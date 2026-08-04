@@ -1,0 +1,131 @@
+﻿@model GeneratorsManagementSystem.Models.GeneratorBook
+@{
+    var oldBook = ViewBag.OldBook as GeneratorsManagementSystem.Models.GeneratorBook;
+}
+
+<form id="bookForm" asp-action="Renew" method="post" enctype="multipart/form-data">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="oldBookId" value="@oldBook?.Id" />
+    <input type="hidden" asp-for="RenewedFromBookId" value="@oldBook?.Id" />
+
+    <div class="modal-header text-white py-3"
+         style="background:linear-gradient(135deg,#4299E1,#3182CE)">
+        <div class="d-flex align-items-center gap-3 flex-grow-1">
+            <div class="bg-white bg-opacity-25 rounded-circle p-2 d-flex align-items-center justify-content-center"
+                 style="width:50px;height:50px">
+                <i class="fas fa-sync fa-lg"></i>
+            </div>
+            <div>
+                <h5 class="modal-title fw-800 mb-0">تجديد الكتاب</h5>
+                <small class="opacity-75">إنشاء كتاب جديد يحل محل القديم</small>
+            </div>
+        </div>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+    </div>
+
+    <div class="modal-body p-4">
+        <!-- الكتاب القديم -->
+        @if (oldBook != null)
+        {
+            <div class="alert alert-warning mb-4">
+                <div class="d-flex align-items-center gap-3">
+                    <i class="fas fa-history fa-2x text-warning"></i>
+                    <div class="flex-grow-1">
+                        <strong class="d-block mb-1">الكتاب القديم:</strong>
+                        <div class="small">
+                            <span class="badge bg-warning text-dark font-monospace" style="direction:ltr;display:inline-block">
+                                @oldBook.InternalNumber
+                            </span>
+                            <strong class="mx-2">@oldBook.BookName</strong>
+                            @if (oldBook.ExpiryDate.HasValue)
+                            {
+                                <br>
+                                <small>
+                                    <i class="fas fa-calendar-times me-1"></i>
+                                    تاريخ الانتهاء الأصلي:
+                                    <strong style="direction:ltr;display:inline-block">
+                                        @oldBook.ExpiryDate.Value.ToString("yyyy/MM/dd")
+                                    </strong>
+                                </small>
+                            }
+                        </div>
+                        <small class="text-muted mt-2 d-block">
+                            <i class="fas fa-info-circle me-1"></i>
+                            سيتم أرشفة الكتاب القديم تلقائياً بعد التجديد
+                        </small>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <div class="row g-3">
+            <div class="col-md-8">
+                <label class="form-label fw-bold">
+                    اسم الكتاب <span class="text-danger">*</span>
+                </label>
+                <input asp-for="BookName" class="form-control" required />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label fw-bold">التصنيف</label>
+                <select asp-for="Category" class="form-select">
+                    @foreach (var cat in Enum.GetValues<GeneratorsManagementSystem.Models.BookCategory>())
+                    {
+                        <option value="@((int)cat)" selected="@(Model.Category == cat)">
+                            @cat.ToString()
+                        </option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-bold">الجهة المصدرة <span class="text-danger">*</span></label>
+                <input asp-for="IssuingAuthority" class="form-control" required />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-bold">
+                    رقم الكتاب الجديد <span class="text-danger">*</span>
+                </label>
+                <input asp-for="BookNumber" class="form-control"
+                       placeholder="رقم الكتاب الرسمي الجديد" required />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-bold">تاريخ الكتاب الجديد <span class="text-danger">*</span></label>
+                <input asp-for="BookDate" type="date" class="form-control form-control-lg" required />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-bold">تاريخ الانتهاء الجديد <span class="text-danger">*</span></label>
+                <input type="hidden" asp-for="HasExpiry" value="true" />
+                <input asp-for="ExpiryDate" type="date" class="form-control form-control-lg" required />
+                <small class="text-info">
+                    <i class="fas fa-info-circle me-1"></i>
+                    الاقتراح: <span style="direction:ltr;display:inline-block">@DateTime.Today.AddYears(1).ToString("yyyy/MM/dd")</span>
+                </small>
+            </div>
+            <div class="col-12">
+                <label class="form-label">المبلغ الجديد (اختياري)</label>
+                <div class="input-group input-group-lg">
+                    <input asp-for="Amount" type="number" step="any" min="0"
+                           class="form-control text-center fw-bold" style="direction:ltr" />
+                    <span class="input-group-text bg-warning text-white">د.ع</span>
+                </div>
+            </div>
+            <div class="col-12">
+                <label class="form-label">إرفاق الكتاب الجديد</label>
+                <input type="file" name="attachment" class="form-control form-control-lg"
+                       accept=".pdf,.jpg,.jpeg,.png" />
+                <small class="text-muted">PDF, JPG, PNG - الحد الأقصى 10 MB</small>
+            </div>
+            <div class="col-12">
+                <label class="form-label">ملاحظات</label>
+                <textarea asp-for="Notes" class="form-control" rows="2"
+                          placeholder="ملاحظات حول التجديد..."></textarea>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-footer bg-light">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">إلغاء</button>
+        <button type="submit" class="btn btn-info btn-lg px-5 text-white">
+            <i class="fas fa-sync me-2"></i>تجديد الكتاب
+        </button>
+    </div>
+</form>

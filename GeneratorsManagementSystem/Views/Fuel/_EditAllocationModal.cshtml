@@ -1,0 +1,111 @@
+﻿@model GeneratorsManagementSystem.Models.Fuel.FuelAllocation
+
+<form id="fuelForm" asp-action="EditAllocation" method="post">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="Id" />
+    <input type="hidden" asp-for="AllocationNumber" />
+    <input type="hidden" asp-for="CreatedAt" />
+    <input type="hidden" asp-for="CreatedBy" />
+
+    <div class="modal-header text-white py-3"
+         style="background:linear-gradient(135deg,#5A67D8,#7886E0)">
+        <div class="d-flex align-items-center gap-3 flex-grow-1">
+            <div class="bg-white bg-opacity-25 rounded-circle p-2 d-flex align-items-center justify-content-center"
+                 style="width:50px;height:50px">
+                <i class="fas fa-edit fa-lg"></i>
+            </div>
+            <div>
+                <h5 class="modal-title fw-800 mb-0">تعديل الحصة</h5>
+                <small class="opacity-75 font-monospace">@Model.AllocationNumber</small>
+            </div>
+        </div>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+    </div>
+
+    <div class="modal-body p-4">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label fw-bold">نوع الوقود</label>
+                <select asp-for="FuelKind" class="form-select">
+                    <option value="1">ديزل</option>
+                    <option value="2">بنزين</option>
+                    <option value="3">غاز</option>
+                    <option value="4">زيت أسود</option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-bold">المصدر</label>
+                <select asp-for="Source" class="form-select">
+                    <option value="1">حصة الدولة</option>
+                    <option value="2">شراء من السوق</option>
+                    <option value="3">تبرع</option>
+                    <option value="99">أخرى</option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-bold">الكمية</label>
+                <div class="input-group input-group-lg">
+                    <input asp-for="Quantity" type="number" step="any" class="form-control text-center fw-bold" style="direction:ltr" />
+                    <span class="input-group-text bg-success text-white">لتر</span>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">سعر اللتر</label>
+                <div class="input-group input-group-lg">
+                    <input asp-for="PricePerLiter" type="number" step="any" class="form-control text-center" style="direction:ltr" />
+                    <span class="input-group-text">د.ع</span>
+                </div>
+            </div>
+            <div class="col-12">
+                <div class="alert alert-success py-3 mb-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <strong><i class="fas fa-calculator me-2"></i>التكلفة الإجمالية:</strong>
+                        <strong id="totalCostDisplay" class="fs-4 text-success" style="direction:ltr;">0 د.ع</strong>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-bold">تاريخ الاستلام</label>
+                <input asp-for="AllocationDate" type="date" class="form-control form-control-lg" />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">المستلم</label>
+                <input asp-for="ReceivedBy" class="form-control form-control-lg" />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">الشهر</label>
+                <select asp-for="AllocationMonth" class="form-select">
+                    <option value="">--</option>
+                    @for (int i = 1; i <= 12; i++)
+                    {
+                        var monthName = new[] { "", "يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر" }[i];
+                        <option value="@i" selected="@(Model.AllocationMonth == i)">@monthName</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">السنة</label>
+                <input asp-for="AllocationYear" type="number" class="form-control" />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">المورد</label>
+                <input asp-for="Supplier" class="form-control" />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">رقم المرجع</label>
+                <input asp-for="ReferenceNumber" class="form-control" />
+            </div>
+            <div class="col-12">
+                <label class="form-label">ملاحظات</label>
+                <textarea asp-for="Notes" class="form-control" rows="2"></textarea>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-footer bg-light">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">إلغاء</button>
+        <button type="submit" class="btn btn-primary btn-lg px-5">
+            <i class="fas fa-save me-2"></i>حفظ التغييرات
+        </button>
+    </div>
+</form>

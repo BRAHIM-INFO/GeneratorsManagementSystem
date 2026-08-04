@@ -1,0 +1,802 @@
+﻿@model GeneratorsManagementSystem.Models.Generator
+@{
+    ViewData["Title"] = "تعديل المولد";
+    ViewData["PageTitle"] = $"تعديل - {Model.Name}";
+
+    var statusVal = (int)Model.Status;
+    var fuelVal = (int)Model.FuelType;
+}
+
+@section Styles {
+    <style>
+        .form-section {
+            background: white;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .form-section-header {
+            padding: 14px 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: white;
+        }
+
+        .form-section-body {
+            padding: 20px;
+        }
+
+        .gen-info-bar {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            border-radius: 14px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .gen-info-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 14px;
+            background: rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .gen-info-number {
+            font-family: monospace;
+            font-size: 0.85rem;
+            background: rgba(255,255,255,0.2);
+            padding: 3px 12px;
+            border-radius: 20px;
+            display: inline-block;
+            margin-top: 4px;
+        }
+
+        .form-label {
+            font-weight: 600;
+            font-size: 0.85rem;
+            margin-bottom: 6px;
+        }
+
+        .optional-tag {
+            font-weight: 400;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .required-star {
+            color: #E53E3E;
+        }
+
+        .status-selector {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .status-option {
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            padding: 10px 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+            .status-option:hover {
+                border-color: var(--primary);
+            }
+
+            .status-option.selected {
+                border-color: var(--primary);
+                background: rgba(90,103,216,0.08);
+                color: var(--primary);
+            }
+
+            .status-option i {
+                display: block;
+                font-size: 1.2rem;
+                margin-bottom: 4px;
+            }
+
+        .fuel-type-selector {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+
+        .fuel-option {
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 0.82rem;
+            font-weight: 600;
+        }
+
+            .fuel-option:hover {
+                border-color: var(--primary);
+            }
+
+            .fuel-option.selected {
+                border-color: var(--primary);
+                background: rgba(90,103,216,0.08);
+                color: var(--primary);
+            }
+
+            .fuel-option i {
+                display: block;
+                font-size: 1.1rem;
+                margin-bottom: 4px;
+            }
+
+        .save-panel {
+            position: sticky;
+            bottom: 20px;
+            background: white;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-md);
+            padding: 16px 20px;
+            z-index: 10;
+        }
+
+        .change-log {
+            background: rgba(90,103,216,0.04);
+            border: 1px solid rgba(90,103,216,0.15);
+            border-radius: 10px;
+            padding: 12px 16px;
+            font-size: 0.8rem;
+        }
+    </style>
+}
+
+<!-- ═══ HEADER ═══ -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="fw-800 mb-1">
+            <i class="fas fa-edit text-primary me-2"></i>
+            تعديل بيانات المولد
+        </h4>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item">
+                    <a href="@Url.Action("Index", "Generators")">المولدات</a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a href="@Url.Action("Details", "Generators", new { id = Model.Id })">
+                        @Model.Name
+                    </a>
+                </li>
+                <li class="breadcrumb-item active">تعديل</li>
+            </ol>
+        </nav>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="@Url.Action("Details", "Generators", new { id = Model.Id })"
+           class="btn btn-outline-info">
+            <i class="fas fa-eye me-2"></i>مراقبة
+        </a>
+        <a href="@Url.Action("Index", "Generators")"
+           class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-right me-2"></i>رجوع
+        </a>
+    </div>
+</div>
+
+<!-- ═══ GEN INFO BAR ═══ -->
+<div class="gen-info-bar">
+    <div class="gen-info-icon">
+        <i class="fas fa-bolt"></i>
+    </div>
+    <div>
+        <div style="font-size:1.1rem; font-weight:800">@Model.Name</div>
+        <div class="gen-info-number">@Model.GeneratorNumber</div>
+    </div>
+    <div class="ms-auto text-end d-none d-md-block">
+        <div class="small opacity-75">أضيف بواسطة</div>
+        <div class="fw-600">@(Model.CreatedBy ?? "—")</div>
+        <div class="small opacity-75">
+            @Model.CreatedAt.ToString("yyyy/MM/dd")
+        </div>
+    </div>
+</div>
+
+<form asp-action="Edit"
+      asp-route-id="@Model.Id"
+      method="post"
+      id="editForm">
+    @Html.AntiForgeryToken()
+
+    <input asp-for="Id" type="hidden" />
+    <input asp-for="GeneratorNumber" type="hidden" />
+    <input asp-for="CreatedAt" type="hidden" />
+    <input asp-for="CreatedBy" type="hidden" />
+    <input asp-for="TotalRunningHours" type="hidden" />
+
+    <!-- Hidden for custom selectors -->
+    <input type="hidden" asp-for="Status" id="hiddenStatus" value="@statusVal" />
+    <input type="hidden" asp-for="FuelType" id="hiddenFuelType" value="@fuelVal" />
+
+    <div class="row g-3">
+
+        <!-- ═══ RIGHT COLUMN ═══ -->
+        <div class="col-lg-8">
+
+            <!-- ─── البيانات الأساسية ─── -->
+            <div class="form-section">
+                <div class="form-section-header"
+                     style="background:linear-gradient(135deg,#5A67D8,#7886E0)">
+                    <i class="fas fa-bolt"></i>
+                    البيانات الأساسية
+                    <span class="ms-auto small opacity-75">* مطلوب</span>
+                </div>
+                <div class="form-section-body">
+                    <div class="row g-3">
+
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                اسم المولد
+                                <span class="required-star">*</span>
+                            </label>
+                            <input asp-for="Name"
+                                   class="form-control"
+                                   placeholder="اسم المولد" />
+                            <span asp-validation-for="Name"
+                                  class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                الماركة
+                                <span class="optional-tag">(اختياري)</span>
+                            </label>
+                            <input asp-for="Brand" class="form-control" />
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                الموديل
+                                <span class="optional-tag">(اختياري)</span>
+                            </label>
+                            <input asp-for="ModelNumber" class="form-control" />
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                الرقم التسلسلي
+                                <span class="optional-tag">(اختياري)</span>
+                            </label>
+                            <input asp-for="SerialNumber" class="form-control" />
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">
+                                سنة الصنع
+                                <span class="optional-tag">(اختياري)</span>
+                            </label>
+                            <input asp-for="ManufactureYear"
+                                   type="number"
+                                   min="1990" max="2030"
+                                   class="form-control" />
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">
+                                تاريخ بدء التشغيل
+                                <span class="optional-tag">(اختياري)</span>
+                            </label>
+                            <input asp-for="StartDate"
+                                   type="date"
+                                   class="form-control" />
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">
+                                الصيانة كل (ساعة)
+                                <span class="optional-tag">(اختياري)</span>
+                            </label>
+                            <div class="input-group">
+                                <input asp-for="MaintenanceIntervalHours"
+                                       type="number" min="50"
+                                       class="form-control" />
+                                <span class="input-group-text">ساعة</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ─── المواصفات التقنية ─── -->
+            <div class="form-section">
+                <div class="form-section-header"
+                     style="background:linear-gradient(135deg,#D69E2E,#F6AD55)">
+                    <i class="fas fa-microchip"></i>
+                    المواصفات التقنية
+                </div>
+                <div class="form-section-body">
+                    <div class="row g-3">
+
+                        <div class="col-md-4">
+                            <label class="form-label">
+                                القدرة (KVA)
+                                <span class="optional-tag">(اختياري)</span>
+                            </label>
+                            <div class="input-group">
+                                <input asp-for="PowerKVA"
+                                       type="number" step="0.5" min="0"
+                                       class="form-control" />
+                                <span class="input-group-text">KVA</span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">
+                                القدرة (KW)
+                                <span class="optional-tag">(اختياري)</span>
+                            </label>
+                            <div class="input-group">
+                                <input asp-for="PowerKW"
+                                       type="number" step="0.5" min="0"
+                                       class="form-control" />
+                                <span class="input-group-text">KW</span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">
+                                الحد الأقصى للأمبير
+                                <span class="optional-tag">(اختياري)</span>
+                            </label>
+                            <div class="input-group">
+                                <input asp-for="MaxAmpere"
+                                       type="number" step="0.5" min="0"
+                                       class="form-control" />
+                                <span class="input-group-text">A</span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">
+                                الجهد الكهربائي
+                                <span class="optional-tag">(اختياري)</span>
+                            </label>
+                            <div class="input-group">
+                                <input asp-for="Voltage"
+                                       type="number"
+                                       class="form-control" />
+                                <span class="input-group-text">V</span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">
+                                التردد
+                                <span class="optional-tag">(اختياري)</span>
+                            </label>
+                            <div class="input-group">
+                                <input asp-for="Frequency"
+                                       type="number"
+                                       class="form-control" />
+                                <span class="input-group-text">Hz</span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">
+                                استهلاك الوقود
+                                <span class="optional-tag">(اختياري)</span>
+                            </label>
+                            <div class="input-group">
+                                <input asp-for="FuelConsumptionRate"
+                                       type="number" step="0.1" min="0"
+                                       class="form-control" />
+                                <span class="input-group-text">ل/س</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ─── الوقود ─── -->
+            <div class="form-section">
+                <div class="form-section-header"
+                     style="background:linear-gradient(135deg,#E53E3E,#FC8181)">
+                    <i class="fas fa-gas-pump"></i>
+                    بيانات الوقود
+                </div>
+                <div class="form-section-body">
+                    <div class="row g-3">
+
+                        <div class="col-12">
+                            <label class="form-label">نوع الوقود</label>
+                            <div class="fuel-type-selector">
+                                <div class="fuel-option @(fuelVal == 1 ? "selected" : "")"
+                                     data-value="1" onclick="selectFuel(this)">
+                                    <i class="fas fa-oil-can"
+                                       style="color:#E53E3E"></i>ديزل
+                                </div>
+                                <div class="fuel-option @(fuelVal == 2 ? "selected" : "")"
+                                     data-value="2" onclick="selectFuel(this)">
+                                    <i class="fas fa-gas-pump"
+                                       style="color:#F6AD55"></i>بنزين
+                                </div>
+                                <div class="fuel-option @(fuelVal == 3 ? "selected" : "")"
+                                     data-value="3" onclick="selectFuel(this)">
+                                    <i class="fas fa-fire"
+                                       style="color:#48BB78"></i>غاز
+                                </div>
+                                <div class="fuel-option @(fuelVal == 4 ? "selected" : "")"
+                                     data-value="4" onclick="selectFuel(this)">
+                                    <i class="fas fa-exchange-alt"
+                                       style="color:#5A67D8"></i>ثنائي
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                سعة خزان الوقود
+                                <span class="optional-tag">(اختياري)</span>
+                            </label>
+                            <div class="input-group">
+                                <input asp-for="FuelTankCapacity"
+                                       type="number" step="10" min="0"
+                                       class="form-control" />
+                                <span class="input-group-text">لتر</span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                مستوى الوقود الحالي
+                                <span class="optional-tag">(اختياري)</span>
+                            </label>
+                            <div class="input-group">
+                                <input asp-for="CurrentFuelLevel"
+                                       type="number" step="10" min="0"
+                                       class="form-control" />
+                                <span class="input-group-text">لتر</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ─── الموقع ─── -->
+            <div class="form-section">
+                <div class="form-section-header"
+                     style="background:linear-gradient(135deg,#38A169,#48BB78)">
+                    <i class="fas fa-map-marker-alt"></i>
+                    الموقع
+                </div>
+                <div class="form-section-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                المنطقة
+                                <span class="optional-tag">(اختياري)</span>
+                            </label>
+                            <input asp-for="Area" class="form-control" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                الموقع التفصيلي
+                                <span class="optional-tag">(اختياري)</span>
+                            </label>
+                            <input asp-for="Location" class="form-control" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                خط الطول
+                                <span class="optional-tag">(اختياري)</span>
+                            </label>
+                            <input asp-for="Longitude"
+                                   type="number" step="0.000001"
+                                   class="form-control" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                خط العرض
+                                <span class="optional-tag">(اختياري)</span>
+                            </label>
+                            <input asp-for="Latitude"
+                                   type="number" step="0.000001"
+                                   class="form-control" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ─── الصيانة ─── -->
+            <div class="form-section">
+                <div class="form-section-header"
+                     style="background:linear-gradient(135deg,#3182CE,#63B3ED)">
+                    <i class="fas fa-tools"></i>
+                    بيانات الصيانة
+                </div>
+                <div class="form-section-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                آخر صيانة
+                                <span class="optional-tag">(اختياري)</span>
+                            </label>
+                            <input asp-for="LastMaintenanceDate"
+                                   type="date" class="form-control" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                الصيانة القادمة
+                                <span class="optional-tag">(اختياري)</span>
+                            </label>
+                            <input asp-for="NextMaintenanceDate"
+                                   type="date" class="form-control" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ─── الملاحظات ─── -->
+            <div class="form-section">
+                <div class="form-section-header"
+                     style="background:linear-gradient(135deg,#718096,#A0AEC0)">
+                    <i class="fas fa-sticky-note"></i>
+                    ملاحظات
+                </div>
+                <div class="form-section-body">
+                    <textarea asp-for="Notes"
+                              class="form-control" rows="3"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ LEFT COLUMN ═══ -->
+        <div class="col-lg-4">
+
+            <!-- ─── حالة المولد ─── -->
+            <div class="form-section">
+                <div class="form-section-header"
+                     style="background:linear-gradient(135deg,#5A67D8,#7886E0)">
+                    <i class="fas fa-toggle-on"></i>
+                    حالة المولد
+                </div>
+                <div class="form-section-body">
+                    <div class="status-selector">
+                        <div class="status-option @(statusVal == 1 ? "selected" : "")"
+                             data-value="1" onclick="selectStatus(this)">
+                            <i class="fas fa-check-circle"
+                               style="color:#48BB78"></i>يعمل
+                        </div>
+                        <div class="status-option @(statusVal == 2 ? "selected" : "")"
+                             data-value="2" onclick="selectStatus(this)">
+                            <i class="fas fa-stop-circle"
+                               style="color:#718096"></i>متوقف
+                        </div>
+                        <div class="status-option @(statusVal == 3 ? "selected" : "")"
+                             data-value="3" onclick="selectStatus(this)">
+                            <i class="fas fa-tools"
+                               style="color:#F6AD55"></i>صيانة
+                        </div>
+                        <div class="status-option @(statusVal == 4 ? "selected" : "")"
+                             data-value="4" onclick="selectStatus(this)">
+                            <i class="fas fa-exclamation-triangle"
+                               style="color:#FC8181"></i>عطل
+                        </div>
+                        <div class="status-option @(statusVal == 5 ? "selected" : "")"
+                             data-value="5" onclick="selectStatus(this)">
+                            <i class="fas fa-pause-circle"
+                               style="color:#63B3ED"></i>احتياط
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ─── إحصاءات حالية ─── -->
+            <div class="form-section">
+                <div class="form-section-header"
+                     style="background:linear-gradient(135deg,#38A169,#48BB78)">
+                    <i class="fas fa-chart-bar"></i>
+                    الإحصاءات الحالية
+                </div>
+                <div class="form-section-body">
+                    <div class="d-flex flex-column gap-2">
+                        <div class="d-flex justify-content-between
+                                    align-items-center p-2 bg-light rounded">
+                            <span class="small text-muted">
+                                <i class="fas fa-users me-1"></i>
+                                عدد المشتركين
+                            </span>
+                            <strong class="small text-primary">
+                                @Model.ActiveSubscribersCount
+                            </strong>
+                        </div>
+                        <div class="d-flex justify-content-between
+                                    align-items-center p-2 bg-light rounded">
+                            <span class="small text-muted">
+                                <i class="fas fa-bolt me-1"></i>
+                                الأمبير المستخدم
+                            </span>
+                            <strong class="small">
+                                @Model.UsedAmpere A
+                            </strong>
+                        </div>
+                        <div class="d-flex justify-content-between
+                                    align-items-center p-2 bg-light rounded">
+                            <span class="small text-muted">
+                                <i class="fas fa-percent me-1"></i>
+                                نسبة التحميل
+                            </span>
+                            <strong class="small"
+                                    style="color:@(Model.LoadPercentage >= 90 ? "#FC8181" : Model.LoadPercentage >= 70 ? "#F6AD55" : "#48BB78")">
+                                @Model.LoadPercentage%
+                            </strong>
+                        </div>
+                        <div class="d-flex justify-content-between
+                                    align-items-center p-2 bg-light rounded">
+                            <span class="small text-muted">
+                                <i class="fas fa-clock me-1"></i>
+                                إجمالي ساعات التشغيل
+                            </span>
+                            <strong class="small">
+                                @Model.TotalRunningHours.ToString("N0") س
+                            </strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ─── تغيير الحالة السريع ─── -->
+            @if (Model.Status != GeneratorStatus.Active)
+            {
+                <div class="form-section border-success">
+                    <div class="form-section-header"
+                         style="background:linear-gradient(135deg,#38A169,#48BB78)">
+                        <i class="fas fa-play-circle"></i>
+                        تشغيل المولد سريعاً
+                    </div>
+                    <div class="form-section-body">
+                        <button type="button"
+                                class="btn btn-success w-100 btn-quick-status"
+                                data-id="@Model.Id" data-status="1">
+                            <i class="fas fa-power-off me-2"></i>
+                            تشغيل المولد الآن
+                        </button>
+                    </div>
+                </div>
+            }
+
+            <!-- ─── أزرار الحفظ ─── -->
+            <div class="save-panel">
+                <div class="d-grid gap-2">
+                    <button type="submit"
+                            class="btn btn-primary btn-lg"
+                            id="saveBtn">
+                        <i class="fas fa-save me-2"></i>حفظ التعديلات
+                    </button>
+                    <a href="@Url.Action("Details", "Generators", new { id = Model.Id })"
+                       class="btn btn-outline-info">
+                        <i class="fas fa-eye me-2"></i>مراقبة المولد
+                    </a>
+                    <a href="@Url.Action("Index", "Generators")"
+                       class="btn btn-outline-secondary">
+                        <i class="fas fa-times me-2"></i>إلغاء
+                    </a>
+                </div>
+
+                <!-- Change Log -->
+                @if (Model.UpdatedAt.HasValue)
+                {
+                    <div class="change-log mt-3">
+                        <i class="fas fa-history me-1 text-muted"></i>
+                        <small class="text-muted">
+                            آخر تعديل:
+                            @Model.UpdatedAt?.ToString("yyyy/MM/dd HH:mm")
+                        </small>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+
+            // ═══ Status Selector ═══
+            window.selectStatus = function (el) {
+                document.querySelectorAll('.status-option')
+                    .forEach(o => o.classList.remove('selected'));
+                el.classList.add('selected');
+                document.getElementById('hiddenStatus').value = el.dataset.value;
+            };
+
+            // ═══ Fuel Selector ═══
+            window.selectFuel = function (el) {
+                document.querySelectorAll('.fuel-option')
+                    .forEach(o => o.classList.remove('selected'));
+                el.classList.add('selected');
+                document.getElementById('hiddenFuelType').value = el.dataset.value;
+            };
+
+            // ═══ Quick Status Change ═══
+            document.querySelector('.btn-quick-status')
+                ?.addEventListener('click', function () {
+                    const id = this.dataset.id;
+                    GMS.confirm({
+                        title:   'تشغيل المولد',
+                        text:    'هل تريد تشغيل المولد الآن؟',
+                        icon:    'question',
+                        confirm: 'نعم، شغّل',
+                        color:   '#38A169'
+                    }).then(function (r) {
+                        if (r.isConfirmed) {
+                            GMS.post('/Generators/ChangeStatus', {
+                                id: id, status: 1, reason: ''
+                            }).then(function (data) {
+                                if (data.success) {
+                                    GMS.toast('success', data.message);
+                                    setTimeout(() => location.reload(), 1000);
+                                } else {
+                                    GMS.toast('error', data.message);
+                                }
+                            });
+                        }
+                    });
+                });
+
+            // ═══ Save Button Loading ═══
+            document.getElementById('saveBtn')
+                ?.addEventListener('click', function () {
+                    const name = document.getElementById('Name');
+                    if (name && name.value.trim()) {
+                        this.innerHTML =
+                            '<span class="spinner-border spinner-border-sm me-2"></span>جار الحفظ...';
+                        this.disabled = true;
+                    }
+                });
+
+            // ═══ Unsaved Changes Warning ═══
+            let formChanged = false;
+            document.getElementById('editForm')
+                ?.querySelectorAll('input, select, textarea')
+                .forEach(el => {
+                    el.addEventListener('change', () => formChanged = true);
+                });
+
+            window.addEventListener('beforeunload', function (e) {
+                if (formChanged) {
+                    e.preventDefault();
+                    e.returnValue = '';
+                }
+            });
+
+            document.getElementById('editForm')
+                ?.addEventListener('submit', function () {
+                    formChanged = false;
+                });
+        });
+    </script>
+}

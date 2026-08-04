@@ -1,0 +1,954 @@
+﻿@model GeneratorsManagementSystem.Models.Subscriber
+@using GeneratorsManagementSystem.Models
+@using GeneratorsManagementSystem.Models.Geography
+
+@{
+    var governorates = ViewBag.Governorates as List<Governorate> ?? new List<Governorate>();
+    var generators = ViewBag.Generators as List<Generator> ?? new List<Generator>();
+    var deviceTypes = ViewBag.DeviceTypes as List<DeviceType> ?? new List<DeviceType>();
+    var discountReasons = ViewBag.DiscountReasons as List<DiscountReason> ?? new List<DiscountReason>();
+    var defaultCommission = (decimal)(ViewBag.DefaultCommissionPercentage ?? 2.5m);
+    var canFullExempt = (bool)(ViewBag.CanFullExempt ?? false);
+}
+
+<style>
+    /* ═══ Modal Sections ═══ */
+    .section-card {
+        border: none;
+        border-radius: 15px;
+        margin-bottom: 15px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+
+    .section-header {
+        padding: 12px 20px;
+        color: white;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+        .section-header.personal {
+            background: linear-gradient(135deg, #5A67D8, #7886E0);
+        }
+
+        .section-header.address {
+            background: linear-gradient(135deg, #38A169, #48BB78);
+        }
+
+        .section-header.subscription {
+            background: linear-gradient(135deg, #D69E2E, #F6AD55);
+        }
+
+        .section-header.mobile {
+            background: linear-gradient(135deg, #805AD5, #B794F4);
+        }
+
+    .section-body {
+        padding: 20px;
+        background: white;
+    }
+
+    /* ═══ Subscriber Number Badge ═══ */
+    .sub-number-badge {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+        .sub-number-badge .badge-inner {
+            display: inline-block;
+            padding: 10px 30px;
+            border-radius: 30px;
+            background: #EBF4FF;
+            border: 2px dashed #5A67D8;
+        }
+
+        .sub-number-badge small {
+            display: block;
+            color: #718096;
+            font-size: 0.85rem;
+            margin-bottom: 5px;
+        }
+
+        .sub-number-badge strong {
+            color: #5A67D8;
+            font-size: 1.3rem;
+            font-family: 'Segoe UI', Tahoma;
+            letter-spacing: 1px;
+        }
+
+    /* ═══ Amount Displays ═══ */
+    .amount-box {
+        padding: 15px;
+        border-radius: 12px;
+        text-align: center;
+        transition: all 0.3s;
+    }
+
+        .amount-box.info {
+            background: #EBF4FF;
+            border: 2px solid #4299E1;
+        }
+
+        .amount-box.warning {
+            background: #FFFAF0;
+            border: 2px solid #F6AD55;
+        }
+
+        .amount-box.success {
+            background: #F0FFF4;
+            border: 2px solid #48BB78;
+        }
+
+        .amount-box.danger {
+            background: #FFF5F5;
+            border: 2px solid #FC8181;
+        }
+
+        .amount-box.primary {
+            background: #EBF4FF;
+            border: 2px solid #5A67D8;
+        }
+
+    .amount-value {
+        font-size: 1.5rem;
+        font-weight: 900;
+        direction: ltr;
+        display: inline-block;
+        font-family: 'Segoe UI', Tahoma;
+    }
+
+    .amount-label {
+        color: #718096;
+        font-size: 0.85rem;
+        margin-bottom: 5px;
+    }
+
+    /* ═══ Final Amount ═══ */
+    .final-amount-box {
+        background: linear-gradient(135deg, #48BB78, #38A169);
+        color: white;
+        padding: 20px;
+        border-radius: 15px;
+        text-align: center;
+        margin-top: 15px;
+        box-shadow: 0 5px 20px rgba(72, 187, 120, 0.3);
+    }
+
+        .final-amount-box .amount-huge {
+            font-size: 2.2rem;
+            font-weight: 900;
+            direction: ltr;
+            display: block;
+            font-family: 'Segoe UI', Tahoma;
+            line-height: 1;
+        }
+
+        .final-amount-box.exempt {
+            background: linear-gradient(135deg, #718096, #A0AEC0);
+        }
+
+    /* ═══ Toggle Switch ═══ */
+    .exempt-toggle {
+        padding: 15px;
+        background: #FFF5F5;
+        border: 2px dashed #FC8181;
+        border-radius: 12px;
+    }
+
+        .exempt-toggle.active {
+            background: #FED7D7;
+            border-style: solid;
+        }
+
+        .exempt-toggle.disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+    /* ═══ Numbers in English ═══ */
+    .en-numbers {
+        direction: ltr;
+        display: inline-block;
+        font-feature-settings: "tnum";
+        font-family: 'Segoe UI', Tahoma;
+    }
+
+    /* ═══ Loading Cascade ═══ */
+    .cascade-loading {
+        display: none;
+        margin-top: 5px;
+        color: #4299E1;
+        font-size: 0.85rem;
+    }
+
+    /* ═══ Mobile Placeholder ═══ */
+    .mobile-placeholder {
+        background: linear-gradient(135deg, #F7FAFC, #EDF2F7);
+        padding: 30px;
+        border-radius: 12px;
+        text-align: center;
+        border: 2px dashed #CBD5E0;
+    }
+</style>
+
+<form id="subscriberForm" asp-action="Create" method="post" enctype="multipart/form-data">
+    @Html.AntiForgeryToken()
+
+    <!-- ═══ MODAL HEADER ═══ -->
+    <div class="modal-header text-white py-3"
+         style="background:linear-gradient(135deg,#5A67D8,#7886E0)">
+        <div class="d-flex align-items-center gap-3 flex-grow-1">
+            <div class="bg-white bg-opacity-25 rounded-circle p-2 d-flex align-items-center justify-content-center"
+                 style="width:50px;height:50px">
+                <i class="fas fa-user-plus fa-lg"></i>
+            </div>
+            <div>
+                <h5 class="modal-title fw-800 mb-0">إضافة مشترك جديد</h5>
+                <small class="opacity-75 font-monospace">@Model.SubscriberNumber</small>
+            </div>
+        </div>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+    </div>
+
+    <!-- ═══ MODAL BODY ═══ -->
+    <div class="modal-body p-4">
+
+        <!-- Subscriber Number Badge -->
+        <div class="sub-number-badge">
+            <div class="badge-inner">
+                <small>رقم المشترك (يتولد تلقائياً)</small>
+                <strong class="font-monospace">@Model.SubscriberNumber</strong>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════ -->
+        <!--  📱 القسم 1: البيانات الشخصية          -->
+        <!-- ═══════════════════════════════════════ -->
+        <div class="section-card">
+            <div class="section-header personal">
+                <i class="fas fa-user"></i>
+                <span>البيانات الشخصية</span>
+                <span class="ms-auto small opacity-75">* الحقول المطلوبة</span>
+            </div>
+            <div class="section-body">
+                <div class="row g-3">
+                    <!-- اسم المشترك -->
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">
+                            اسم المشترك <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light">
+                                <i class="fas fa-user text-primary"></i>
+                            </span>
+                            <input asp-for="FullName" class="form-control"
+                                   placeholder="أدخل الاسم الكامل"
+                                   autofocus required />
+                        </div>
+                    </div>
+
+                    <!-- رقم الهوية -->
+                    <div class="col-md-6">
+                        <label class="form-label">
+                            رقم الهوية
+                            <small class="text-muted">(اختياري)</small>
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light">
+                                <i class="fas fa-id-card text-info"></i>
+                            </span>
+                            <input asp-for="IdNumber" class="form-control en-numbers"
+                                   placeholder="رقم الهوية أو البطاقة الشخصية" />
+                        </div>
+                    </div>
+
+                    <!-- رقم الهاتف -->
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">
+                            رقم الهاتف <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light">
+                                <i class="fas fa-phone text-success"></i>
+                            </span>
+                            <input asp-for="Phone" class="form-control en-numbers"
+                                   placeholder="07X XXXX XXXX"
+                                   dir="ltr" required />
+                        </div>
+                    </div>
+
+                    <!-- رقم الهاتف 2 -->
+                    <div class="col-md-6">
+                        <label class="form-label">
+                            رقم الهاتف 2
+                            <small class="text-muted">(اختياري)</small>
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light">
+                                <i class="fas fa-phone-alt text-success"></i>
+                            </span>
+                            <input asp-for="Phone2" class="form-control en-numbers"
+                                   placeholder="07X XXXX XXXX" dir="ltr" />
+                        </div>
+                    </div>
+
+                    <!-- البريد الإلكتروني -->
+                    <div class="col-12">
+                        <label class="form-label">
+                            البريد الإلكتروني
+                            <small class="text-muted">(اختياري)</small>
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light">
+                                <i class="fas fa-envelope text-warning"></i>
+                            </span>
+                            <input asp-for="Email" type="email" class="form-control"
+                                   placeholder="example@email.com" dir="ltr" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════ -->
+        <!--  📍 القسم 2: العنوان (Cascade)         -->
+        <!-- ═══════════════════════════════════════ -->
+        <div class="section-card">
+            <div class="section-header address">
+                <i class="fas fa-map-marker-alt"></i>
+                <span>العنوان</span>
+            </div>
+            <div class="section-body">
+                <div class="row g-3">
+                    <!-- المحافظة -->
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">
+                            المحافظة
+                        </label>
+                        <select asp-for="GovernorateId" class="form-select" id="governorateSelect">
+                            <option value="">-- اختر المحافظة --</option>
+                            @foreach (var gov in governorates)
+                            {
+                                <option value="@gov.Id">@gov.Name</option>
+                            }
+                        </select>
+                    </div>
+
+                    <!-- القضاء -->
+                    <div class="col-md-3">
+                        <label class="form-label">القضاء</label>
+                        <select asp-for="DistrictId" class="form-select" id="districtSelect" disabled>
+                            <option value="">-- اختر أولاً المحافظة --</option>
+                        </select>
+                        <div class="cascade-loading" id="districtLoading">
+                            <i class="fas fa-spinner fa-spin"></i> جارِ التحميل...
+                        </div>
+                    </div>
+
+                    <!-- الحي -->
+                    <div class="col-md-3">
+                        <label class="form-label">الحي</label>
+                        <select asp-for="NeighborhoodId" class="form-select" id="neighborhoodSelect" disabled>
+                            <option value="">-- اختر أولاً القضاء --</option>
+                        </select>
+                        <div class="cascade-loading" id="neighborhoodLoading">
+                            <i class="fas fa-spinner fa-spin"></i> جارِ التحميل...
+                        </div>
+                    </div>
+
+                    <!-- الزقاق -->
+                    <div class="col-md-3">
+                        <label class="form-label">الزقاق</label>
+                        <select asp-for="AlleyId" class="form-select" id="alleySelect" disabled>
+                            <option value="">-- اختر أولاً الحي --</option>
+                        </select>
+                        <div class="cascade-loading" id="alleyLoading">
+                            <i class="fas fa-spinner fa-spin"></i> جارِ التحميل...
+                        </div>
+                    </div>
+
+                    <!-- الشارع -->
+                    <div class="col-md-4">
+                        <label class="form-label">اسم الشارع</label>
+                        <input asp-for="Street" class="form-control"
+                               placeholder="مثال: شارع 14 رمضان" />
+                    </div>
+
+                    <!-- رقم البناية -->
+                    <div class="col-md-2">
+                        <label class="form-label">رقم البناية</label>
+                        <input asp-for="BuildingNumber" class="form-control en-numbers"
+                               placeholder="12" />
+                    </div>
+
+                    <!-- أقرب نقطة دالة -->
+                    <div class="col-md-6">
+                        <label class="form-label">أقرب نقطة دالة</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light">
+                                <i class="fas fa-landmark text-info"></i>
+                            </span>
+                            <input asp-for="NearestLandmark" class="form-control"
+                                   placeholder="مثال: مقابل مدرسة المنصور الابتدائية" />
+                        </div>
+                    </div>
+
+                    <!-- ملاحظات العنوان -->
+                    <div class="col-12">
+                        <label class="form-label">
+                            ملاحظات إضافية للعنوان
+                            <small class="text-muted">(اختياري)</small>
+                        </label>
+                        <textarea asp-for="AddressNotes" class="form-control" rows="2"
+                                  placeholder="أدخل أي ملاحظات إضافية عن الموقع..."></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════ -->
+        <!--  💰 القسم 3: تفاصيل الاشتراك والفاتورة -->
+        <!-- ═══════════════════════════════════════ -->
+        <div class="section-card">
+            <div class="section-header subscription">
+                <i class="fas fa-bolt"></i>
+                <span>تفاصيل الاشتراك والفاتورة</span>
+                <span class="ms-auto small opacity-75">اختياري - يمكن إضافته لاحقاً</span>
+            </div>
+            <div class="section-body">
+                <div class="row g-3">
+                    <!-- المولد -->
+                    <div class="col-md-6">
+                        <label class="form-label">
+                            المولد
+                            <small class="text-muted">(اترك فارغاً لإضافة الاشتراك لاحقاً)</small>
+                        </label>
+                        <select name="generatorId" class="form-select" id="generatorSelect">
+                            <option value="">-- بدون اشتراك حالياً --</option>
+                            @foreach (var gen in generators)
+                            {
+                                <option value="@gen.Id">
+                                    @gen.GeneratorNumber - @gen.Name
+                                </option>
+                            }
+                        </select>
+                    </div>
+
+                    <!-- نوع الجهاز -->
+                    <div class="col-md-6">
+                        <label class="form-label">نوع الجهاز</label>
+                        <select name="deviceTypeId" class="form-select" id="deviceTypeSelect">
+                            <option value="">-- اختر نوع الجهاز --</option>
+                            @foreach (var dt in deviceTypes)
+                            {
+                                <option value="@dt.Id"
+                                        data-price="@dt.DefaultPrice"
+                                        data-ampere="@dt.DefaultAmpere">
+                                    @dt.Name (@dt.DefaultAmpere A - @dt.DefaultPrice.ToString("N0") د.ع)
+                                </option>
+                            }
+                        </select>
+                    </div>
+
+                    <!-- عدد الأجهزة والأمبير -->
+                    <div class="col-md-3">
+                        <label class="form-label">عدد الأجهزة</label>
+                        <input type="number" name="deviceCount" id="deviceCount"
+                               class="form-control text-center fw-bold en-numbers"
+                               value="1" min="1" />
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">عدد الأمبير</label>
+                        <div class="input-group">
+                            <input type="number" name="ampere" id="ampere"
+                                   class="form-control text-center fw-bold en-numbers"
+                                   value="0" step="any" min="0" style="direction:ltr" />
+                            <span class="input-group-text">A</span>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">سعر الأمبير</label>
+                        <div class="input-group">
+                            <input type="number" name="pricePerAmpere" id="pricePerAmpere"
+                                   class="form-control text-center fw-bold en-numbers"
+                                   value="0" step="any" min="0" style="direction:ltr" />
+                            <span class="input-group-text">د.ع</span>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">يوم الاستحقاق</label>
+                        <div class="input-group">
+                            <input type="number" name="dueDay" id="dueDay"
+                                   class="form-control text-center en-numbers"
+                                   value="1" min="1" max="30" />
+                            <span class="input-group-text">من الشهر</span>
+                        </div>
+                    </div>
+
+                    <!-- تاريخ البداية -->
+                    <div class="col-md-4">
+                        <label class="form-label">من تاريخ</label>
+                        <input type="date" name="startDate" id="startDate"
+                               class="form-control" value="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                    </div>
+
+                    <!-- العمولة الإدارية -->
+                    <div class="col-md-4">
+                        <label class="form-label">
+                            العمولة الإدارية
+                            <i class="fas fa-info-circle text-muted"
+                               title="نسبة تُضاف على المبلغ الأساسي"></i>
+                        </label>
+                        <div class="input-group">
+                            <input type="number" name="adminCommissionPercentage"
+                                   id="adminCommissionPercentage"
+                                   class="form-control text-center en-numbers"
+                                   value="@defaultCommission" step="any" min="0" max="100" />
+                            <span class="input-group-text">%</span>
+                        </div>
+                    </div>
+
+                    <!-- سبب الخصم -->
+                    <div class="col-md-4">
+                        <label class="form-label">
+                            سبب الخصم
+                            <small class="text-muted">(اختياري)</small>
+                        </label>
+                        <select name="discountReasonId" id="discountReasonSelect" class="form-select">
+                            <option value="">-- بدون سبب محدد --</option>
+                            @foreach (var dr in discountReasons)
+                            {
+                                <option value="@dr.Id">@dr.Name</option>
+                            }
+                        </select>
+                    </div>
+
+                    <!-- مبلغ الخصم -->
+                    <div class="col-md-6">
+                        <label class="form-label">
+                            مبلغ الخصم
+                            <small class="text-muted">(اختياري)</small>
+                        </label>
+                        <div class="input-group">
+                            <input type="number" name="discountAmount" id="discountAmount"
+                                   class="form-control text-center en-numbers"
+                                   value="0" step="any" min="0" style="direction:ltr" />
+                            <span class="input-group-text bg-danger text-white">د.ع</span>
+                        </div>
+                    </div>
+
+                    <!-- تفاصيل الخصم -->
+                    <div class="col-md-6">
+                        <label class="form-label">
+                            تفاصيل الخصم
+                            <small class="text-muted">(اختياري)</small>
+                        </label>
+                        <input type="text" name="discountNotes" class="form-control"
+                               placeholder="ملاحظات حول الخصم..." />
+                    </div>
+
+                    <!-- الحسابات المُظهرة -->
+                    <div class="col-12 mt-3">
+                        <div class="row g-2">
+                            <div class="col-md-4">
+                                <div class="amount-box info">
+                                    <div class="amount-label">مبلغ الاشتراك الأساسي</div>
+                                    <div class="amount-value text-primary" id="baseAmount">0</div>
+                                    <small class="text-muted">د.ع</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="amount-box warning">
+                                    <div class="amount-label">قيمة العمولة</div>
+                                    <div class="amount-value text-warning" id="commissionValue">0</div>
+                                    <small class="text-muted">د.ع</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="amount-box danger">
+                                    <div class="amount-label">قيمة الخصم</div>
+                                    <div class="amount-value text-danger" id="discountValue">0</div>
+                                    <small class="text-muted">د.ع</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- الإعفاء الكامل -->
+                    <div class="col-12">
+                        @if (canFullExempt)
+                        {
+                            <div class="exempt-toggle" id="exemptToggle">
+                                <div class="form-check form-switch fs-5">
+                                    <input class="form-check-input" type="checkbox"
+                                           id="isFullExempt" name="isFullExempt"
+                                           value="true" role="switch" />
+                                    <label class="form-check-label fw-bold text-danger" for="isFullExempt">
+                                        <i class="fas fa-hand-holding-heart me-2"></i>
+                                        إعفاء كامل (سيصبح المبلغ = 0)
+                                    </label>
+                                </div>
+                                <div id="exemptReasonContainer" class="mt-3" style="display:none;">
+                                    <label class="form-label fw-bold">سبب الإعفاء *</label>
+                                    <textarea name="exemptReason" class="form-control" rows="2"
+                                              placeholder="اذكر سبب الإعفاء الكامل..."></textarea>
+                                    <small class="text-danger mt-1 d-block">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        سيتم تسجيل هذا في السجل باسم المدير
+                                    </small>
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="alert alert-secondary py-2 mb-0">
+                                <i class="fas fa-lock me-2"></i>
+                                <strong>ملاحظة:</strong>
+                                خاصية "الإعفاء الكامل" متاحة للمدير فقط
+                            </div>
+                        }
+                    </div>
+
+                    <!-- المبلغ النهائي المستحق -->
+                    <div class="col-12">
+                        <div class="final-amount-box" id="finalAmountBox">
+                            <div class="opacity-75 mb-1">
+                                <i class="fas fa-calculator me-2"></i>
+                                المبلغ الشهري المستحق
+                            </div>
+                            <div class="amount-huge" id="finalAmount">0</div>
+                            <small class="opacity-75">دينار عراقي</small>
+                            <div class="mt-2 small opacity-75" id="finalFormula">
+                                (0 × 0) + عمولة 0 - خصم 0 = 0 د.ع
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════ -->
+        <!--  📱 القسم 4: بيانات التطبيق (لاحقاً)   -->
+        <!-- ═══════════════════════════════════════ -->
+        <div class="section-card">
+            <div class="section-header mobile">
+                <i class="fas fa-mobile-alt"></i>
+                <span>بيانات التطبيق (Mobile App)</span>
+                <span class="ms-auto small opacity-75">قيد التطوير</span>
+            </div>
+            <div class="section-body">
+                <div class="mobile-placeholder">
+                    <i class="fas fa-mobile-alt fa-3x text-muted mb-3"></i>
+                    <h6 class="fw-bold text-muted">ربط تطبيق الموبايل قريباً</h6>
+                    <p class="text-muted small mb-0">
+                        سيتم إضافة إمكانية ربط التطبيق للمشترك في التحديثات القادمة
+                    </p>
+                    <div class="mt-3 d-flex justify-content-center gap-2">
+                        <span class="badge bg-secondary">
+                            <i class="fas fa-key me-1"></i> رمز OTP
+                        </span>
+                        <span class="badge bg-secondary">
+                            <i class="fas fa-link me-1"></i> إرسال رابط
+                        </span>
+                        <span class="badge bg-secondary">
+                            <i class="fas fa-bell me-1"></i> إشعارات
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ملاحظات عامة -->
+        <div class="mb-3">
+            <label class="form-label">
+                <i class="fas fa-sticky-note text-secondary me-1"></i>
+                ملاحظات عامة
+                <small class="text-muted">(اختياري)</small>
+            </label>
+            <textarea asp-for="Notes" class="form-control" rows="2"
+                      placeholder="أدخل أي ملاحظات إضافية عن المشترك..."></textarea>
+        </div>
+    </div>
+
+    <!-- ═══ MODAL FOOTER ═══ -->
+    <div class="modal-footer bg-light">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+            <i class="fas fa-times me-2"></i>إلغاء
+        </button>
+        <button type="submit" class="btn btn-primary btn-lg px-5">
+            <i class="fas fa-save me-2"></i>حفظ المشترك
+        </button>
+    </div>
+</form>
+
+<script>
+    (function() {
+        // ═══════════════════════════════════════
+        //  🌍 Cascade Dropdowns للجغرافيا
+        // ═══════════════════════════════════════
+
+        function loadDistricts(governorateId, targetSelect, loadingEl) {
+            var select = document.getElementById(targetSelect);
+            var loading = document.getElementById(loadingEl);
+
+            select.innerHTML = '<option value="">-- جارِ التحميل --</option>';
+            select.disabled = true;
+            loading.style.display = 'block';
+
+            fetch('/Geography/GetDistricts?governorateId=' + governorateId)
+                .then(r => r.json())
+                .then(data => {
+                    select.innerHTML = '<option value="">-- اختر القضاء --</option>';
+                    data.forEach(d => {
+                        var opt = document.createElement('option');
+                        opt.value = d.id;
+                        opt.textContent = d.name;
+                        select.appendChild(opt);
+                    });
+                    select.disabled = false;
+                    loading.style.display = 'none';
+                });
+        }
+
+        function loadNeighborhoods(districtId, targetSelect, loadingEl) {
+            var select = document.getElementById(targetSelect);
+            var loading = document.getElementById(loadingEl);
+
+            select.innerHTML = '<option value="">-- جارِ التحميل --</option>';
+            select.disabled = true;
+            loading.style.display = 'block';
+
+            fetch('/Geography/GetNeighborhoods?districtId=' + districtId)
+                .then(r => r.json())
+                .then(data => {
+                    select.innerHTML = '<option value="">-- اختر الحي --</option>';
+                    data.forEach(d => {
+                        var opt = document.createElement('option');
+                        opt.value = d.id;
+                        opt.textContent = d.name;
+                        select.appendChild(opt);
+                    });
+                    select.disabled = false;
+                    loading.style.display = 'none';
+                });
+        }
+
+        function loadAlleys(neighborhoodId, targetSelect, loadingEl) {
+            var select = document.getElementById(targetSelect);
+            var loading = document.getElementById(loadingEl);
+
+            select.innerHTML = '<option value="">-- جارِ التحميل --</option>';
+            select.disabled = true;
+            loading.style.display = 'block';
+
+            fetch('/Geography/GetAlleys?neighborhoodId=' + neighborhoodId)
+                .then(r => r.json())
+                .then(data => {
+                    select.innerHTML = '<option value="">-- اختر الزقاق --</option>';
+                    data.forEach(d => {
+                        var opt = document.createElement('option');
+                        opt.value = d.id;
+                        opt.textContent = d.name;
+                        select.appendChild(opt);
+                    });
+                    select.disabled = false;
+                    loading.style.display = 'none';
+                });
+        }
+
+        // Event Listeners للـ Cascade
+        var govSelect = document.getElementById('governorateSelect');
+        var distSelect = document.getElementById('districtSelect');
+        var hoodSelect = document.getElementById('neighborhoodSelect');
+        var alleySelect = document.getElementById('alleySelect');
+
+        govSelect.addEventListener('change', function() {
+            if (this.value) {
+                loadDistricts(this.value, 'districtSelect', 'districtLoading');
+            } else {
+                distSelect.innerHTML = '<option value="">-- اختر أولاً المحافظة --</option>';
+                distSelect.disabled = true;
+            }
+            hoodSelect.innerHTML = '<option value="">-- اختر أولاً القضاء --</option>';
+            hoodSelect.disabled = true;
+            alleySelect.innerHTML = '<option value="">-- اختر أولاً الحي --</option>';
+            alleySelect.disabled = true;
+        });
+
+        distSelect.addEventListener('change', function() {
+            if (this.value) {
+                loadNeighborhoods(this.value, 'neighborhoodSelect', 'neighborhoodLoading');
+            } else {
+                hoodSelect.innerHTML = '<option value="">-- اختر أولاً القضاء --</option>';
+                hoodSelect.disabled = true;
+            }
+            alleySelect.innerHTML = '<option value="">-- اختر أولاً الحي --</option>';
+            alleySelect.disabled = true;
+        });
+
+        hoodSelect.addEventListener('change', function() {
+            if (this.value) {
+                loadAlleys(this.value, 'alleySelect', 'alleyLoading');
+            } else {
+                alleySelect.innerHTML = '<option value="">-- اختر أولاً الحي --</option>';
+                alleySelect.disabled = true;
+            }
+        });
+
+        // ═══════════════════════════════════════
+        //  💰 حسابات المبلغ التلقائية
+        // ═══════════════════════════════════════
+
+        function formatNumber(num) {
+            return Math.round(num).toLocaleString('en-US');
+        }
+
+        function updateCalculations() {
+            var ampere = parseFloat(document.getElementById('ampere').value) || 0;
+            var pricePerAmpere = parseFloat(document.getElementById('pricePerAmpere').value) || 0;
+            var commissionPct = parseFloat(document.getElementById('adminCommissionPercentage').value) || 0;
+            var discount = parseFloat(document.getElementById('discountAmount').value) || 0;
+            var isExempt = document.getElementById('isFullExempt')?.checked || false;
+
+            // الحسابات
+            var baseAmount = ampere * pricePerAmpere;
+            var commissionValue = baseAmount * (commissionPct / 100);
+            var finalAmount = isExempt ? 0 : Math.max(0, baseAmount + commissionValue - discount);
+
+            // العرض
+            document.getElementById('baseAmount').textContent = formatNumber(baseAmount);
+            document.getElementById('commissionValue').textContent = formatNumber(commissionValue);
+            document.getElementById('discountValue').textContent = formatNumber(discount);
+            document.getElementById('finalAmount').textContent = formatNumber(finalAmount);
+
+            // المعادلة
+            document.getElementById('finalFormula').textContent =
+                `(${ampere} × ${formatNumber(pricePerAmpere)}) + عمولة ${formatNumber(commissionValue)} - خصم ${formatNumber(discount)} = ${formatNumber(finalAmount)} د.ع`;
+
+            // تغيير لون الصندوق النهائي
+            var finalBox = document.getElementById('finalAmountBox');
+            if (isExempt) {
+                finalBox.classList.add('exempt');
+            } else {
+                finalBox.classList.remove('exempt');
+            }
+        }
+
+        // Auto-fill من نوع الجهاز
+        document.getElementById('deviceTypeSelect').addEventListener('change', function() {
+            var option = this.options[this.selectedIndex];
+            var price = option.getAttribute('data-price');
+            var ampere = option.getAttribute('data-ampere');
+
+            if (price) document.getElementById('pricePerAmpere').value = price;
+            if (ampere) document.getElementById('ampere').value = ampere;
+
+            updateCalculations();
+        });
+
+        // Listen for input changes
+        ['ampere', 'pricePerAmpere', 'adminCommissionPercentage',
+            'discountAmount', 'deviceCount'].forEach(id => {
+                var el = document.getElementById(id);
+                if (el) el.addEventListener('input', updateCalculations);
+            });
+
+        // ═══════════════════════════════════════
+        //  🎁 الإعفاء الكامل
+        // ═══════════════════════════════════════
+
+        var exemptCheckbox = document.getElementById('isFullExempt');
+        if (exemptCheckbox) {
+            exemptCheckbox.addEventListener('change', function() {
+                var toggle = document.getElementById('exemptToggle');
+                var reasonContainer = document.getElementById('exemptReasonContainer');
+
+                if (this.checked) {
+                    toggle.classList.add('active');
+                    reasonContainer.style.display = 'block';
+                } else {
+                    toggle.classList.remove('active');
+                    reasonContainer.style.display = 'none';
+                }
+                updateCalculations();
+            });
+        }
+
+        // ═══════════════════════════════════════
+        //  📤 Form Submission
+        // ═══════════════════════════════════════
+
+        document.getElementById('subscriberForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            var btn = this.querySelector('[type="submit"]');
+            var original = btn.innerHTML;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>جارِ الحفظ...';
+            btn.disabled = true;
+
+            var formData = new FormData(this);
+
+            fetch(this.getAttribute('action'), {
+                method: 'POST',
+                body: formData
+            })
+                .then(r => r.json())
+                .then(res => {
+                    if (res.success) {
+                        // إغلاق النافذة
+                        var modalEl = document.getElementById('subscriberModal');
+                        var modal = bootstrap.Modal.getInstance(modalEl);
+                        if (modal) modal.hide();
+
+                        // رسالة نجاح
+                        Swal.fire({
+                            icon: 'success',
+                            title: '✅ تم بنجاح!',
+                            text: res.message,
+                            confirmButtonColor: '#48BB78',
+                            timer: 3000,
+                            timerProgressBar: true,
+                            customClass: { popup: 'swal2-rtl' }
+                        }).then(() => location.reload());
+                    } else {
+                        var errHtml = '';
+                        if (res.errors && res.errors.length) {
+                            errHtml = '<ul class="text-start mt-2">';
+                            res.errors.forEach(e => errHtml += `<li>${e}</li>`);
+                            errHtml += '</ul>';
+                        }
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'فشل الحفظ',
+                            html: res.message + errHtml,
+                            confirmButtonColor: '#dc3545',
+                            customClass: { popup: 'swal2-rtl' }
+                        });
+                        btn.innerHTML = original;
+                        btn.disabled = false;
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'خطأ',
+                        text: 'تعذر الاتصال بالخادم',
+                        customClass: { popup: 'swal2-rtl' }
+                    });
+                    btn.innerHTML = original;
+                    btn.disabled = false;
+                });
+        });
+
+        // تحديث الحسابات عند البداية
+        updateCalculations();
+
+    })();
+</script>

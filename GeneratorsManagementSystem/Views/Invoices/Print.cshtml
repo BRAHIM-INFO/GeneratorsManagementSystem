@@ -1,0 +1,555 @@
+﻿@model GeneratorsManagementSystem.Models.Invoice
+@{
+    Layout = null;
+    var org = "شركة إدارة المولدات";
+}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="utf-8">
+    <title>فاتورة @Model.InvoiceNumber</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            body {
+                font-family: 'Cairo', sans-serif;
+                background: #f5f5f5;
+                padding: 20px;
+                direction: rtl;
+            }
+
+            .invoice-container {
+                max-width: 850px;
+                margin: 0 auto;
+                background: white;
+                padding: 40px;
+                box-shadow: 0 5px 30px rgba(0,0,0,0.1);
+                border-radius: 12px;
+            }
+
+            .header {
+                border-bottom: 3px solid #5A67D8;
+                padding-bottom: 20px;
+                margin-bottom: 30px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .logo {
+                display: flex;
+                align-items: center;
+                gap: 15px;
+            }
+
+            .logo-icon {
+                width: 60px;
+                height: 60px;
+                background: linear-gradient(135deg, #5A67D8, #7886E0);
+                border-radius: 15px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: white;
+                font-size: 28px;
+            }
+
+            .company-name {
+                font-size: 22px;
+                font-weight: 900;
+                color: #2d3748;
+            }
+
+            .company-info {
+                font-size: 12px;
+                color: #718096;
+            }
+
+            .invoice-title {
+                text-align: start;
+            }
+
+                .invoice-title h1 {
+                    font-size: 32px;
+                    color: #5A67D8;
+                    font-weight: 900;
+                }
+
+            .invoice-number {
+                font-family: 'Courier New', monospace;
+                font-size: 16px;
+                background: #EBF4FF;
+                padding: 6px 12px;
+                border-radius: 8px;
+                color: #5A67D8;
+                font-weight: 700;
+                display: inline-block;
+                margin-top: 5px;
+            }
+
+            .info-row {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 30px;
+                margin-bottom: 30px;
+            }
+
+            .info-box {
+                background: #f8f9fc;
+                padding: 20px;
+                border-radius: 12px;
+                border-right: 4px solid #5A67D8;
+            }
+
+                .info-box h3 {
+                    font-size: 14px;
+                    color: #718096;
+                    margin-bottom: 10px;
+                    font-weight: 600;
+                }
+
+                .info-box .value {
+                    font-size: 16px;
+                    font-weight: 700;
+                    color: #2d3748;
+                }
+
+                .info-box .sub-value {
+                    font-size: 13px;
+                    color: #718096;
+                    margin-top: 3px;
+                }
+
+            .status-badge {
+                display: inline-block;
+                padding: 6px 15px;
+                border-radius: 20px;
+                font-size: 13px;
+                font-weight: 700;
+            }
+
+            .status-unpaid {
+                background: #FED7D7;
+                color: #C53030;
+            }
+
+            .status-paid {
+                background: #C6F6D5;
+                color: #22543D;
+            }
+
+            .status-partiallypaid {
+                background: #FEEBC8;
+                color: #C05621;
+            }
+
+            .status-overdue {
+                background: #FED7D7;
+                color: #C53030;
+            }
+
+            /* ═══ Items Table ═══ */
+            .items-table {
+                width: 100%;
+                border-collapse: collapse;
+                margin: 25px 0;
+                border-radius: 12px;
+                overflow: hidden;
+                box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            }
+
+                .items-table thead {
+                    background: linear-gradient(135deg, #5A67D8, #7886E0);
+                    color: white;
+                }
+
+                    .items-table thead th {
+                        padding: 14px 12px;
+                        font-weight: 700;
+                        font-size: 14px;
+                        text-align: center;
+                        border: none;
+                    }
+
+                .items-table tbody tr {
+                    background: white;
+                    border-bottom: 1px solid #e2e8f0;
+                }
+
+                    .items-table tbody tr:nth-child(even) {
+                        background: #fafbfc;
+                    }
+
+                    .items-table tbody tr:last-child {
+                        border-bottom: none;
+                    }
+
+                .items-table tbody td {
+                    padding: 15px 12px;
+                    font-size: 14px;
+                    vertical-align: middle;
+                    line-height: 1.6;
+                }
+
+                    .items-table tbody td strong {
+                        color: #2d3748;
+                        font-size: 15px;
+                    }
+
+                    .items-table tbody td small {
+                        display: block;
+                        margin-top: 4px;
+                        font-size: 12px;
+                    }
+
+            .totals {
+                margin-top: 20px;
+                padding: 25px;
+                background: linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%);
+                border-radius: 12px;
+                border: 2px solid #48bb78;
+            }
+
+            .totals-row {
+                display: flex;
+                justify-content: space-between;
+                padding: 8px 0;
+                font-size: 15px;
+            }
+
+                .totals-row.total {
+                    border-top: 2px solid #48bb78;
+                    margin-top: 10px;
+                    padding-top: 15px;
+                    font-size: 20px;
+                    font-weight: 900;
+                    color: #22543d;
+                }
+
+            .en-numbers {
+                font-family: 'Segoe UI', Tahoma, sans-serif;
+                font-feature-settings: "tnum";
+                direction: ltr;
+                display: inline-block;
+            }
+
+            .footer {
+                margin-top: 40px;
+                padding-top: 20px;
+                border-top: 2px dashed #cbd5e0;
+                text-align: center;
+                color: #718096;
+                font-size: 12px;
+            }
+
+            .actions {
+                text-align: center;
+                margin: 20px 0;
+            }
+
+            .btn {
+                display: inline-block;
+                padding: 12px 30px;
+                background: linear-gradient(135deg, #5A67D8, #7886E0);
+                color: white;
+                border: none;
+                border-radius: 10px;
+                cursor: pointer;
+                font-family: inherit;
+                font-size: 14px;
+                font-weight: 700;
+                text-decoration: none;
+                margin: 0 5px;
+            }
+
+            .btn-secondary {
+                background: #718096;
+            }
+
+            .btn:hover {
+                opacity: 0.9;
+            }
+
+            .signature-area {
+                margin-top: 40px;
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 40px;
+            }
+
+            .signature-box {
+                text-align: center;
+                padding-top: 60px;
+                border-top: 2px solid #2d3748;
+            }
+
+            .notes-box {
+                background: #FFFAF0;
+                border-right: 4px solid #ECC94B;
+                padding: 15px 20px;
+                border-radius: 8px;
+                margin: 20px 0;
+            }
+
+                .notes-box h4 {
+                    color: #B7791F;
+                    font-size: 13px;
+                    margin-bottom: 5px;
+                }
+
+            @@media print {
+                body {
+                    background: white;
+                    padding: 0;
+                }
+
+                .invoice-container {
+                    box-shadow: none;
+                    border-radius: 0;
+                    padding: 20px;
+                }
+
+                .actions {
+                    display: none;
+                }
+
+                .items-table thead {
+                    background: #5A67D8 !important;
+                    -webkit-print-color-adjust: exact;
+                    color-adjust: exact;
+                }
+            }
+    </style>
+</head>
+<body>
+    <div class="invoice-container">
+
+        <!-- HEADER -->
+        <div class="header">
+            <div class="logo">
+                <div class="logo-icon">⚡</div>
+                <div>
+                    <div class="company-name">@org</div>
+                    <div class="company-info">
+                        📍 بغداد، العراق | 📞 07XX XXX XXXX | 📧 info@gms.com
+                    </div>
+                </div>
+            </div>
+            <div class="invoice-title">
+                <h1>فاتورة</h1>
+                <div class="invoice-number">@Model.InvoiceNumber</div>
+                <div style="margin-top:8px;">
+                    <span class="status-badge status-@Model.Status.ToString().ToLower()">
+                        @Model.StatusText
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- INFO -->
+        <div class="info-row">
+            <div class="info-box">
+                <h3>👤 معلومات المشترك</h3>
+                <div class="value">@Model.Subscriber?.FullName</div>
+                <div class="sub-value">
+                    🔢 <span class="en-numbers">@Model.Subscriber?.SubscriberNumber</span>
+                </div>
+                @if (!string.IsNullOrEmpty(Model.Subscriber?.Phone))
+                {
+                    <div class="sub-value">
+                        📞 <span class="en-numbers">@Model.Subscriber.Phone</span>
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(Model.Subscriber?.FullAddress) && Model.Subscriber.FullAddress != "—")
+                {
+                    <div class="sub-value">📍 @Model.Subscriber.FullAddress</div>
+                }
+            </div>
+
+            <div class="info-box">
+                <h3>📅 تفاصيل الفاتورة</h3>
+                <div class="sub-value">
+                    <strong>تاريخ الإصدار:</strong>
+                    <span class="en-numbers">@Model.IssueDate.ToString("yyyy/MM/dd")</span>
+                </div>
+                <div class="sub-value">
+                    <strong>تاريخ الاستحقاق:</strong>
+                    <span class="en-numbers" style="color:#e53e3e;font-weight:700">
+                        @Model.DueDate.ToString("yyyy/MM/dd")
+                    </span>
+                </div>
+                <div class="sub-value">
+                    <strong>الفترة:</strong>
+                    <span class="en-numbers">@Model.PeriodStart.ToString("yyyy/MM/dd")</span>
+                    →
+                    <span class="en-numbers">@Model.PeriodEnd.ToString("yyyy/MM/dd")</span>
+                </div>
+                @if (Model.Subscription != null)
+                {
+                    <div class="sub-value">
+                        <strong>رقم العقد:</strong>
+                        <span class="en-numbers">@Model.Subscription.ContractNumber</span>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- ITEMS TABLE -->
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th style="width:5%;">#</th>
+                    <th style="width:40%; text-align:right;">البيان</th>
+                    <th style="width:15%;">الكمية</th>
+                    <th style="width:20%;">السعر</th>
+                    <th style="width:20%;">المجموع</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="en-numbers" style="text-align:center;">1</td>
+                    <td style="text-align:right;">
+                        <strong>اشتراك كهرباء</strong>
+                        <br>
+                        <small style="color:#718096">
+                            @Model.Subscription?.SubscriptionTypeText -
+                            المولد: @Model.Subscription?.Generator?.Name
+                            (<span class="en-numbers">@Model.Subscription?.Generator?.GeneratorNumber</span>)
+                        </small>
+                    </td>
+                    <td class="en-numbers" style="text-align:center;">
+                        <strong>@Model.Subscription?.Ampere</strong> A
+                    </td>
+                    <td class="en-numbers" style="text-align:center;">
+                        <strong>@Model.Subscription?.PricePerAmpere.ToString("N0")</strong>
+                        <small style="color:#718096;"> د.ع</small>
+                    </td>
+                    <td class="en-numbers" style="text-align:center;">
+                        <strong style="color:#5A67D8;font-size:16px;">@Model.Amount.ToString("N0")</strong>
+                        <small style="color:#718096;"> د.ع</small>
+                    </td>
+                </tr>
+                @if (Model.AdditionalCharges > 0)
+                {
+                    <tr>
+                        <td class="en-numbers" style="text-align:center;">2</td>
+                        <td style="text-align:right;">
+                            <strong>رسوم إضافية</strong>
+                            @if (!string.IsNullOrEmpty(Model.Notes))
+                            {
+                                <br>
+                                <small style="color:#718096">@Model.Notes</small>
+                            }
+                        </td>
+                        <td style="text-align:center;color:#a0aec0;">—</td>
+                        <td style="text-align:center;color:#a0aec0;">—</td>
+                        <td class="en-numbers" style="text-align:center;">
+                            <strong style="color:#5A67D8;font-size:16px;">@Model.AdditionalCharges.ToString("N0")</strong>
+                            <small style="color:#718096;"> د.ع</small>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <!-- TOTALS -->
+        <div class="totals">
+            <div class="totals-row">
+                <span>المبلغ الفرعي:</span>
+                <span class="en-numbers">@Model.Amount.ToString("N0") د.ع</span>
+            </div>
+            @if (Model.Discount > 0)
+            {
+                <div class="totals-row" style="color:#e53e3e">
+                    <span>الخصم:</span>
+                    <span class="en-numbers">- @Model.Discount.ToString("N0") د.ع</span>
+                </div>
+            }
+            @if (Model.Tax > 0)
+            {
+                <div class="totals-row">
+                    <span>الضريبة:</span>
+                    <span class="en-numbers">@Model.Tax.ToString("N0") د.ع</span>
+                </div>
+            }
+            @if (Model.AdditionalCharges > 0)
+            {
+                <div class="totals-row">
+                    <span>رسوم إضافية:</span>
+                    <span class="en-numbers">@Model.AdditionalCharges.ToString("N0") د.ع</span>
+                </div>
+            }
+            <div class="totals-row total">
+                <span>الإجمالي المستحق:</span>
+                <span class="en-numbers">@Model.TotalAmount.ToString("N0") د.ع</span>
+            </div>
+            @if (Model.PaidAmount > 0)
+            {
+                <div class="totals-row" style="color:#48bb78">
+                    <span>المدفوع:</span>
+                    <span class="en-numbers">@Model.PaidAmount.ToString("N0") د.ع</span>
+                </div>
+                <div class="totals-row total" style="color:@(Model.RemainingAmount > 0 ? "#e53e3e" : "#48bb78")">
+                    <span>المتبقي:</span>
+                    <span class="en-numbers">@Model.RemainingAmount.ToString("N0") د.ع</span>
+                </div>
+            }
+        </div>
+
+        @if (!string.IsNullOrEmpty(Model.Notes))
+        {
+            <div class="notes-box">
+                <h4>📝 ملاحظات:</h4>
+                <div>@Model.Notes</div>
+            </div>
+        }
+
+        <!-- SIGNATURE -->
+        <div class="signature-area">
+            <div class="signature-box">
+                <strong>توقيع المستلم</strong>
+            </div>
+            <div class="signature-box">
+                <strong>توقيع المُصدر</strong>
+            </div>
+        </div>
+
+        <!-- FOOTER -->
+        <div class="footer">
+            <p>شكراً لتعاملكم معنا 🙏</p>
+            <p style="margin-top:5px">
+                يرجى دفع الفاتورة قبل تاريخ
+                <strong class="en-numbers">@Model.DueDate.ToString("yyyy/MM/dd")</strong>
+                لتجنب الرسوم الإضافية
+            </p>
+            <p style="margin-top:10px;font-size:11px;">
+                نظام إدارة المولدات الكهربائية (GMS) - جميع الحقوق محفوظة
+            </p>
+        </div>
+
+        <!-- ACTIONS -->
+        <div class="actions">
+            <button class="btn" onclick="window.print()">
+                🖨️ طباعة الفاتورة
+            </button>
+            <a href="/Invoices/Details/@Model.Id" class="btn btn-secondary">
+                ← رجوع للتفاصيل
+            </a>
+        </div>
+    </div>
+
+    <script>
+            var params = new URLSearchParams(window.location.search);
+            if (params.get('autoprint') === '1') {
+                window.onload = function() {
+                    setTimeout(function() { window.print(); }, 500);
+                };
+            }
+    </script>
+</body>
+</html>

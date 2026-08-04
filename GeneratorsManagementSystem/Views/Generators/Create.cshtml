@@ -1,0 +1,1336 @@
+﻿@model GeneratorsManagementSystem.Models.Generator
+@{
+    ViewData["Title"] = "إضافة مولد";
+    ViewData["PageTitle"] = "إضافة مولد جديد";
+}
+
+@section Styles {
+    <style>
+        .form-section {
+            background: white;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .form-section-header {
+            padding: 14px 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: white;
+        }
+
+        .form-section-body {
+            padding: 20px;
+        }
+
+        .gen-number-display {
+            background: rgba(90,103,216,0.06);
+            border: 2px dashed rgba(90,103,216,0.3);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+            .gen-number-display .num {
+                font-size: 1.6rem;
+                font-weight: 800;
+                color: var(--primary);
+                font-family: monospace;
+                letter-spacing: 3px;
+            }
+
+        .form-label {
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--text);
+            margin-bottom: 6px;
+        }
+
+        .optional-tag {
+            font-weight: 400;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .required-star {
+            color: #E53E3E;
+        }
+
+        .status-selector {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .status-option {
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            padding: 10px 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+            .status-option:hover {
+                border-color: var(--primary);
+            }
+
+            .status-option.selected {
+                border-color: var(--primary);
+                background: rgba(90,103,216,0.08);
+                color: var(--primary);
+            }
+
+            .status-option i {
+                display: block;
+                font-size: 1.2rem;
+                margin-bottom: 4px;
+            }
+
+        .fuel-type-selector {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+
+        .fuel-option {
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 0.82rem;
+            font-weight: 600;
+        }
+
+            .fuel-option:hover {
+                border-color: var(--primary);
+            }
+
+            .fuel-option.selected {
+                border-color: var(--primary);
+                background: rgba(90,103,216,0.08);
+                color: var(--primary);
+            }
+
+            .fuel-option i {
+                display: block;
+                font-size: 1.1rem;
+                margin-bottom: 4px;
+            }
+
+        /* Sticky Save Button */
+        .save-panel {
+            position: sticky;
+            bottom: 20px;
+            background: white;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-md);
+            padding: 16px 20px;
+            z-index: 10;
+        }
+
+        /* ═══ Validation Styling ═══ */
+        .form-control.is-invalid,
+        .form-control.field-error {
+            border-color: #dc3545 !important;
+            border-width: 2px !important;
+            padding-inline-end: calc(1.5em + 0.75rem);
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: left calc(0.375em + 0.1875rem) center;
+            background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+            animation: shake 0.4s ease-in-out;
+        }
+
+        .form-control.is-valid,
+        .form-control.field-success {
+            border-color: #28a745 !important;
+            border-width: 2px !important;
+        }
+
+        .field-error-message {
+            display: block;
+            color: #dc3545;
+            font-size: 0.8125rem;
+            margin-top: 0.25rem;
+            font-weight: 600;
+            animation: slideDown 0.3s ease;
+        }
+
+            .field-error-message::before {
+                content: "⚠️ ";
+                margin-inline-end: 4px;
+            }
+
+        /* ═══ Section with errors ═══ */
+        .form-section.has-errors {
+            border: 2px solid #dc3545;
+            border-radius: 12px;
+            animation: shake 0.4s ease-in-out;
+        }
+
+            .form-section.has-errors .form-section-header {
+                background: linear-gradient(135deg, #dc3545, #e57373) !important;
+            }
+
+        /* ═══ Animations ═══ */
+        @@keyframes shake {
+            0%, 100% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-5px);
+            }
+
+            75% {
+                transform: translateX(5px);
+            }
+        }
+
+        @@keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-5px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ═══ Summary Errors Box ═══ */
+        .validation-summary-box {
+            background: linear-gradient(135deg, #fff5f5, #fed7d7);
+            border-inline-start: 5px solid #dc3545;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.15);
+            animation: slideDown 0.4s ease;
+        }
+
+            .validation-summary-box h6 {
+                color: #dc3545;
+                font-weight: 800;
+                margin-bottom: 12px;
+            }
+
+            .validation-summary-box .error-item {
+                padding: 8px 12px;
+                background: white;
+                border-radius: 8px;
+                margin-bottom: 6px;
+                cursor: pointer;
+                transition: all 0.2s;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+
+                .validation-summary-box .error-item:hover {
+                    transform: translateX(-5px);
+                    box-shadow: 0 2px 8px rgba(220, 53, 69, 0.2);
+                }
+
+                .validation-summary-box .error-item .badge {
+                    background: #dc3545;
+                    color: white;
+                    padding: 4px 8px;
+                    border-radius: 6px;
+                    font-size: 0.75rem;
+                }
+
+        /* ═══ Required field indicator ═══ */
+        .required-star {
+            color: #dc3545;
+            font-weight: 900;
+            margin-inline-start: 4px;
+        }
+
+        /* ═══ Field focus glow ═══ */
+        .form-control:focus {
+            border-color: #5A67D8;
+            box-shadow: 0 0 0 0.25rem rgba(90, 103, 216, 0.15);
+        }
+    </style>
+}
+
+<!-- ═══ HEADER ═══ -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="fw-800 mb-1">
+            <i class="fas fa-plus-circle text-primary me-2"></i>
+            إضافة مولد جديد
+        </h4>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item">
+                    <a href="@Url.Action("Index", "Generators")">المولدات</a>
+                </li>
+                <li class="breadcrumb-item active">إضافة جديد</li>
+            </ol>
+        </nav>
+    </div>
+    <a href="@Url.Action("Index", "Generators")"
+       class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-right me-2"></i>رجوع
+    </a>
+</div>
+
+@* <form asp-action="Create" method="post" id="createForm">
+    @Html.AntiForgeryToken()
+ *@
+
+<form asp-action="Create" method="post" id="createForm">
+    @Html.AntiForgeryToken()
+
+    <!-- 🔴 عرض الأخطاء -->
+    @if (ViewBag.ValidationErrors != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <h6 class="fw-bold mb-2">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                فشل الحفظ - يرجى تصحيح الأخطاء التالية:
+            </h6>
+            <ul class="mb-0">
+                @foreach (var err in (List<string>)ViewBag.ValidationErrors)
+                {
+                    <li>@err</li>
+                }
+            </ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @Html.Raw(TempData["Error"])
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+
+    <!-- Hidden Fields -->
+    <input type="hidden" asp-for="Status" id="hiddenStatus" value="1" />
+    <input type="hidden" asp-for="FuelType" id="hiddenFuelType" value="1" />
+
+    <div class="row g-3">
+
+        <!-- ═══ RIGHT COLUMN (8) ═══ -->
+        <div class="col-lg-8">
+
+            <!-- رقم المولد -->
+            <div class="gen-number-display">
+                <div class="text-muted small mb-1">
+                    <i class="fas fa-hashtag me-1"></i>
+                    رقم المولد (يتولد تلقائياً)
+                </div>
+                <div class="num">@ViewBag.NewNumber</div>
+            </div>
+
+            <!-- ─── البيانات الأساسية ─── -->
+            <div class="form-section">
+                <div class="form-section-header"
+                     style="background:linear-gradient(135deg,#5A67D8,#7886E0)">
+                    <i class="fas fa-bolt"></i>
+                    البيانات الأساسية
+                    <span class="ms-auto small opacity-75">* مطلوب</span>
+                </div>
+                <div class="form-section-body">
+                    <div class="row g-3">
+
+                        <!-- الاسم - مطلوب -->
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                اسم المولد
+                                <span class="required-star">*</span>
+                            </label>
+                            <input asp-for="Name"
+                                   class="form-control"
+                                   placeholder="مثال: مولد الكرادة الرئيسي"
+                                   autofocus />
+                          @*   <input asp-for="Name"
+                                   id="Name"
+                                   name="Name"
+                                   class="form-control"
+                                   placeholder="مثال: مولد الكرادة الرئيسي"
+                                   autofocus /> *@
+                            <span asp-validation-for="Name"
+                                  class="text-danger small"></span>
+                        </div>
+
+                        <!-- الماركة -->
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                الماركة
+                                <span class="optional-tag">(اختياري)</span>
+                            </label>
+                            <input asp-for="Brand"
+                                   class="form-control"
+                                   placeholder="مثال: Perkins, Cummins, Caterpillar" />
+                        </div>
+
+                        <!-- الموديل -->
+                        <!-- ✅ بعد -->
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                الموديل
+                                <span class="optional-tag">(اختياري)</span>
+                            </label>
+                            <input type="text"
+                                   name="ModelNumber"
+                                   id="ModelNumber"
+                                   value="@Model.ModelNumber"
+                                   class="form-control"
+                                   placeholder="مثال: 4008-30TAG3" />
+                        </div>
+                      @*   <div class="col-md-6">
+                            <label class="form-label">
+                                الموديل
+                                <span class="optional-tag">(اختياري)</span>
+                            </label>
+                            <input asp-for="Model"
+                                   class="form-control"
+                                   placeholder="مثال: 4008-30TAG3" />
+                        </div> *@
+
+                        <!-- الرقم التسلسلي -->
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                الرقم التسلسلي
+                                <span class="optional-tag">(اختياري)</span>
+                            </label>
+                            <input asp-for="SerialNumber"
+                                   class="form-control"
+                                   placeholder="Serial Number" />
+                        </div>
+
+                        <!-- سنة الصنع -->
+                        <div class="col-md-4">
+                            <label class="form-label">
+                                سنة الصنع
+                                <span class="optional-tag">(اختياري)</span>
+                            </label>
+                            <input asp-for="ManufactureYear"
+                                   type="number"
+                                   min="1990"
+                                   max="2030"
+                                   class="form-control"
+                                   placeholder="2020" />
+                        </div>
+
+                        <!-- تاريخ بدء التشغيل -->
+                        <div class="col-md-4">
+                            <label class="form-label">
+                                تاريخ بدء التشغيل
+                                <span class="optional-tag">(اختياري)</span>
+                            </label>
+                            <input asp-for="StartDate"
+                                   type="date"
+                                   class="form-control" />
+                        </div>
+
+                        <!-- فترة الصيانة -->
+                        <div class="col-md-4">
+                            <label class="form-label">
+                                الصيانة كل (ساعة)
+                                <span class="optional-tag">(اختياري)</span>
+                            </label>
+                            <div class="input-group">
+                                <input asp-for="MaintenanceIntervalHours"
+                                       type="number"
+                                       min="50"
+                                       class="form-control"
+                                       placeholder="250" />
+                                <span class="input-group-text">ساعة</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ─── المواصفات التقنية ─── -->
+            <div class="form-section">
+                <div class="form-section-header"
+                     style="background:linear-gradient(135deg,#D69E2E,#F6AD55)">
+                    <i class="fas fa-microchip"></i>
+                    المواصفات التقنية
+                </div>
+                <div class="form-section-body">
+                    <div class="row g-3">
+
+                        <!-- KVA -->
+                        <div class="col-md-4">
+                            <label class="form-label">
+                                القدرة (KVA)
+                                <span class="optional-tag">(اختياري)</span>
+                            </label>
+                            <div class="input-group">
+                                <input asp-for="PowerKVA"
+                                       type="number"
+                                       step="0.5"
+                                       min="0"
+                                       class="form-control"
+                                       placeholder="0" />
+                                <span class="input-group-text">KVA</span>
+                            </div>
+                        </div>
+
+                        <!-- KW -->
+                        <div class="col-md-4">
+                            <label class="form-label">
+                                القدرة (KW)
+                                <span class="optional-tag">(اختياري)</span>
+                            </label>
+                            <div class="input-group">
+                                <input asp-for="PowerKW"
+                                       type="number"
+                                       step="0.5"
+                                       min="0"
+                                       class="form-control"
+                                       id="powerKW"
+                                       placeholder="0" />
+                                <span class="input-group-text">KW</span>
+                            </div>
+                        </div>
+
+                        <!-- الحد الأقصى للأمبير -->
+                        <div class="col-md-4">
+                            <label class="form-label">
+                                الحد الأقصى للأمبير
+                                <span class="optional-tag">(اختياري)</span>
+                            </label>
+                            <div class="input-group">
+                                <input asp-for="MaxAmpere"
+                                       type="number"
+                                       step="0.5"
+                                       min="0"
+                                       class="form-control"
+                                       placeholder="0" />
+                                <span class="input-group-text">A</span>
+                            </div>
+                        </div>
+
+                        <!-- الجهد -->
+                        <div class="col-md-4">
+                            <label class="form-label">
+                                الجهد الكهربائي
+                                <span class="optional-tag">(اختياري)</span>
+                            </label>
+                            <div class="input-group">
+                                <input asp-for="Voltage"
+                                       type="number"
+                                       class="form-control"
+                                       placeholder="380" />
+                                <span class="input-group-text">V</span>
+                            </div>
+                        </div>
+
+                        <!-- التردد -->
+                        <div class="col-md-4">
+                            <label class="form-label">
+                                التردد
+                                <span class="optional-tag">(اختياري)</span>
+                            </label>
+                            <div class="input-group">
+                                <input asp-for="Frequency"
+                                       type="number"
+                                       class="form-control"
+                                       placeholder="50" />
+                                <span class="input-group-text">Hz</span>
+                            </div>
+                        </div>
+
+                        <!-- معدل استهلاك الوقود -->
+                        <div class="col-md-4">
+                            <label class="form-label">
+                                استهلاك الوقود
+                                <span class="optional-tag">(اختياري)</span>
+                            </label>
+                            <div class="input-group">
+                                <input asp-for="FuelConsumptionRate"
+                                       type="number"
+                                       step="0.1"
+                                       min="0"
+                                       class="form-control"
+                                       placeholder="0" />
+                                <span class="input-group-text">ل/س</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ─── الوقود ─── -->
+            <div class="form-section">
+                <div class="form-section-header"
+                     style="background:linear-gradient(135deg,#E53E3E,#FC8181)">
+                    <i class="fas fa-gas-pump"></i>
+                    بيانات الوقود
+                </div>
+                <div class="form-section-body">
+                    <div class="row g-3">
+
+                        <!-- نوع الوقود - Custom Selector -->
+                        <div class="col-12">
+                            <label class="form-label">نوع الوقود</label>
+                            <div class="fuel-type-selector">
+                                <div class="fuel-option selected"
+                                     data-value="1" onclick="selectFuel(this)">
+                                    <i class="fas fa-oil-can" style="color:#E53E3E"></i>
+                                    ديزل
+                                </div>
+                                <div class="fuel-option"
+                                     data-value="2" onclick="selectFuel(this)">
+                                    <i class="fas fa-gas-pump" style="color:#F6AD55"></i>
+                                    بنزين
+                                </div>
+                                <div class="fuel-option"
+                                     data-value="3" onclick="selectFuel(this)">
+                                    <i class="fas fa-fire" style="color:#48BB78"></i>
+                                    غاز
+                                </div>
+                                <div class="fuel-option"
+                                     data-value="4" onclick="selectFuel(this)">
+                                    <i class="fas fa-exchange-alt" style="color:#5A67D8"></i>
+                                    ثنائي الوقود
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- سعة الخزان -->
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                سعة خزان الوقود
+                                <span class="optional-tag">(اختياري)</span>
+                            </label>
+                            <div class="input-group">
+                                <input asp-for="FuelTankCapacity"
+                                       type="number"
+                                       step="10"
+                                       min="0"
+                                       class="form-control"
+                                       placeholder="0" />
+                                <span class="input-group-text">لتر</span>
+                            </div>
+                        </div>
+
+                        <!-- مستوى الوقود الحالي -->
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                مستوى الوقود الحالي
+                                <span class="optional-tag">(اختياري)</span>
+                            </label>
+                            <div class="input-group">
+                                <input asp-for="CurrentFuelLevel"
+                                       type="number"
+                                       step="10"
+                                       min="0"
+                                       class="form-control"
+                                       placeholder="0" />
+                                <span class="input-group-text">لتر</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ─── الموقع ─── -->
+            <div class="form-section">
+                <div class="form-section-header"
+                     style="background:linear-gradient(135deg,#38A169,#48BB78)">
+                    <i class="fas fa-map-marker-alt"></i>
+                    الموقع
+                </div>
+                <div class="form-section-body">
+                    <div class="row g-3">
+
+                        <!-- المنطقة -->
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                المنطقة
+                                <span class="optional-tag">(اختياري)</span>
+                            </label>
+                            <input asp-for="Area"
+                                   class="form-control"
+                                   placeholder="مثال: الكرادة، الجادرية، الزيونة" />
+                        </div>
+
+                        <!-- الموقع التفصيلي -->
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                الموقع التفصيلي
+                                <span class="optional-tag">(اختياري)</span>
+                            </label>
+                            <input asp-for="Location"
+                                   class="form-control"
+                                   placeholder="العنوان التفصيلي" />
+                        </div>
+
+                        <!-- خط الطول -->
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                خط الطول (Longitude)
+                                <span class="optional-tag">(اختياري)</span>
+                            </label>
+                            <input asp-for="Longitude"
+                                   type="number"
+                                   step="0.000001"
+                                   class="form-control"
+                                   placeholder="44.361488" />
+                        </div>
+
+                        <!-- خط العرض -->
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                خط العرض (Latitude)
+                                <span class="optional-tag">(اختياري)</span>
+                            </label>
+                            <input asp-for="Latitude"
+                                   type="number"
+                                   step="0.000001"
+                                   class="form-control"
+                                   placeholder="33.312805" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ─── الصيانة ─── -->
+            <div class="form-section">
+                <div class="form-section-header"
+                     style="background:linear-gradient(135deg,#3182CE,#63B3ED)">
+                    <i class="fas fa-tools"></i>
+                    بيانات الصيانة
+                </div>
+                <div class="form-section-body">
+                    <div class="row g-3">
+
+                        <!-- آخر صيانة -->
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                آخر صيانة
+                                <span class="optional-tag">(اختياري)</span>
+                            </label>
+                            <input asp-for="LastMaintenanceDate"
+                                   type="date"
+                                   class="form-control" />
+                        </div>
+
+                        <!-- الصيانة القادمة -->
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                الصيانة القادمة
+                                <span class="optional-tag">(اختياري)</span>
+                            </label>
+                            <input asp-for="NextMaintenanceDate"
+                                   type="date"
+                                   class="form-control" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ─── الملاحظات ─── -->
+            <div class="form-section">
+                <div class="form-section-header"
+                     style="background:linear-gradient(135deg,#718096,#A0AEC0)">
+                    <i class="fas fa-sticky-note"></i>
+                    ملاحظات
+                </div>
+                <div class="form-section-body">
+                    <textarea asp-for="Notes"
+                              class="form-control"
+                              rows="3"
+                              placeholder="أي ملاحظات إضافية حول المولد...">
+                    </textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ LEFT COLUMN (4) ═══ -->
+        <div class="col-lg-4">
+
+            <!-- ─── حالة المولد ─── -->
+            <div class="form-section">
+                <div class="form-section-header"
+                     style="background:linear-gradient(135deg,#5A67D8,#7886E0)">
+                    <i class="fas fa-toggle-on"></i>
+                    حالة المولد
+                </div>
+                <div class="form-section-body">
+                    <div class="status-selector">
+                        <div class="status-option selected"
+                             data-value="1" onclick="selectStatus(this)">
+                            <i class="fas fa-check-circle"
+                               style="color:#48BB78"></i>
+                            يعمل
+                        </div>
+                        <div class="status-option"
+                             data-value="2" onclick="selectStatus(this)">
+                            <i class="fas fa-stop-circle"
+                               style="color:#718096"></i>
+                            متوقف
+                        </div>
+                        <div class="status-option"
+                             data-value="3" onclick="selectStatus(this)">
+                            <i class="fas fa-tools"
+                               style="color:#F6AD55"></i>
+                            صيانة
+                        </div>
+                        <div class="status-option"
+                             data-value="4" onclick="selectStatus(this)">
+                            <i class="fas fa-exclamation-triangle"
+                               style="color:#FC8181"></i>
+                            عطل
+                        </div>
+                        <div class="status-option"
+                             data-value="5" onclick="selectStatus(this)">
+                            <i class="fas fa-pause-circle"
+                               style="color:#63B3ED"></i>
+                            احتياط
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ─── ملخص المواصفات ─── -->
+            <div class="form-section">
+                <div class="form-section-header"
+                     style="background:linear-gradient(135deg,#805AD5,#9F7AEA)">
+                    <i class="fas fa-info-circle"></i>
+                    ملخص المواصفات
+                </div>
+                <div class="form-section-body">
+                    <div class="d-flex flex-column gap-2" id="specsSummary">
+                        <div class="d-flex justify-content-between
+                                    align-items-center p-2 bg-light rounded">
+                            <span class="small text-muted">رقم المولد</span>
+                            <strong class="small">@ViewBag.NewNumber</strong>
+                        </div>
+                        <div class="d-flex justify-content-between
+                                    align-items-center p-2 bg-light rounded">
+                            <span class="small text-muted">القدرة</span>
+                            <strong class="small" id="sumPower">—</strong>
+                        </div>
+                        <div class="d-flex justify-content-between
+                                    align-items-center p-2 bg-light rounded">
+                            <span class="small text-muted">الأمبير الأقصى</span>
+                            <strong class="small" id="sumAmpere">—</strong>
+                        </div>
+                        <div class="d-flex justify-content-between
+                                    align-items-center p-2 bg-light rounded">
+                            <span class="small text-muted">سعة الخزان</span>
+                            <strong class="small" id="sumTank">—</strong>
+                        </div>
+                        <div class="d-flex justify-content-between
+                                    align-items-center p-2 bg-light rounded">
+                            <span class="small text-muted">نوع الوقود</span>
+                            <strong class="small" id="sumFuel">ديزل</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ─── أزرار الحفظ ─── -->
+            <div class="save-panel">
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary btn-lg"
+                            id="saveBtn">
+                        <i class="fas fa-save me-2"></i>حفظ المولد
+                    </button>
+                    <a href="@Url.Action("Index", "Generators")"
+                       class="btn btn-outline-secondary">
+                        <i class="fas fa-times me-2"></i>إلغاء
+                    </a>
+                </div>
+                <div class="text-center mt-3">
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        الحقل الوحيد المطلوب هو اسم المولد
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+
+            // ═══════════════════════════════════════════════
+            //  🎯 نظام Validation احترافي
+            // ═══════════════════════════════════════════════
+
+            const form = document.getElementById('createForm');
+            const saveBtn = document.getElementById('saveBtn');
+
+            // ─── تعريف قواعد التحقق ───
+            const validationRules = {
+                'Name': {
+                    required: true,
+                    minLength: 2,
+                    maxLength: 100,
+                    label: 'اسم المولد',
+                    section: 'البيانات الأساسية'
+                },
+                'ManufactureYear': {
+                    required: false,
+                    min: 1990,
+                    max: new Date().getFullYear() + 1,
+                    label: 'سنة الصنع',
+                    section: 'البيانات الأساسية'
+                },
+                'MaintenanceIntervalHours': {
+                    required: false,
+                    min: 50,
+                    max: 10000,
+                    label: 'فترة الصيانة',
+                    section: 'البيانات الأساسية'
+                },
+                'PowerKVA': {
+                    required: false,
+                    min: 0,
+                    max: 5000,
+                    label: 'القدرة (KVA)',
+                    section: 'المواصفات التقنية'
+                },
+                'PowerKW': {
+                    required: false,
+                    min: 0,
+                    max: 5000,
+                    label: 'القدرة (KW)',
+                    section: 'المواصفات التقنية'
+                },
+                'MaxAmpere': {
+                    required: false,
+                    min: 0,
+                    max: 10000,
+                    label: 'الحد الأقصى للأمبير',
+                    section: 'المواصفات التقنية'
+                },
+                'Voltage': {
+                    required: false,
+                    min: 0,
+                    max: 1000,
+                    label: 'الجهد الكهربائي',
+                    section: 'المواصفات التقنية'
+                },
+                'Frequency': {
+                    required: false,
+                    min: 0,
+                    max: 100,
+                    label: 'التردد',
+                    section: 'المواصفات التقنية'
+                },
+                'FuelTankCapacity': {
+                    required: false,
+                    min: 0,
+                    max: 100000,
+                    label: 'سعة خزان الوقود',
+                    section: 'بيانات الوقود'
+                },
+                'CurrentFuelLevel': {
+                    required: false,
+                    min: 0,
+                    label: 'مستوى الوقود الحالي',
+                    section: 'بيانات الوقود',
+                    customValidation: function (value, form) {
+                        const capacity = parseFloat(form.querySelector('[name="FuelTankCapacity"]')?.value || 0);
+                        if (capacity > 0 && parseFloat(value) > capacity) {
+                            return `لا يمكن أن يتجاوز مستوى الوقود سعة الخزان (${capacity} لتر)`;
+                        }
+                        return null;
+                    }
+                },
+                'Longitude': {
+                    required: false,
+                    min: -180,
+                    max: 180,
+                    label: 'خط الطول',
+                    section: 'الموقع'
+                },
+                'Latitude': {
+                    required: false,
+                    min: -90,
+                    max: 90,
+                    label: 'خط العرض',
+                    section: 'الموقع'
+                }
+            };
+
+            // ─── دالة التحقق من حقل واحد ───
+            function validateField(fieldName) {
+                const field = form.querySelector('[name="' + fieldName + '"]');
+                if (!field) return { valid: true };
+
+                const rule = validationRules[fieldName];
+                if (!rule) return { valid: true };
+
+                const value = field.value.trim();
+
+                // 1. التحقق من المطلوب
+                if (rule.required && !value) {
+                    return {
+                        valid: false,
+                        message: `${rule.label} مطلوب`,
+                        field: field,
+                        section: rule.section
+                    };
+                }
+
+                // إذا كان الحقل فارغ وليس مطلوب، اعتبره صحيح
+                if (!value) return { valid: true, field: field };
+
+                // 2. التحقق من الطول
+                if (rule.minLength && value.length < rule.minLength) {
+                    return {
+                        valid: false,
+                        message: `${rule.label} يجب ألا يقل عن ${rule.minLength} أحرف`,
+                        field: field,
+                        section: rule.section
+                    };
+                }
+
+                if (rule.maxLength && value.length > rule.maxLength) {
+                    return {
+                        valid: false,
+                        message: `${rule.label} يجب ألا يتجاوز ${rule.maxLength} حرف`,
+                        field: field,
+                        section: rule.section
+                    };
+                }
+
+                // 3. التحقق من القيم الرقمية
+                if (rule.min !== undefined || rule.max !== undefined) {
+                    const numValue = parseFloat(value);
+                    if (isNaN(numValue)) {
+                        return {
+                            valid: false,
+                            message: `${rule.label} يجب أن يكون رقماً صحيحاً`,
+                            field: field,
+                            section: rule.section
+                        };
+                    }
+                    if (rule.min !== undefined && numValue < rule.min) {
+                        return {
+                            valid: false,
+                            message: `${rule.label} يجب ألا يقل عن ${rule.min}`,
+                            field: field,
+                            section: rule.section
+                        };
+                    }
+                    if (rule.max !== undefined && numValue > rule.max) {
+                        return {
+                            valid: false,
+                            message: `${rule.label} يجب ألا يتجاوز ${rule.max}`,
+                            field: field,
+                            section: rule.section
+                        };
+                    }
+                }
+
+                // 4. التحقق المخصص
+                if (rule.customValidation) {
+                    const customError = rule.customValidation(value, form);
+                    if (customError) {
+                        return {
+                            valid: false,
+                            message: customError,
+                            field: field,
+                            section: rule.section
+                        };
+                    }
+                }
+
+                return { valid: true, field: field };
+            }
+
+            // ─── عرض خطأ الحقل ───
+            function showFieldError(field, message) {
+                if (!field) return;
+
+                // إضافة الكلاس
+                field.classList.remove('is-valid', 'field-success');
+                field.classList.add('is-invalid', 'field-error');
+
+                // إزالة أي رسالة سابقة
+                const existingError = field.parentElement.querySelector('.field-error-message');
+                if (existingError) existingError.remove();
+
+                // البحث عن أقرب wrapper مناسب
+                let container = field.parentElement;
+                if (container.classList.contains('input-group')) {
+                    container = container.parentElement;
+                }
+
+                // إضافة رسالة الخطأ
+                const errorSpan = document.createElement('span');
+                errorSpan.className = 'field-error-message';
+                errorSpan.textContent = message;
+                container.appendChild(errorSpan);
+
+                // تظليل القسم
+                const section = field.closest('.form-section');
+                if (section) section.classList.add('has-errors');
+            }
+
+            // ─── إخفاء خطأ الحقل ───
+            function clearFieldError(field) {
+                if (!field) return;
+
+                field.classList.remove('is-invalid', 'field-error');
+                if (field.value.trim()) {
+                    field.classList.add('is-valid', 'field-success');
+                }
+
+                // إزالة رسالة الخطأ
+                let container = field.parentElement;
+                if (container.classList.contains('input-group')) {
+                    container = container.parentElement;
+                }
+                const errorMsg = container.querySelector('.field-error-message');
+                if (errorMsg) errorMsg.remove();
+
+                // إزالة تظليل القسم إذا لم يعد فيه أخطاء
+                const section = field.closest('.form-section');
+                if (section) {
+                    const remainingErrors = section.querySelectorAll('.field-error-message');
+                    if (remainingErrors.length === 0) {
+                        section.classList.remove('has-errors');
+                    }
+                }
+            }
+
+            // ─── التحقق من جميع الحقول ───
+            function validateAllFields() {
+                const errors = [];
+                Object.keys(validationRules).forEach(function (fieldName) {
+                    const result = validateField(fieldName);
+                    if (!result.valid) {
+                        errors.push(result);
+                        showFieldError(result.field, result.message);
+                    } else if (result.field) {
+                        clearFieldError(result.field);
+                    }
+                });
+                return errors;
+            }
+
+            // ─── عرض ملخص الأخطاء في الأعلى ───
+            function showErrorSummary(errors) {
+                // إزالة الملخص السابق
+                const existingSummary = document.getElementById('validationSummary');
+                if (existingSummary) existingSummary.remove();
+
+                if (errors.length === 0) return;
+
+                // إنشاء صندوق الملخص
+                const summary = document.createElement('div');
+                summary.id = 'validationSummary';
+                summary.className = 'validation-summary-box';
+                summary.innerHTML = `
+                    <h6>
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        يوجد ${errors.length} خطأ يجب تصحيحه:
+                    </h6>
+                    <div class="errors-list">
+                        ${errors.map((err, i) => `
+                            <div class="error-item" data-field="${err.field.name}">
+                                <span class="badge">${i + 1}</span>
+                                <div class="flex-grow-1">
+                                    <strong>${err.section}:</strong>
+                                    ${err.message}
+                                </div>
+                                <i class="fas fa-arrow-left text-danger"></i>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="mt-3 small text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        اضغط على أي خطأ للانتقال إلى الحقل مباشرة
+                    </div>
+                `;
+
+                // إضافة الملخص في أعلى الفورم
+                form.insertBefore(summary, form.firstChild);
+
+                // ربط النقر على الأخطاء
+                summary.querySelectorAll('.error-item').forEach(function (item) {
+                    item.addEventListener('click', function () {
+                        const fieldName = this.dataset.field;
+                        const field = form.querySelector('[name="' + fieldName + '"]');
+                        if (field) {
+                            field.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            setTimeout(() => field.focus(), 300);
+                        }
+                    });
+                });
+
+                // Scroll للأعلى
+                summary.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+
+            // ═══════════════════════════════════════════════
+            //  🎯 ربط الأحداث
+            // ═══════════════════════════════════════════════
+
+            // ─── التحقق أثناء الكتابة (Real-time) ───
+            Object.keys(validationRules).forEach(function (fieldName) {
+                const field = form.querySelector('[name="' + fieldName + '"]');
+                if (!field) return;
+
+                // عند الخروج من الحقل
+                field.addEventListener('blur', function () {
+                    const result = validateField(fieldName);
+                    if (!result.valid) {
+                        showFieldError(result.field, result.message);
+                    } else {
+                        clearFieldError(result.field);
+                    }
+                });
+
+                // عند الكتابة (لإخفاء الخطأ فور التصحيح)
+                field.addEventListener('input', function () {
+                    if (field.classList.contains('is-invalid')) {
+                        const result = validateField(fieldName);
+                        if (result.valid) {
+                            clearFieldError(result.field);
+                        }
+                    }
+                });
+            });
+
+            // ═══════════════════════════════════════════════
+            //  🎯 عند الضغط على "حفظ"
+            // ═══════════════════════════════════════════════
+
+            form.addEventListener('submit', function (e) {
+                const errors = validateAllFields();
+
+                if (errors.length > 0) {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    // عرض ملخص الأخطاء
+                    showErrorSummary(errors);
+
+                    // Scroll للحقل الأول المشكل
+                    setTimeout(function () {
+                        errors[0].field.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        errors[0].field.focus();
+                    }, 500);
+
+                    // إشعار SweetAlert
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'يوجد أخطاء في النموذج',
+                        html: `يرجى تصحيح <strong>${errors.length}</strong> ${errors.length === 1 ? 'خطأ' : 'أخطاء'} قبل الحفظ`,
+                        confirmButtonColor: '#dc3545',
+                        confirmButtonText: 'حسناً، سأصحّح',
+                        customClass: { popup: 'swal2-rtl' },
+                        timer: 3000,
+                        timerProgressBar: true
+                    });
+
+                    return false;
+                }
+
+                // ✅ لا أخطاء - فعّل حالة التحميل
+                if (saveBtn) {
+                    setTimeout(function () {
+                        saveBtn.innerHTML =
+                            '<span class="spinner-border spinner-border-sm me-2"></span>جارِ الحفظ...';
+                        saveBtn.disabled = true;
+                    }, 10);
+                }
+
+                return true;
+            });
+
+            // ═══════════════════════════════════════════════
+            //  🎯 الـ Selectors السابقة (Status & Fuel)
+            // ═══════════════════════════════════════════════
+
+            window.selectStatus = function (el) {
+                document.querySelectorAll('.status-option')
+                    .forEach(o => o.classList.remove('selected'));
+                el.classList.add('selected');
+                document.getElementById('hiddenStatus').value = el.dataset.value;
+            };
+
+            const fuelLabels = {
+                '1': 'ديزل', '2': 'بنزين',
+                '3': 'غاز', '4': 'ثنائي الوقود'
+            };
+
+            window.selectFuel = function (el) {
+                document.querySelectorAll('.fuel-option')
+                    .forEach(o => o.classList.remove('selected'));
+                el.classList.add('selected');
+                document.getElementById('hiddenFuelType').value = el.dataset.value;
+                const sumFuelEl = document.getElementById('sumFuel');
+                if (sumFuelEl) {
+                    sumFuelEl.textContent = fuelLabels[el.dataset.value] || '—';
+                }
+            };
+
+            // ═══════════════════════════════════════════════
+            //  🎯 تحديث الملخص
+            // ═══════════════════════════════════════════════
+
+            function updateSummary() {
+                const kva = form.querySelector('[name="PowerKVA"]')?.value;
+                const ampere = form.querySelector('[name="MaxAmpere"]')?.value;
+                const tank = form.querySelector('[name="FuelTankCapacity"]')?.value;
+
+                const sumPower = document.getElementById('sumPower');
+                const sumAmpere = document.getElementById('sumAmpere');
+                const sumTank = document.getElementById('sumTank');
+
+                if (sumPower) sumPower.textContent = kva ? kva + ' KVA' : '—';
+                if (sumAmpere) sumAmpere.textContent = ampere ? ampere + ' A' : '—';
+                if (sumTank) sumTank.textContent = tank ? tank + ' لتر' : '—';
+            }
+
+            ['PowerKVA', 'MaxAmpere', 'FuelTankCapacity'].forEach(function (name) {
+                const el = form.querySelector('[name="' + name + '"]');
+                if (el) el.addEventListener('input', updateSummary);
+            });
+
+            // KVA → KW Auto Calculate
+            const kvaField = form.querySelector('[name="PowerKVA"]');
+            if (kvaField) {
+                kvaField.addEventListener('input', function () {
+                    const kva = parseFloat(this.value);
+                    if (!isNaN(kva)) {
+                        const kw = (kva * 0.8).toFixed(1);
+                        const kwEl = form.querySelector('[name="PowerKW"]');
+                        if (kwEl && !kwEl.value) kwEl.value = kw;
+                    }
+                    updateSummary();
+                });
+            }
+
+        });
+    </script>
+}

@@ -1,0 +1,449 @@
+﻿@model List<GeneratorsManagementSystem.Services.InvoiceAlert>
+@{
+    ViewData["Title"] = "تنبيهات الفواتير";
+}
+
+@section Styles {
+    <style>
+        .alert-card {
+            border-radius: 16px;
+            border: none;
+            padding: 20px;
+            margin-bottom: 12px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            border-right: 5px solid;
+        }
+
+            .alert-card:hover {
+                transform: translateX(-5px);
+                box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            }
+
+            .alert-card.overdue {
+                background: linear-gradient(135deg, #FFF5F5, #FED7D7);
+                border-color: #dc3545;
+            }
+
+            .alert-card.today {
+                background: linear-gradient(135deg, #FFFAF0, #FEEBC8);
+                border-color: #F6AD55;
+            }
+
+            .alert-card.upcoming {
+                background: linear-gradient(135deg, #EBF4FF, #BEE3F8);
+                border-color: #4299E1;
+            }
+
+        .alert-icon-large {
+            width: 60px;
+            height: 60px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+            flex-shrink: 0;
+        }
+
+            .alert-icon-large.overdue {
+                background: #dc3545;
+            }
+
+            .alert-icon-large.today {
+                background: #F6AD55;
+            }
+
+            .alert-icon-large.upcoming {
+                background: #4299E1;
+            }
+
+        .amount-big {
+            font-size: 1.5rem;
+            font-weight: 900;
+            direction: ltr;
+            display: inline-block;
+        }
+
+        .en-numbers {
+            direction: ltr;
+            display: inline-block;
+            font-feature-settings: "tnum";
+        }
+
+        .filter-tab {
+            padding: 12px 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+            background: white;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+            .filter-tab:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            }
+
+            .filter-tab.active {
+                border-color: #5A67D8;
+                background: #EBF4FF;
+            }
+
+            .filter-tab .badge-count {
+                padding: 4px 10px;
+                border-radius: 12px;
+                font-weight: 700;
+                font-size: 0.85rem;
+            }
+    </style>
+}
+
+<!-- HEADER -->
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <div>
+        <h4 class="fw-800 mb-1">
+            <i class="fas fa-bell text-danger me-2"></i>
+            تنبيهات الفواتير
+        </h4>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0 small">
+                <li class="breadcrumb-item">
+                    <a href="@Url.Action("Index", "Dashboard")"><i class="fas fa-home"></i></a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a href="@Url.Action("Index")">الفواتير</a>
+                </li>
+                <li class="breadcrumb-item active">التنبيهات</li>
+            </ol>
+        </nav>
+    </div>
+    <a href="@Url.Action("Index")" class="btn btn-outline-primary">
+        <i class="fas fa-list me-2"></i>كل الفواتير
+    </a>
+</div>
+
+<!-- SUMMARY -->
+@{
+    var overdueList = Model.Where(a => a.AlertType == "overdue").ToList();
+    var todayList = Model.Where(a => a.AlertType == "today").ToList();
+    var upcomingList = Model.Where(a => a.AlertType == "upcoming").ToList();
+    var totalDue = Model.Sum(a => a.RemainingAmount);
+}
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="filter-tab active" data-filter="all">
+            <div class="alert-icon-large" style="background: #5A67D8;">
+                <i class="fas fa-list"></i>
+            </div>
+            <div class="flex-grow-1">
+                <small class="text-muted d-block">إجمالي التنبيهات</small>
+                <div class="d-flex justify-content-between align-items-center">
+                    <h4 class="fw-900 mb-0 en-numbers">@Model.Count</h4>
+                    <span class="badge-count bg-primary text-white">@Model.Count</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="filter-tab" data-filter="overdue">
+            <div class="alert-icon-large overdue">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="flex-grow-1">
+                <small class="text-muted d-block">متأخرة</small>
+                <div class="d-flex justify-content-between align-items-center">
+                    <h4 class="fw-900 mb-0 text-danger en-numbers">@overdueList.Count</h4>
+                    <span class="badge-count bg-danger text-white">@overdueList.Count</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="filter-tab" data-filter="today">
+            <div class="alert-icon-large today">
+                <i class="fas fa-bell"></i>
+            </div>
+            <div class="flex-grow-1">
+                <small class="text-muted d-block">تستحق اليوم/قريباً</small>
+                <div class="d-flex justify-content-between align-items-center">
+                    <h4 class="fw-900 mb-0 text-warning en-numbers">@todayList.Count</h4>
+                    <span class="badge-count bg-warning text-white">@todayList.Count</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="filter-tab" data-filter="upcoming">
+            <div class="alert-icon-large upcoming">
+                <i class="fas fa-calendar-alt"></i>
+            </div>
+            <div class="flex-grow-1">
+                <small class="text-muted d-block">قادمة</small>
+                <div class="d-flex justify-content-between align-items-center">
+                    <h4 class="fw-900 mb-0 text-info en-numbers">@upcomingList.Count</h4>
+                    <span class="badge-count bg-info text-white">@upcomingList.Count</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- إجمالي المبالغ -->
+<div class="alert alert-warning shadow-sm mb-4">
+    <div class="d-flex align-items-center gap-3">
+        <i class="fas fa-money-bill-wave fa-2x text-warning"></i>
+        <div class="flex-grow-1">
+            <strong>إجمالي المبالغ المستحقة:</strong>
+            <div class="amount-big text-danger en-numbers">
+                @totalDue.ToString("N0") <small class="fs-6">د.ع</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ALERTS LIST -->
+<div id="alertsContainer">
+    @if (Model.Any())
+    {
+        <!-- المتأخرة أولاً -->
+        @if (overdueList.Any())
+        {
+            <h5 class="fw-bold text-danger mt-4 mb-3">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                فواتير متأخرة (<span class="en-numbers">@overdueList.Count</span>)
+            </h5>
+            @foreach (var alert in overdueList)
+            {
+                <div class="alert-card overdue alert-item" data-type="overdue">
+                    <div class="alert-icon-large overdue">
+                        <i class="fas @alert.AlertIcon"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                            <div>
+                                <h6 class="fw-bold mb-1">@alert.SubscriberName</h6>
+                                <div class="d-flex flex-wrap gap-2 small">
+                                    <span class="badge bg-white text-primary font-monospace en-numbers">
+                                        @alert.InvoiceNumber
+                                    </span>
+                                    @if (!string.IsNullOrEmpty(alert.SubscriberPhone))
+                                    {
+                                        <a href="tel:@alert.SubscriberPhone"
+                                           class="badge bg-white text-success text-decoration-none">
+                                            <i class="fas fa-phone me-1"></i>
+                                            <span dir="ltr" class="en-numbers">@alert.SubscriberPhone</span>
+                                        </a>
+                                    }
+                                </div>
+                                <div class="mt-2 text-danger fw-bold">
+                                    <i class="fas fa-calendar-times me-1"></i>
+                                    @alert.AlertMessage
+                                    <small class="text-muted">
+                                        (استحقاق: <span class="en-numbers">@alert.DueDate.ToString("yyyy/MM/dd")</span>)
+                                    </small>
+                                </div>
+                            </div>
+                            <div class="text-end">
+                                <div class="amount-big text-danger en-numbers">
+                                    @alert.RemainingAmount.ToString("N0")
+                                </div>
+                                <small class="text-muted">د.ع مستحق</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <a href="@Url.Action("Details", new { id = alert.InvoiceId })"
+                           class="btn btn-danger">
+                            <i class="fas fa-eye me-1"></i>عرض
+                        </a>
+                    </div>
+                </div>
+            }
+        }
+
+        <!-- تستحق اليوم/قريباً -->
+        @if (todayList.Any())
+        {
+            <h5 class="fw-bold text-warning mt-4 mb-3">
+                <i class="fas fa-bell me-2"></i>
+                تستحق اليوم أو خلال يومين (<span class="en-numbers">@todayList.Count</span>)
+            </h5>
+            @foreach (var alert in todayList)
+            {
+                <div class="alert-card today alert-item" data-type="today">
+                    <div class="alert-icon-large today">
+                        <i class="fas @alert.AlertIcon"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                            <div>
+                                <h6 class="fw-bold mb-1">@alert.SubscriberName</h6>
+                                <div class="d-flex flex-wrap gap-2 small">
+                                    <span class="badge bg-white text-primary font-monospace en-numbers">
+                                        @alert.InvoiceNumber
+                                    </span>
+                                    @if (!string.IsNullOrEmpty(alert.SubscriberPhone))
+                                    {
+                                        <a href="tel:@alert.SubscriberPhone"
+                                           class="badge bg-white text-success text-decoration-none">
+                                            <i class="fas fa-phone me-1"></i>
+                                            <span dir="ltr" class="en-numbers">@alert.SubscriberPhone</span>
+                                        </a>
+                                    }
+                                </div>
+                                <div class="mt-2 text-warning fw-bold">
+                                    <i class="fas fa-clock me-1"></i>
+                                    @alert.AlertMessage
+                                    <small class="text-muted">
+                                        (<span class="en-numbers">@alert.DueDate.ToString("yyyy/MM/dd")</span>)
+                                    </small>
+                                </div>
+                            </div>
+                            <div class="text-end">
+                                <div class="amount-big text-warning en-numbers">
+                                    @alert.RemainingAmount.ToString("N0")
+                                </div>
+                                <small class="text-muted">د.ع</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <a href="@Url.Action("Details", new { id = alert.InvoiceId })"
+                           class="btn btn-warning">
+                            <i class="fas fa-eye me-1"></i>عرض
+                        </a>
+                    </div>
+                </div>
+            }
+        }
+
+        <!-- قادمة -->
+        @if (upcomingList.Any())
+        {
+            <h5 class="fw-bold text-info mt-4 mb-3">
+                <i class="fas fa-calendar-alt me-2"></i>
+                قادمة (<span class="en-numbers">@upcomingList.Count</span>)
+            </h5>
+            @foreach (var alert in upcomingList)
+            {
+                <div class="alert-card upcoming alert-item" data-type="upcoming">
+                    <div class="alert-icon-large upcoming">
+                        <i class="fas @alert.AlertIcon"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                            <div>
+                                <h6 class="fw-bold mb-1">@alert.SubscriberName</h6>
+                                <div class="d-flex flex-wrap gap-2 small">
+                                    <span class="badge bg-white text-primary font-monospace en-numbers">
+                                        @alert.InvoiceNumber
+                                    </span>
+                                    @if (!string.IsNullOrEmpty(alert.SubscriberPhone))
+                                    {
+                                        <a href="tel:@alert.SubscriberPhone"
+                                           class="badge bg-white text-success text-decoration-none">
+                                            <i class="fas fa-phone me-1"></i>
+                                            <span dir="ltr" class="en-numbers">@alert.SubscriberPhone</span>
+                                        </a>
+                                    }
+                                </div>
+                                <div class="mt-2 text-info fw-bold">
+                                    <i class="fas fa-calendar-alt me-1"></i>
+                                    @alert.AlertMessage
+                                    <small class="text-muted">
+                                        (<span class="en-numbers">@alert.DueDate.ToString("yyyy/MM/dd")</span>)
+                                    </small>
+                                </div>
+                            </div>
+                            <div class="text-end">
+                                <div class="amount-big text-info en-numbers">
+                                    @alert.RemainingAmount.ToString("N0")
+                                </div>
+                                <small class="text-muted">د.ع</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <a href="@Url.Action("Details", new { id = alert.InvoiceId })"
+                           class="btn btn-info text-white">
+                            <i class="fas fa-eye me-1"></i>عرض
+                        </a>
+                    </div>
+                </div>
+            }
+        }
+    }
+    else
+    {
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-check-circle fa-5x text-success mb-3"></i>
+                <h4 class="fw-bold text-success">ممتاز! لا توجد تنبيهات</h4>
+                <p class="text-muted mb-0">جميع الفواتير مسدّدة أو ما زال هناك وقت كافٍ للاستحقاق</p>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // فلاتر
+            document.querySelectorAll('.filter-tab').forEach(function (tab) {
+                tab.addEventListener('click', function () {
+                    // إزالة active من الكل
+                    document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+                    // إضافة active للحالي
+                    this.classList.add('active');
+
+                    const filter = this.getAttribute('data-filter');
+
+                    // إظهار/إخفاء
+                    document.querySelectorAll('.alert-item').forEach(function (item) {
+                        if (filter === 'all' || item.getAttribute('data-type') === filter) {
+                            item.style.display = 'flex';
+                        } else {
+                            item.style.display = 'none';
+                        }
+                    });
+
+                    // إخفاء العناوين إذا لم يكن هناك عناصر
+                    document.querySelectorAll('h5').forEach(function (h) {
+                        const nextItem = h.nextElementSibling;
+                        if (nextItem && nextItem.classList.contains('alert-item')) {
+                            const visible = Array.from(h.parentElement.querySelectorAll('.alert-item'))
+                                .some(item => item.style.display !== 'none' &&
+                                    (filter === 'all' || item.getAttribute('data-type') === filter));
+
+                            // إخفاء العنوان إذا كل العناصر مخفية
+                            if (filter !== 'all') {
+                                const type = filter;
+                                const items = h.parentElement.querySelectorAll(`[data-type="${type}"]`);
+                                let hasType = false;
+                                let current = h.nextElementSibling;
+                                while (current && current.classList.contains('alert-item')) {
+                                    if (current.getAttribute('data-type') === type) {
+                                        hasType = true;
+                                        break;
+                                    }
+                                    current = current.nextElementSibling;
+                                }
+                                h.style.display = hasType ? '' : 'none';
+                            } else {
+                                h.style.display = '';
+                            }
+                        }
+                    });
+                });
+            });
+        });
+    </script>
+}

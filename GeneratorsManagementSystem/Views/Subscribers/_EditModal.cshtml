@@ -1,0 +1,169 @@
+﻿@model GeneratorsManagementSystem.Models.Subscriber
+
+<form id="subscriberForm" asp-action="Edit" method="post">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="Id" />
+    <input type="hidden" asp-for="SubscriberNumber" />
+    <input type="hidden" asp-for="CreatedAt" />
+    <input type="hidden" asp-for="CreatedBy" />
+
+    <!-- ═══ HEADER ═══ -->
+    <div class="modal-header text-white py-3"
+         style="background:linear-gradient(135deg,#38A169,#48BB78)">
+        <div class="d-flex align-items-center gap-3 flex-grow-1">
+            <div class="bg-white bg-opacity-25 rounded-circle p-2 d-flex align-items-center justify-content-center"
+                 style="width:50px;height:50px">
+                <i class="fas fa-user-edit fa-lg"></i>
+            </div>
+            <div>
+                <h5 class="modal-title fw-800 mb-0">تعديل بيانات المشترك</h5>
+                <small class="opacity-75">
+                    <i class="fas fa-hashtag me-1"></i>
+                    <span class="font-monospace">@Model.SubscriberNumber</span>
+                </small>
+            </div>
+        </div>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+    </div>
+
+    <!-- ═══ BODY ═══ -->
+    <div class="modal-body p-4" style="max-height:70vh;overflow-y:auto">
+
+        <!-- ─── البيانات الشخصية ─── -->
+        <div class="mb-4">
+            <div class="d-flex align-items-center gap-2 py-2 px-3 rounded-top text-white fw-bold"
+                 style="background:linear-gradient(135deg,#5A67D8,#7886E0)">
+                <i class="fas fa-user"></i>
+                <span>البيانات الشخصية</span>
+            </div>
+            <div class="p-3 border border-top-0 rounded-bottom bg-white">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">
+                            اسم المشترك <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light">
+                                <i class="fas fa-user text-primary"></i>
+                            </span>
+                            <input asp-for="FullName" class="form-control" autofocus />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">رقم الهوية</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light">
+                                <i class="fas fa-id-card text-info"></i>
+                            </span>
+                            <input asp-for="IdNumber" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">رقم الهاتف</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light">
+                                <i class="fas fa-phone text-success"></i>
+                            </span>
+                            <input asp-for="Phone" class="form-control" dir="ltr" />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">رقم الهاتف 2</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light">
+                                <i class="fas fa-phone-alt text-success"></i>
+                            </span>
+                            <input asp-for="Phone2" class="form-control" dir="ltr" />
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">البريد الإلكتروني</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light">
+                                <i class="fas fa-envelope text-warning"></i>
+                            </span>
+                            <input asp-for="Email" type="email" class="form-control" dir="ltr" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ─── العنوان ─── -->
+        <div class="mb-4">
+            <div class="d-flex align-items-center gap-2 py-2 px-3 rounded-top text-white fw-bold"
+                 style="background:linear-gradient(135deg,#38A169,#48BB78)">
+                <i class="fas fa-map-marker-alt"></i>
+                <span>العنوان</span>
+            </div>
+            <div class="p-3 border border-top-0 rounded-bottom bg-white">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">المنطقة / الحي</label>
+                        <input asp-for="Area" class="form-control" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">الشارع</label>
+                        <input asp-for="Street" class="form-control" />
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">رقم البناية</label>
+                        <input asp-for="BuildingNumber" class="form-control" />
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">الطابق</label>
+                        <input asp-for="Floor" class="form-control" />
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">رقم الشقة</label>
+                        <input asp-for="ApartmentNumber" class="form-control" />
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">ملاحظات العنوان</label>
+                        <textarea asp-for="AddressNotes" class="form-control" rows="2"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ─── الحالة ─── -->
+        <div class="mb-4">
+            <div class="d-flex align-items-center gap-2 py-2 px-3 rounded-top text-white fw-bold"
+                 style="background:linear-gradient(135deg,#D69E2E,#F6AD55)">
+                <i class="fas fa-toggle-on"></i>
+                <span>الحالة</span>
+            </div>
+            <div class="p-3 border border-top-0 rounded-bottom bg-white">
+                <div class="form-check form-switch fs-5">
+                    <input class="form-check-input" type="checkbox" asp-for="IsActive" role="switch" />
+                    <label class="form-check-label fw-bold" asp-for="IsActive">
+                        المشترك نشط
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- ─── ملاحظات ─── -->
+        <div>
+            <div class="d-flex align-items-center gap-2 py-2 px-3 rounded-top text-white fw-bold"
+                 style="background:linear-gradient(135deg,#718096,#A0AEC0)">
+                <i class="fas fa-sticky-note"></i>
+                <span>ملاحظات إضافية</span>
+            </div>
+            <div class="p-3 border border-top-0 rounded-bottom bg-white">
+                <textarea asp-for="Notes" class="form-control" rows="3"></textarea>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ═══ FOOTER ═══ -->
+    <div class="modal-footer bg-light">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+            <i class="fas fa-times me-2"></i>إلغاء
+        </button>
+        <button type="submit" class="btn btn-success btn-lg px-5">
+            <i class="fas fa-save me-2"></i>حفظ التغييرات
+        </button>
+    </div>
+</form>

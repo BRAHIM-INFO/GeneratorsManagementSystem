@@ -1,0 +1,524 @@
+﻿@{
+    ViewData["Title"] = "لوحة الوقود والتشغيل";
+    var dashboard = ViewBag.Dashboard as GeneratorsManagementSystem.Services.FuelDashboard;
+    var generatorStats = ViewBag.GeneratorStats as List<GeneratorsManagementSystem.Services.GeneratorFuelStats>;
+}
+
+@section Styles {
+    <style>
+        .fuel-stat-card {
+            border: none;
+            border-radius: 20px;
+            overflow: hidden;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+            .fuel-stat-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 15px 40px rgba(0,0,0,0.12);
+            }
+
+        .fuel-icon {
+            width: 65px;
+            height: 65px;
+            border-radius: 18px;
+            background: rgba(255,255,255,0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+        }
+
+        .amount-big {
+            font-size: 2.2rem;
+            font-weight: 900;
+            line-height: 1;
+            direction: ltr;
+            display: inline-block;
+            font-feature-settings: "tnum";
+        }
+
+        .en-numbers {
+            direction: ltr;
+            display: inline-block;
+            font-feature-settings: "tnum";
+        }
+
+        .progress-fuel {
+            height: 12px;
+            border-radius: 10px;
+            overflow: hidden;
+            background: rgba(255,255,255,0.2);
+        }
+
+        .source-tile {
+            padding: 20px;
+            border-radius: 15px;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+
+            .source-tile:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+            }
+
+        .gen-fuel-card {
+            border-radius: 12px;
+            padding: 15px;
+            background: white;
+            border: 1px solid #e2e8f0;
+            transition: all 0.2s;
+            margin-bottom: 10px;
+        }
+
+            .gen-fuel-card:hover {
+                border-color: #E53E3E;
+                box-shadow: 0 4px 12px rgba(229,62,62,0.1);
+            }
+
+        .chart-container {
+            position: relative;
+            height: 320px;
+        }
+    </style>
+}
+
+<!-- HEADER -->
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <div>
+        <h4 class="fw-800 mb-1">
+            <i class="fas fa-gas-pump text-danger me-2"></i>
+            الوقود والتشغيل
+        </h4>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0 small">
+                <li class="breadcrumb-item"><a href="@Url.Action("Index", "Dashboard")"><i class="fas fa-home"></i></a></li>
+                <li class="breadcrumb-item active">الوقود</li>
+            </ol>
+        </nav>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+        <a href="@Url.Action("CreateAllocation")" class="btn btn-success" id="btnAddAllocation">
+            <i class="fas fa-plus me-2"></i>حصة جديدة
+        </a>
+        <a href="@Url.Action("CreateConsumption")" class="btn btn-danger" id="btnAddConsumption">
+            <i class="fas fa-tint me-2"></i>تسجيل استهلاك
+        </a>
+        <a href="@Url.Action("Allocations")" class="btn btn-outline-success">
+            <i class="fas fa-list me-2"></i>الحصص
+        </a>
+        <a href="@Url.Action("Consumptions")" class="btn btn-outline-danger">
+            <i class="fas fa-history me-2"></i>الاستهلاك
+        </a>
+    </div>
+</div>
+
+<!-- ═══ Main Stats ═══ -->
+<div class="row g-3 mb-4">
+    <!-- إجمالي المستلم -->
+    <div class="col-lg-3 col-md-6">
+        <div class="fuel-stat-card shadow-sm p-4 text-white"
+             style="background: linear-gradient(135deg, #48BB78, #38A169);">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="fuel-icon">
+                    <i class="fas fa-arrow-down"></i>
+                </div>
+                <span class="badge bg-white text-success fw-bold">مستلم</span>
+            </div>
+            <small class="opacity-75 d-block">إجمالي الوقود المستلم</small>
+            <div class="amount-big text-white">@dashboard?.TotalAllocated.ToString("N0")</div>
+            <small class="opacity-75">لتر</small>
+            <hr class="opacity-25 my-2">
+            <div class="d-flex justify-content-between small">
+                <span class="opacity-75">الشهر</span>
+                <strong class="en-numbers"> لا توجد حصص مسجلة بعد</strong>
+            </div>
+        </div>
+    </div>
+
+    <!-- إجمالي المستهلك -->
+    <div class="col-lg-3 col-md-6">
+        <div class="fuel-stat-card shadow-sm p-4 text-white"
+             style="background: linear-gradient(135deg, #FC8181, #E53E3E);">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="fuel-icon">
+                    <i class="fas fa-fire"></i>
+                </div>
+                <span class="badge bg-white text-danger fw-bold">مستهلك</span>
+            </div>
+            <small class="opacity-75 d-block">إجمالي المستهلك</small>
+            <div class="amount-big text-white">@dashboard?.TotalConsumed.ToString("N0")</div>
+            <small class="opacity-75">لتر</small>
+            <hr class="opacity-25 my-2">
+            <div class="d-flex justify-content-between small">
+                <span class="opacity-75">الشهر</span>
+                <strong class="en-numbers">@dashboard?.MonthConsumption.ToString("N0") لتر</strong>
+            </div>
+        </div>
+    </div>
+     
+    <!-- الرصيد المتبقي -->
+    <div class="col-lg-3 col-md-6">
+        @{
+            var totalAlloc = dashboard?.TotalAllocated ?? 0;
+            var remaining = dashboard?.TotalRemaining ?? 0;
+            var remainingPct = totalAlloc > 0 ? (remaining / totalAlloc * 100) : 0;
+
+            var remainingBg = remaining > 1000
+                        ? "linear-gradient(135deg, #5A67D8, #4C51BF);"
+                        : remaining > 0
+                            ? "linear-gradient(135deg, #F6AD55, #DD6B20);"
+                            : "linear-gradient(135deg, #A0AEC0, #718096);";
+        }
+        <div class="fuel-stat-card shadow-sm p-4 text-white" style="background: @remainingBg">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="fuel-icon">
+                    <i class="fas fa-warehouse"></i>
+                </div>
+                <span class="badge bg-white text-primary fw-bold">متبقي</span>
+            </div>
+            <small class="opacity-75 d-block">الرصيد المتبقي</small>
+            <div class="amount-big text-white">@remaining.ToString("N0")</div>
+            <small class="opacity-75">لتر</small>
+            <hr class="opacity-25 my-2">
+
+            @if (totalAlloc > 0)
+            {
+                <div class="progress-fuel mt-2">
+                    <div class="bg-white" style="width: @remainingPct.ToString("F1")%; height:100%;"></div>
+                </div>
+                <small class="opacity-75 en-numbers d-block mt-1">
+                    @remainingPct.ToString("F1")% متبقي من الإجمالي
+                </small>
+            }
+            else
+            {
+                <small class="opacity-75 d-block mt-2">
+                    <i class="fas fa-info-circle me-1"></i>
+                    لا توجد حصص مسجلة بعد
+                </small>
+            }
+        </div>
+    </div>
+    @* <div class="col-lg-3 col-md-6">
+        @{
+            var remainingBg = dashboard?.TotalRemaining > 1000
+                ? "linear-gradient(135deg, #5A67D8, #4C51BF);"
+                : "linear-gradient(135deg, #F6AD55, #DD6B20);";
+        }
+        <div class="fuel-stat-card shadow-sm p-4 text-white" style="background: @remainingBg">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="fuel-icon">
+                    <i class="fas fa-warehouse"></i>
+                </div>
+                <span class="badge bg-white text-primary fw-bold">متبقي</span>
+            </div>
+            <small class="opacity-75 d-block">الرصيد المتبقي</small>
+            <div class="amount-big text-white">@dashboard?.TotalRemaining.ToString("N0")</div>
+            <small class="opacity-75">لتر</small>
+            <hr class="opacity-25 my-2">
+            <div class="progress-fuel mt-2">
+                <div class="bg-white" style="width: @(100 - (dashboard?.ConsumptionPercentage ?? 0))%; height:100%;"></div>
+            </div>
+            <small class="opacity-75 en-numbers d-block mt-1">
+                @((100 - (dashboard?.ConsumptionPercentage ?? 0)).ToString("F1"))% متبقي
+            </small>
+        </div>
+    </div> *@
+
+    <!-- التكلفة الإجمالية -->
+    <div class="col-lg-3 col-md-6">
+        <div class="fuel-stat-card shadow-sm p-4 text-white"
+             style="background: linear-gradient(135deg, #ED8936, #DD6B20);">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="fuel-icon">
+                    <i class="fas fa-dollar-sign"></i>
+                </div>
+                <span class="badge bg-white text-warning fw-bold">تكلفة</span>
+            </div>
+            <small class="opacity-75 d-block">إجمالي تكلفة الوقود</small>
+            <div class="amount-big text-white">@dashboard?.TotalCost.ToString("N0")</div>
+            <small class="opacity-75">د.ع</small>
+            <hr class="opacity-25 my-2">
+            <div class="d-flex justify-content-between small">
+                <span class="opacity-75">اليوم</span>
+                <strong class="en-numbers">@dashboard?.TodayConsumption.ToString("N0") لتر</strong>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ Sources Breakdown ═══ -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="source-tile bg-success bg-opacity-10">
+            <div class="d-flex align-items-center gap-3">
+                <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center"
+                     style="width:55px;height:55px">
+                    <i class="fas fa-flag fa-lg"></i>
+                </div>
+                <div class="flex-grow-1">
+                    <small class="text-muted d-block">حصة الدولة</small>
+                    <h4 class="fw-900 mb-0 text-success en-numbers">
+                        @dashboard?.GovernmentQuota.ToString("N0")
+                    </h4>
+                    <small class="text-muted">لتر</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="source-tile bg-primary bg-opacity-10">
+            <div class="d-flex align-items-center gap-3">
+                <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center"
+                     style="width:55px;height:55px">
+                    <i class="fas fa-shopping-cart fa-lg"></i>
+                </div>
+                <div class="flex-grow-1">
+                    <small class="text-muted d-block">شراء من السوق</small>
+                    <h4 class="fw-900 mb-0 text-primary en-numbers">
+                        @dashboard?.MarketPurchase.ToString("N0")
+                    </h4>
+                    <small class="text-muted">لتر</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="source-tile bg-info bg-opacity-10">
+            <div class="d-flex align-items-center gap-3">
+                <div class="rounded-circle bg-info text-white d-flex align-items-center justify-content-center"
+                     style="width:55px;height:55px">
+                    <i class="fas fa-gift fa-lg"></i>
+                </div>
+                <div class="flex-grow-1">
+                    <small class="text-muted d-block">تبرعات</small>
+                    <h4 class="fw-900 mb-0 text-info en-numbers">
+                        @dashboard?.Donations.ToString("N0")
+                    </h4>
+                    <small class="text-muted">لتر</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ Charts & Generators ═══ -->
+<div class="row g-3 mb-4">
+    <!-- Chart -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white py-3">
+                <h6 class="mb-0 fw-bold">
+                    <i class="fas fa-chart-pie text-danger me-2"></i>
+                    الاستهلاك حسب نوع الوقود
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <div id="fuelKindChart"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Consumers -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white py-3">
+                <h6 class="mb-0 fw-bold">
+                    <i class="fas fa-bolt text-warning me-2"></i>
+                    استهلاك المولدات
+                </h6>
+            </div>
+            <div class="card-body">
+                @if (generatorStats?.Any(g => g.TotalConsumed > 0) == true)
+                {
+                    @foreach (var gen in generatorStats.Where(g => g.TotalConsumed > 0).Take(5))
+                    {
+                        var maxConsumed = generatorStats.Max(g => g.TotalConsumed);
+                        var pct = maxConsumed > 0 ? (double)(gen.TotalConsumed / maxConsumed * 100) : 0;
+
+                        <div class="gen-fuel-card">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <strong class="d-block">
+                                        <i class="fas fa-bolt text-warning me-1"></i>
+                                        @gen.GeneratorName
+                                    </strong>
+                                    <small class="text-muted font-monospace en-numbers">@gen.GeneratorNumber</small>
+                                </div>
+                                <div class="text-end">
+                                    <strong class="text-danger en-numbers fs-5">
+                                        @gen.TotalConsumed.ToString("N0")
+                                    </strong>
+                                    <small class="text-muted d-block">لتر</small>
+                                </div>
+                            </div>
+                            <div class="progress" style="height: 6px;">
+                                <div class="progress-bar bg-danger"
+                                     style="width: @pct.ToString("F1")%"></div>
+                            </div>
+                            <div class="d-flex justify-content-between mt-2 small text-muted">
+                                <span>
+                                    <i class="fas fa-list me-1"></i>
+                                    <span class="en-numbers">@gen.ConsumptionCount</span> سجل
+                                </span>
+                                @if (gen.LastConsumption.HasValue)
+                                {
+                                    <span>
+                                        <i class="fas fa-clock me-1"></i>
+                                        آخر تعبئة: <span class="en-numbers">@gen.LastConsumption.Value.ToString("yyyy/MM/dd")</span>
+                                    </span>
+                                }
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="text-center py-4">
+                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                        <p class="text-muted mb-0">لا توجد سجلات استهلاك</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="fuelModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg" id="modalContent"></div>
+    </div>
+</div>
+
+<form id="antiForgeryForm">@Html.AntiForgeryToken()</form>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <script>
+        var fuelKindChart = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadFuelKindChart();
+
+            document.getElementById('btnAddAllocation').addEventListener('click', function(e) {
+                e.preventDefault();
+                loadModal('@Url.Action("CreateAllocation")');
+            });
+
+            document.getElementById('btnAddConsumption').addEventListener('click', function(e) {
+                e.preventDefault();
+                loadModal('@Url.Action("CreateConsumption")');
+            });
+        });
+
+        function loadFuelKindChart() {
+            var data = @Html.Raw(Json.Serialize(dashboard?.ConsumptionByFuelKind ?? new Dictionary<string, decimal>()));
+            var labels = Object.keys(data);
+            var values = Object.values(data);
+
+            if (labels.length === 0) {
+                document.querySelector("#fuelKindChart").innerHTML =
+                    '<div class="text-center py-5 text-muted"><i class="fas fa-chart-pie fa-3x mb-3"></i><br>لا توجد بيانات</div>';
+                return;
+            }
+
+            var options = {
+                chart: { type: 'donut', height: 320, fontFamily: 'Cairo' },
+                series: values,
+                labels: labels,
+                colors: ['#E53E3E', '#F6AD55', '#48BB78', '#2D3748'],
+                legend: { position: 'bottom', fontFamily: 'Cairo', fontSize: '13px' },
+                dataLabels: {
+                    enabled: true,
+                    formatter: (val) => val.toFixed(1) + '%'
+                },
+                plotOptions: {
+                    pie: {
+                        donut: {
+                            size: '65%',
+                            labels: {
+                                show: true,
+                                total: {
+                                    show: true,
+                                    label: 'إجمالي',
+                                    fontFamily: 'Cairo',
+                                    formatter: function(w) {
+                                        var total = w.globals.seriesTotals.reduce((a, b) => a + b, 0);
+                                        return total.toLocaleString('en-US') + ' لتر';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                tooltip: {
+                    y: { formatter: (v) => v.toLocaleString('en-US') + ' لتر' }
+                }
+            };
+
+            fuelKindChart = new ApexCharts(document.querySelector("#fuelKindChart"), options);
+            fuelKindChart.render();
+        }
+
+        function loadModal(url) {
+            document.getElementById('modalContent').innerHTML = `
+                        <div class="modal-body text-center py-5">
+                            <div class="spinner-border text-primary"></div>
+                            <p class="mt-3">جارِ التحميل...</p>
+                        </div>`;
+            var modal = new bootstrap.Modal(document.getElementById('fuelModal'));
+            modal.show();
+
+            fetch(url)
+                .then(r => r.text())
+                .then(html => {
+                    document.getElementById('modalContent').innerHTML = html;
+                    initForm();
+                });
+        }
+
+        function initForm() {
+            var form = document.getElementById('fuelForm');
+            if (!form) return;
+
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                var btn = form.querySelector('[type="submit"]');
+                var original = btn.innerHTML;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>جارِ الحفظ...';
+                btn.disabled = true;
+
+                fetch(form.getAttribute('action'), {
+                    method: 'POST',
+                    body: new FormData(form)
+                })
+                    .then(r => r.json())
+                    .then(res => {
+                        if (res.success) {
+                            bootstrap.Modal.getInstance(document.getElementById('fuelModal')).hide();
+                            Swal.fire({
+                                icon: 'success', title: 'تم', text: res.message,
+                                timer: 2000, customClass: { popup: 'swal2-rtl' }
+                            }).then(() => location.reload());
+                        } else {
+                            var errHtml = res.errors?.length
+                                ? '<ul class="text-start mt-2">' + res.errors.map(e => `<li>${e}</li>`).join('') + '</ul>'
+                                : '';
+                            Swal.fire({
+                                icon: 'error', title: 'فشل', html: res.message + errHtml,
+                                customClass: { popup: 'swal2-rtl' }
+                            });
+                            btn.innerHTML = original;
+                            btn.disabled = false;
+                        }
+                    });
+            });
+        }
+    </script>
+}

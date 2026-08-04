@@ -1,0 +1,802 @@
+﻿@model List<GeneratorsManagementSystem.Models.Subscription>
+@{
+    ViewData["Title"] = "إدارة الاشتراكات";
+    var stats = ViewBag.Stats as GeneratorsManagementSystem.Services.SubscriptionStats;
+}
+
+@section Styles {
+    <style>
+        .stat-card {
+            border: none;
+            border-radius: 16px;
+            transition: all 0.3s;
+        }
+
+            .stat-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            }
+
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .contract-badge {
+            font-family: 'Courier New', monospace;
+            font-weight: 700;
+            padding: 6px 12px;
+            border-radius: 8px;
+        }
+
+        .btn-action {
+            width: 34px;
+            height: 34px;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+        }
+
+        .ampere-badge {
+            background: linear-gradient(135deg, #ffd700, #ffa500);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+
+        /* ═══ الأنماط الحالية ═══ */
+        .stat-card { /* ... */
+        }
+        /* ... */
+
+        /* ═══ 🆕 صندوق المبلغ الشهري ═══ */
+        .monthly-amount-box {
+            background: linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%);
+            border: 2px solid #48bb78;
+            border-radius: 15px;
+            padding: 20px 25px;
+            box-shadow: 0 4px 15px rgba(72, 187, 120, 0.2);
+            transition: all 0.3s;
+        }
+
+            .monthly-amount-box:hover {
+                box-shadow: 0 6px 20px rgba(72, 187, 120, 0.3);
+                transform: translateY(-2px);
+            }
+
+        .calculated-amount {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: #22543d;
+            font-family: 'Segoe UI', Tahoma, Geneva, sans-serif;
+            letter-spacing: 1px;
+            line-height: 1.1;
+        }
+
+        /* ✅ ضمان الأرقام الإنجليزية في كل مكان */
+        .calculated-amount,
+        .en-numbers,
+        .font-monospace {
+            font-feature-settings: "tnum" 1;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* ═══ 🆕 تلوين الحقول حسب الأهمية ═══ */
+        .field-required-highlight {
+            background: linear-gradient(to left, #fff5f5, transparent);
+            border-right: 3px solid #dc3545 !important;
+        }
+
+        .field-financial {
+            background: linear-gradient(to left, #fffff0, transparent);
+        }
+    </style>
+}
+
+<!-- ═══ HEADER ═══ -->
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <div>
+        <h4 class="fw-800 mb-1">
+            <i class="fas fa-file-contract text-primary me-2"></i>
+            إدارة الاشتراكات (العقود)
+        </h4>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0 small">
+                <li class="breadcrumb-item">
+                    <a href="@Url.Action("Index", "Dashboard")" class="text-decoration-none">
+                        <i class="fas fa-home"></i>
+                    </a>
+                </li>
+                <li class="breadcrumb-item active">الاشتراكات</li>
+            </ol>
+        </nav>
+    </div>
+    <button type="button" class="btn btn-primary btn-lg px-4" id="btnAddSubscription">
+        <i class="fas fa-plus-circle me-2"></i>
+        عقد جديد
+    </button>
+</div>
+
+<!-- ═══ STATS ═══ -->
+<div class="row g-3 mb-4">
+    <div class="col-lg-3 col-md-6">
+        <div class="card stat-card shadow-sm h-100">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="stat-icon" style="background:#EBF4FF;color:#5A67D8">
+                    <i class="fas fa-file-contract"></i>
+                </div>
+                <div>
+                    <div class="text-muted small">إجمالي العقود</div>
+                    <h3 class="fw-900 mb-0">@stats?.Total</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="card stat-card shadow-sm h-100">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="stat-icon" style="background:#F0FFF4;color:#48BB78">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div>
+                    <div class="text-muted small">عقود نشطة</div>
+                    <h3 class="fw-900 mb-0 text-success">@stats?.Active</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="card stat-card shadow-sm h-100">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="stat-icon" style="background:#FFFAF0;color:#D69E2E">
+                    <i class="fas fa-bolt"></i>
+                </div>
+                <div>
+                    <div class="text-muted small">إجمالي الأمبير المستخدم</div>
+                    <h3 class="fw-900 mb-0 text-warning">
+                        @stats?.TotalAmpereUsed<small class="fs-6"> A</small>
+                    </h3>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="card stat-card shadow-sm h-100">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="stat-icon" style="background:#F0FFF4;color:#38A169">
+                    <i class="fas fa-money-bill-wave"></i>
+                </div>
+                <div>
+                    <div class="text-muted small">الإيرادات الشهرية</div>
+                    <h3 class="fw-900 mb-0 text-success">
+                        @stats?.TotalMonthlyRevenue.ToString("N0")
+                        <small class="fs-6">د.ع</small>
+                    </h3>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ TABLE ═══ -->
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white py-3">
+        <h6 class="mb-0 fw-bold">
+            <i class="fas fa-list me-2 text-primary"></i>
+            قائمة العقود
+            <span class="badge bg-primary ms-2">@Model.Count</span>
+        </h6>
+    </div>
+    <div class="card-body p-3">
+        <table id="subscriptionsTable" class="table table-hover align-middle" style="width:100%">
+            <thead class="table-light">
+                <tr>
+                    <th>رقم العقد</th>
+                    <th>المشترك</th>
+                    <th>المولد</th>
+                    <th>الأمبير</th>
+                    <th>النوع</th>
+                    <th>الرسوم الشهرية</th>
+                    <th>الحالة</th>
+                    <th>تاريخ البداية</th>
+                    <th class="text-center">الإجراءات</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var sub in Model)
+                {
+                    <tr>
+                        <td>
+                            <span class="contract-badge bg-light text-primary">
+                                @sub.ContractNumber
+                            </span>
+                        </td>
+                        <td>
+                            <div>
+                                <strong>@sub.Subscriber?.FullName</strong>
+                                <br />
+                                <small class="text-muted font-monospace">
+                                    @sub.Subscriber?.SubscriberNumber
+                                </small>
+                            </div>
+                        </td>
+                        <td>
+                            <div>
+                                <i class="fas fa-bolt text-warning me-1"></i>
+                                <strong>@sub.Generator?.GeneratorNumber</strong>
+                                <br />
+                                <small class="text-muted">@sub.Generator?.Name</small>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="ampere-badge">
+                                @sub.Ampere A
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge bg-info">@sub.SubscriptionTypeText</span>
+                        </td>
+                        <td>
+                            <strong class="text-success">
+                                @sub.MonthlyAmount.ToString("N0")
+                                <small class="text-muted">د.ع</small>
+                            </strong>
+                        </td>
+                        <td>
+                            <span class="badge @sub.StatusBadgeClass">
+                                @sub.StatusText
+                            </span>
+                        </td>
+                        <td>
+                            <small>@sub.StartDate.ToString("yyyy/MM/dd")</small>
+                        </td>
+                        <td class="text-center">
+                            <div class="btn-group">
+                                <a href="@Url.Action("Details", new { id = sub.Id })"
+                                   class="btn btn-outline-primary btn-action" title="التفاصيل">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <button class="btn btn-outline-success btn-action btn-edit"
+                                        data-id="@sub.Id" title="تعديل">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                @if (sub.Status == SubscriptionStatus.Active)
+                                {
+                                    <button class="btn btn-outline-warning btn-action btn-suspend"
+                                            data-id="@sub.Id" title="إيقاف مؤقت">
+                                        <i class="fas fa-pause"></i>
+                                    </button>
+                                }
+                                else if (sub.Status == SubscriptionStatus.Suspended)
+                                {
+                                    <button class="btn btn-outline-success btn-action btn-reactivate"
+                                            data-id="@sub.Id" title="إعادة تفعيل">
+                                        <i class="fas fa-play"></i>
+                                    </button>
+                                }
+                                @if (sub.Status != SubscriptionStatus.Cancelled)
+                                {
+                                    <button class="btn btn-outline-secondary btn-action btn-cancel"
+                                            data-id="@sub.Id" title="إلغاء العقد">
+                                        <i class="fas fa-ban"></i>
+                                    </button>
+                                }
+                                <button class="btn btn-outline-danger btn-action btn-delete"
+                                        data-id="@sub.Id"
+                                        data-number="@sub.ContractNumber" title="حذف">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ═══ MODAL ═══ -->
+<div class="modal fade" id="subscriptionModal" tabindex="-1"
+     data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg" id="modalContent"></div>
+    </div>
+</div>
+
+<form id="antiForgeryForm">@Html.AntiForgeryToken()</form>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+
+            $('#subscriptionsTable').DataTable({
+                language: { url: "//cdn.datatables.net/plug-ins/1.13.7/i18n/ar.json" },
+                order: [[7, 'desc']],
+                pageLength: 25,
+                responsive: true
+            });
+
+            var token = $('input[name="__RequestVerificationToken"]').val();
+
+            // ═══ إضافة عقد ═══
+            $('#btnAddSubscription').on('click', function () {
+                loadModal('@Url.Action("Create")');
+            });
+
+            // ═══ تعديل ═══
+            $(document).on('click', '.btn-edit', function () {
+                loadModal('@Url.Action("Edit")/' + $(this).data('id'));
+            });
+
+            function loadModal(url) {
+                $('#modalContent').html(`
+                    <div class="modal-body text-center py-5">
+                        <div class="spinner-border text-primary" style="width:3rem;height:3rem"></div>
+                        <p class="mt-3 fw-bold">جارِ التحميل...</p>
+                    </div>
+                `);
+                $('#subscriptionModal').modal('show');
+                $.get(url).done(function (html) {
+                    $('#modalContent').html(html);
+                    initForm();
+                }).fail(function () {
+                    $('#modalContent').html(`
+                        <div class="modal-body text-center py-5">
+                            <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3"></i>
+                            <p class="text-danger fw-bold">فشل التحميل</p>
+                            <button class="btn btn-outline-secondary" data-bs-dismiss="modal">إغلاق</button>
+                        </div>
+                    `);
+                });
+            }
+
+            function initForm() {
+                var $form = $('#subscriptionForm');
+                if (!$form.length) return;
+
+                // حساب المبلغ الشهري
+                                    function updateAmount() {
+            var ampere = parseFloat($form.find('[name="Ampere"]').val()) || 0;
+            var price = parseFloat($form.find('[name="PricePerAmpere"]').val()) || 0;
+            var fixedFee = parseFloat($form.find('[name="FixedFee"]').val()) || 0;
+            var discount = parseFloat($form.find('[name="MonthlyDiscount"]').val()) || 0;
+            var total = (ampere * price) + fixedFee - discount;
+
+            // ✅ تنسيق الأرقام بالإنجليزية
+            var formatted = total.toLocaleString('en-US', {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            });
+
+            $('#calculatedAmount').text(formatted);
+
+            // عرض المعادلة الحقيقية
+            var formula = `(${ampere} × ${price.toLocaleString('en-US')}) + ${fixedFee.toLocaleString('en-US')} - ${discount.toLocaleString('en-US')} = ${formatted}`;
+            $('#calculationFormula').html(formula);
+
+            // تلوين حسب القيمة
+            var $amount = $('#calculatedAmount');
+            if (total > 0) {
+                $amount.removeClass('text-danger').addClass('text-success');
+                $('.monthly-amount-box').css('border-color', '#48bb78');
+            } else if (total < 0) {
+                $amount.removeClass('text-success').addClass('text-danger');
+                $('.monthly-amount-box').css('border-color', '#f56565');
+            } else {
+                $amount.removeClass('text-success text-danger').addClass('text-muted');
+                $('.monthly-amount-box').css('border-color', '#cbd5e0');
+            }
+        }
+
+                $form.on('input change', '[name="Ampere"], [name="PricePerAmpere"], [name="FixedFee"], [name="MonthlyDiscount"]', updateAmount);
+                updateAmount();
+
+                // عند اختيار مولد، اجلب الأمبير المتاح
+                        $form.find('[name="GeneratorId"]').on('change', function () {
+            var genId = $(this).val();
+            if (!genId) {
+                $('#availableAmpereInfo').html('');
+                $form.find('[name="Ampere"]').removeAttr('max');
+                return;
+            }
+
+            $.get('@Url.Action("GetAvailableAmpere")', { generatorId: genId })
+                .done(function (res) {
+                    if (res.success) {
+                        var maxAmpere = parseFloat(res.maxAmpere) || 0;
+                        var available = parseFloat(res.available) || 0;
+                        var used = maxAmpere - available;
+                        var percentage = maxAmpere > 0 ? (used / maxAmpere * 100).toFixed(1) : 0;
+
+                        // ═══ حالة 1: المولد بدون سعة محددة ═══
+                        if (maxAmpere <= 0) {
+                            $('#availableAmpereInfo').html(`
+                                <div class="alert alert-danger py-3 mb-0">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <i class="fas fa-exclamation-triangle fa-2x"></i>
+                                        <div class="flex-grow-1">
+                                            <strong class="d-block fs-6">
+                                                ⚠️ لا يمكن إنشاء عقد على هذا المولد
+                                            </strong>
+                                            <small class="d-block mt-1">
+                                                المولد <strong>${res.generatorName}</strong>
+                                                ليس له قدرة أمبير محددة (السعة = 0)
+                                            </small>
+                                            <small class="d-block mt-2">
+                                                <i class="fas fa-arrow-left me-1"></i>
+                                                <a href="/Generators" target="_blank" class="text-white text-decoration-underline">
+                                                    اذهب إلى إدارة المولدات وأضف "الحد الأقصى للأمبير" أولاً
+                                                </a>
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            `);
+                            // تعطيل حقل الأمبير
+                            $form.find('[name="Ampere"]').val(0).prop('disabled', true);
+                            $form.find('[type="submit"]').prop('disabled', true);
+                            return;
+                        }
+
+                        // ═══ حالة 2: المولد ممتلئ ═══
+                        if (available <= 0) {
+                            $('#availableAmpereInfo').html(`
+                                <div class="alert alert-danger py-3 mb-0">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <i class="fas fa-times-circle fa-2x"></i>
+                                        <div class="flex-grow-1">
+                                            <strong class="d-block fs-6">
+                                                ⚠️ المولد ممتلئ - لا يوجد أمبير متاح
+                                            </strong>
+                                            <small class="d-block mt-1">
+                                                <strong>${res.generatorName}</strong> -
+                                                السعة الكلية: ${maxAmpere} A -
+                                                المستخدم بالكامل: ${used} A
+                                            </small>
+                                            <small class="d-block mt-2 opacity-75">
+                                                يرجى اختيار مولد آخر أو إلغاء اشتراكات قديمة
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            `);
+                            $form.find('[name="Ampere"]').val(0).prop('disabled', true);
+                            $form.find('[type="submit"]').prop('disabled', true);
+                            return;
+                        }
+
+                        // ═══ حالة 3: المولد جيد ═══
+                        var progressColor = percentage < 50 ? 'bg-success' :
+                                            percentage < 80 ? 'bg-warning' : 'bg-danger';
+
+                        $('#availableAmpereInfo').html(`
+                            <div class="alert alert-success py-3 mb-0">
+                                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                                    <div>
+                                        <strong class="d-block fs-6">
+                                            <i class="fas fa-check-circle me-2"></i>
+                                            ${res.generatorName} - جاهز للاشتراك
+                                        </strong>
+                                        <div class="mt-2 d-flex flex-wrap gap-3 small">
+                                            <span>
+                                                <i class="fas fa-bolt text-warning"></i>
+                                                السعة الكلية: <strong class="en-numbers">${maxAmpere} A</strong>
+                                            </span>
+                                            <span>
+                                                <i class="fas fa-plug text-info"></i>
+                                                المستخدم: <strong class="en-numbers">${used} A</strong>
+                                            </span>
+                                            <span>
+                                                <i class="fas fa-check text-success"></i>
+                                                المتاح: <strong class="text-success en-numbers">${available} A</strong>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="progress mb-1" style="width:150px;height:12px">
+                                            <div class="progress-bar ${progressColor}"
+                                                 style="width:${percentage}%"
+                                                 role="progressbar">
+                                                <small class="fw-bold en-numbers">${percentage}%</small>
+                                            </div>
+                                        </div>
+                                        <small class="text-muted">
+                                            نسبة الاستخدام
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        `);
+
+                        // تفعيل حقل الأمبير مع الحد الأقصى
+                        $form.find('[name="Ampere"]').prop('disabled', false).attr('max', available);
+                        $form.find('[type="submit"]').prop('disabled', false);
+
+                        // إذا كانت القيمة الحالية أكبر من المتاح، صفّرها
+                        var currentAmpere = parseFloat($form.find('[name="Ampere"]').val()) || 0;
+                        if (currentAmpere > available) {
+                            $form.find('[name="Ampere"]').val(available);
+                            updateAmount();
+                        }
+                    }
+                })
+                .fail(function () {
+                    $('#availableAmpereInfo').html(`
+                        <div class="alert alert-danger py-2 mb-0">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            فشل جلب بيانات المولد
+                        </div>
+                    `);
+                });
+        });
+                // $form.find('[name="GeneratorId"]').on('change', function () {
+                //     var genId = $(this).val();
+                //     if (!genId) {
+                //         $('#availableAmpereInfo').html('');
+                //         return;
+                //     }
+                //     $.get('@Url.Action("GetAvailableAmpere")', { generatorId: genId })
+                //         .done(function (res) {
+                //             if (res.success) {
+                //                 var used = res.maxAmpere - res.available;
+                //                 var percentage = res.maxAmpere > 0 ? (used / res.maxAmpere * 100).toFixed(1) : 0;
+                //                 $('#availableAmpereInfo').html(`
+                //                     <div class="alert alert-info py-2 mb-0">
+                //                         <div class="d-flex justify-content-between align-items-center">
+                //                             <div>
+                //                                 <strong>${res.generatorName}</strong>
+                //                                 <small class="d-block text-muted">
+                //                                     السعة الكلية: ${res.maxAmpere} A |
+                //                                     المستخدم: ${used} A |
+                //                                     المتاح: <strong class="text-success">${res.available} A</strong>
+                //                                 </small>
+                //                             </div>
+                //                             <div class="progress" style="width:100px;height:8px">
+                //                                 <div class="progress-bar bg-warning" style="width:${percentage}%"></div>
+                //                             </div>
+                //                         </div>
+                //                     </div>
+                //                 `);
+                //                 $form.find('[name="Ampere"]').attr('max', res.available);
+                //             }
+                //         });
+                // });
+
+                // Submit
+                $form.on('submit', function (e) {
+                    e.preventDefault();
+                    var $btn = $form.find('[type="submit"]');
+                    var originalText = $btn.html();
+
+                    $btn.html('<span class="spinner-border spinner-border-sm me-2"></span>جارِ الحفظ...')
+                        .prop('disabled', true);
+
+                    $.ajax({
+                        url: $form.attr('action'),
+                        type: 'POST',
+                        data: $form.serialize(),
+                                success: function (res) {
+                                if (res.success) {
+                                    $('#subscriptionModal').modal('hide');
+                              
+                                    // 🎯 إذا تم توليد فاتورة، اعرض خيار الطباعة
+                                    if (res.showInvoice && res.invoiceNumber) {
+                                        Swal.fire({
+                                            icon: 'success',
+                                            title: 'تم بنجاح!',
+                                            html: `
+                                                <div class="text-start">
+                                                    <p class="mb-2">${res.message}</p>
+                                                    <hr>
+                                                    <p class="mb-2">
+                                                        <i class="fas fa-file-invoice text-primary me-1"></i>
+                                                        <strong>تم توليد الفاتورة:</strong>
+                                                        <span class="font-monospace fw-bold text-primary">${res.invoiceNumber}</span>
+                                                    </p>
+                                                    <small class="text-muted">هل تريد طباعتها الآن؟</small>
+                                                </div>
+                                            `,
+                                            showCancelButton: true,
+                                            confirmButtonText: '<i class="fas fa-print me-2"></i>طباعة الفاتورة',
+                                            cancelButtonText: 'لاحقاً',
+                                            confirmButtonColor: '#5A67D8',
+                                            cancelButtonColor: '#6c757d',
+                                            customClass: { popup: 'swal2-rtl' }
+                                        }).then((result) => {
+                                            if (result.isConfirmed && res.printUrl) {
+                                                // فتح نافذة الطباعة
+                                                var printWindow = window.open(res.printUrl + '?autoprint=1', '_blank');
+                                                // ثم إعادة تحميل الصفحة
+                                                setTimeout(() => location.reload(), 1000);
+                                            } else {
+                                                location.reload();
+                                            }
+                                        });
+                                    } else {
+                                        Swal.fire({
+                                            icon: 'success', title: 'تم', text: res.message,
+                                            confirmButtonColor: '#48BB78',
+                                            customClass: { popup: 'swal2-rtl' },
+                                            timer: 2000
+                                        }).then(() => location.reload());
+                                    }
+                                } else {
+                                    var errHtml = '';
+                                    if (res.errors && res.errors.length) {
+                                        errHtml = '<ul class="text-start mt-2">';
+                                        res.errors.forEach(e => errHtml += `<li>${e}</li>`);
+                                        errHtml += '</ul>';
+                                    }
+                                    Swal.fire({
+                                        icon: 'error', title: 'فشل', html: res.message + errHtml,
+                                        customClass: { popup: 'swal2-rtl' }
+                                    });
+                                    $btn.html(originalText).prop('disabled', false);
+                                }
+                               },
+                        // success: function (res) {
+                        //     if (res.success) {
+                        //         $('#subscriptionModal').modal('hide');
+                        //         Swal.fire({
+                        //             icon: 'success', title: 'تم', text: res.message,
+                        //             confirmButtonColor: '#48BB78',
+                        //             customClass: { popup: 'swal2-rtl' },
+                        //             timer: 2000
+                        //         }).then(() => location.reload());
+                        //     } else {
+                        //         var errHtml = '';
+                        //         if (res.errors && res.errors.length) {
+                        //             errHtml = '<ul class="text-start mt-2">';
+                        //             res.errors.forEach(e => errHtml += `<li>${e}</li>`);
+                        //             errHtml += '</ul>';
+                        //         }
+                        //         Swal.fire({
+                        //             icon: 'error', title: 'فشل', html: res.message + errHtml,
+                        //             customClass: { popup: 'swal2-rtl' }
+                        //         });
+                        //         $btn.html(originalText).prop('disabled', false);
+                        //     }
+                        // },
+                        error: function () {
+                            Swal.fire({ icon: 'error', title: 'خطأ', text: 'تعذر الاتصال' });
+                            $btn.html(originalText).prop('disabled', false);
+                        }
+                    });
+                });
+            }
+
+            // ═══ إيقاف مؤقت ═══
+            $(document).on('click', '.btn-suspend', function () {
+                var id = $(this).data('id');
+                Swal.fire({
+                    icon: 'warning', title: 'إيقاف العقد',
+                    text: 'أدخل سبب الإيقاف:',
+                    input: 'textarea',
+                    showCancelButton: true,
+                    confirmButtonText: 'إيقاف', cancelButtonText: 'إلغاء',
+                    confirmButtonColor: '#D69E2E',
+                    customClass: { popup: 'swal2-rtl' }
+                }).then(res => {
+                    if (res.isConfirmed) {
+                        $.post('@Url.Action("Suspend")', {
+                            id: id, reason: res.value || '',
+                            __RequestVerificationToken: token
+                        }, function (r) {
+                            Swal.fire({
+                                icon: r.success ? 'success' : 'error',
+                                title: r.success ? 'تم' : 'فشل',
+                                text: r.message, timer: 1500,
+                                customClass: { popup: 'swal2-rtl' }
+                            }).then(() => r.success && location.reload());
+                        });
+                    }
+                });
+            });
+
+            // ═══ إعادة تفعيل ═══
+            $(document).on('click', '.btn-reactivate', function () {
+                var id = $(this).data('id');
+                Swal.fire({
+                    icon: 'question', title: 'إعادة تفعيل',
+                    text: 'هل تريد إعادة تفعيل هذا العقد؟',
+                    showCancelButton: true,
+                    confirmButtonText: 'نعم', cancelButtonText: 'إلغاء',
+                    confirmButtonColor: '#48BB78',
+                    customClass: { popup: 'swal2-rtl' }
+                }).then(res => {
+                    if (res.isConfirmed) {
+                        $.post('@Url.Action("Reactivate")', {
+                            id: id, __RequestVerificationToken: token
+                        }, function (r) {
+                            Swal.fire({
+                                icon: r.success ? 'success' : 'error',
+                                title: r.success ? 'تم' : 'فشل',
+                                text: r.message, timer: 1500,
+                                customClass: { popup: 'swal2-rtl' }
+                            }).then(() => r.success && location.reload());
+                        });
+                    }
+                });
+            });
+
+            // ═══ إلغاء ═══
+            $(document).on('click', '.btn-cancel', function () {
+                var id = $(this).data('id');
+                Swal.fire({
+                    icon: 'warning', title: 'إلغاء العقد',
+                    text: 'أدخل سبب الإلغاء:', input: 'textarea',
+                    showCancelButton: true,
+                    confirmButtonText: 'إلغاء العقد', cancelButtonText: 'تراجع',
+                    confirmButtonColor: '#dc3545',
+                    customClass: { popup: 'swal2-rtl' }
+                }).then(res => {
+                    if (res.isConfirmed) {
+                        $.post('@Url.Action("Cancel")', {
+                            id: id, reason: res.value || '',
+                            __RequestVerificationToken: token
+                        }, function (r) {
+                            Swal.fire({
+                                icon: r.success ? 'success' : 'error',
+                                title: r.success ? 'تم' : 'فشل',
+                                text: r.message, timer: 1500,
+                                customClass: { popup: 'swal2-rtl' }
+                            }).then(() => r.success && location.reload());
+                        });
+                    }
+                });
+            });
+
+            // ═══ حذف ═══
+            $(document).on('click', '.btn-delete', function () {
+                var id = $(this).data('id');
+                var num = $(this).data('number');
+                Swal.fire({
+                    icon: 'warning', title: 'تأكيد الحذف',
+                    html: `هل تريد حذف العقد <strong>${num}</strong>؟<br/><small class="text-danger">لا يمكن التراجع</small>`,
+                    showCancelButton: true,
+                    confirmButtonText: 'حذف', cancelButtonText: 'إلغاء',
+                    confirmButtonColor: '#dc3545',
+                    customClass: { popup: 'swal2-rtl' }
+                }).then(res => {
+                    if (res.isConfirmed) {
+                        $.post('@Url.Action("Delete")', {
+                            id: id, __RequestVerificationToken: token
+                        }, function (r) {
+                            Swal.fire({
+                                icon: r.success ? 'success' : 'error',
+                                title: r.success ? 'تم' : 'فشل',
+                                text: r.message, timer: 1500,
+                                customClass: { popup: 'swal2-rtl' }
+                            }).then(() => r.success && location.reload());
+                        });
+                    }
+                });
+            });
+
+        // تفعيل Tooltips
+        setTimeout(function() {
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        }, 100);
+
+        // إعادة تفعيل عند فتح Modal
+        $(document).on('shown.bs.modal', '#subscriptionModal', function () {
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        });
+     });
+    </script>
+}

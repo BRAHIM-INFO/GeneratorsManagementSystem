@@ -1,0 +1,382 @@
+﻿@model GeneratorsManagementSystem.Models.ViewModels.Settings.BillingSettingsViewModel
+@{
+    ViewData["Title"] = "إعدادات الفوترة";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/settings.css" />
+}
+
+<div class="settings-page">
+    <div class="page-header d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="page-title">
+                <i class="fas fa-money-bill-wave text-purple"></i>
+                إعدادات الفوترة
+            </h2>
+            <p class="page-subtitle text-muted mb-0">الضرائب، الخصومات وطرق الدفع</p>
+        </div>
+        <a href="@Url.Action("Index")" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-right"></i> رجوع
+        </a>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            <i class="fas fa-check-circle"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <form asp-action="Billing" method="post" id="billingForm">
+        @Html.AntiForgeryToken()
+        <input asp-for="Id" type="hidden" />
+
+        <ul class="nav nav-tabs settings-tabs mb-4">
+            <li class="nav-item">
+                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#bill-numbering" type="button">
+                    <i class="fas fa-hashtag"></i> الترقيم
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#bill-tax" type="button">
+                    <i class="fas fa-percentage"></i> الضرائب والخصومات
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#bill-payment" type="button">
+                    <i class="fas fa-credit-card"></i> طرق الدفع
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#bill-invoice" type="button">
+                    <i class="fas fa-file-invoice"></i> قالب الفاتورة
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content">
+            <!-- الترقيم -->
+            <div class="tab-pane fade show active" id="bill-numbering">
+                <div class="settings-card mb-3">
+                    <div class="settings-card-header bg-primary-gradient">
+                        <h5><i class="fas fa-file-invoice"></i> ترقيم الفواتير</h5>
+                    </div>
+                    <div class="settings-card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label asp-for="InvoiceNumberPrefix" class="form-label"></label>
+                                <input asp-for="InvoiceNumberPrefix" class="form-control" dir="ltr" />
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="InvoiceNumberLength" class="form-label"></label>
+                                <input asp-for="InvoiceNumberLength" type="number" class="form-control" />
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-check form-switch">
+                                    <input asp-for="IncludeYearInInvoice" class="form-check-input" />
+                                    <label asp-for="IncludeYearInInvoice" class="form-check-label"></label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-check form-switch">
+                                    <input asp-for="IncludeMonthInInvoice" class="form-check-input" />
+                                    <label asp-for="IncludeMonthInInvoice" class="form-check-label"></label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-check form-switch">
+                                    <input asp-for="ResetInvoiceNumberYearly" class="form-check-input" />
+                                    <label asp-for="ResetInvoiceNumberYearly" class="form-check-label"></label>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="preview-box">
+                                    <label class="form-label">معاينة رقم الفاتورة:</label>
+                                    <div class="preview-value" id="invPreview">INV-000001</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-card">
+                    <div class="settings-card-header bg-success-gradient">
+                        <h5><i class="fas fa-receipt"></i> ترقيم الإيصالات</h5>
+                    </div>
+                    <div class="settings-card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label asp-for="ReceiptNumberPrefix" class="form-label"></label>
+                                <input asp-for="ReceiptNumberPrefix" class="form-control" dir="ltr" />
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="ReceiptNumberLength" class="form-label"></label>
+                                <input asp-for="ReceiptNumberLength" type="number" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- الضرائب والخصومات -->
+            <div class="tab-pane fade" id="bill-tax">
+                <div class="settings-card mb-3">
+                    <div class="settings-card-header bg-danger-gradient">
+                        <h5><i class="fas fa-percentage"></i> إعدادات الضريبة</h5>
+                    </div>
+                    <div class="settings-card-body">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <div class="form-check form-switch">
+                                    <input asp-for="EnableTax" class="form-check-input" />
+                                    <label asp-for="EnableTax" class="form-check-label"></label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="TaxName" class="form-label"></label>
+                                <input asp-for="TaxName" class="form-control" />
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="TaxPercentage" class="form-label"></label>
+                                <div class="input-group">
+                                    <input asp-for="TaxPercentage" type="number" step="0.01" class="form-control" />
+                                    <span class="input-group-text">%</span>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-check form-switch">
+                                    <input asp-for="TaxIncludedInPrice" class="form-check-input" />
+                                    <label asp-for="TaxIncludedInPrice" class="form-check-label"></label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-card">
+                    <div class="settings-card-header bg-warning-gradient">
+                        <h5><i class="fas fa-tags"></i> إعدادات الخصومات</h5>
+                    </div>
+                    <div class="settings-card-body">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <div class="form-check form-switch">
+                                    <input asp-for="EnableDiscounts" class="form-check-input" />
+                                    <label asp-for="EnableDiscounts" class="form-check-label"></label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check form-switch">
+                                    <input asp-for="AllowPercentageDiscount" class="form-check-input" />
+                                    <label asp-for="AllowPercentageDiscount" class="form-check-label"></label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check form-switch">
+                                    <input asp-for="AllowFixedDiscount" class="form-check-input" />
+                                    <label asp-for="AllowFixedDiscount" class="form-check-label"></label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="MaxDiscountPercentage" class="form-label"></label>
+                                <div class="input-group">
+                                    <input asp-for="MaxDiscountPercentage" type="number" step="0.01" class="form-control" />
+                                    <span class="input-group-text">%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- طرق الدفع -->
+            <div class="tab-pane fade" id="bill-payment">
+                <div class="settings-card">
+                    <div class="settings-card-header bg-info-gradient">
+                        <h5><i class="fas fa-credit-card"></i> طرق الدفع المسموحة</h5>
+                    </div>
+                    <div class="settings-card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="payment-method-card">
+                                    <div class="pm-icon"><i class="fas fa-money-bill"></i></div>
+                                    <div class="pm-content">
+                                        <strong>الدفع النقدي</strong>
+                                        <small>الدفع كاش عند الاستلام</small>
+                                    </div>
+                                    <div class="form-check form-switch">
+                                        <input asp-for="AllowCashPayment" class="form-check-input" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="payment-method-card">
+                                    <div class="pm-icon"><i class="fas fa-university"></i></div>
+                                    <div class="pm-content">
+                                        <strong>التحويل البنكي</strong>
+                                        <small>الدفع عبر الحسابات البنكية</small>
+                                    </div>
+                                    <div class="form-check form-switch">
+                                        <input asp-for="AllowBankTransfer" class="form-check-input" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="payment-method-card">
+                                    <div class="pm-icon"><i class="fas fa-credit-card"></i></div>
+                                    <div class="pm-content">
+                                        <strong>بطاقة الائتمان</strong>
+                                        <small>Visa, MasterCard</small>
+                                    </div>
+                                    <div class="form-check form-switch">
+                                        <input asp-for="AllowCreditCard" class="form-check-input" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="payment-method-card">
+                                    <div class="pm-icon"><i class="fas fa-money-check"></i></div>
+                                    <div class="pm-content">
+                                        <strong>الشيكات</strong>
+                                        <small>الدفع بشيكات مصرفية</small>
+                                    </div>
+                                    <div class="form-check form-switch">
+                                        <input asp-for="AllowCheque" class="form-check-input" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="payment-method-card">
+                                    <div class="pm-icon"><i class="fas fa-globe"></i></div>
+                                    <div class="pm-content">
+                                        <strong>الدفع الإلكتروني</strong>
+                                        <small>عبر البوابات الإلكترونية</small>
+                                    </div>
+                                    <div class="form-check form-switch">
+                                        <input asp-for="AllowOnlinePayment" class="form-check-input" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="payment-method-card">
+                                    <div class="pm-icon"><i class="fas fa-mobile-alt"></i></div>
+                                    <div class="pm-content">
+                                        <strong>المحفظة الإلكترونية</strong>
+                                        <small>Mobile Money</small>
+                                    </div>
+                                    <div class="form-check form-switch">
+                                        <input asp-for="AllowMobilePayment" class="form-check-input" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- قالب الفاتورة -->
+            <div class="tab-pane fade" id="bill-invoice">
+                <div class="settings-card mb-3">
+                    <div class="settings-card-header bg-purple-gradient">
+                        <h5><i class="fas fa-file-invoice"></i> قالب الفاتورة</h5>
+                    </div>
+                    <div class="settings-card-body">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label asp-for="InvoiceHeader" class="form-label"></label>
+                                <textarea asp-for="InvoiceHeader" class="form-control" rows="2"></textarea>
+                            </div>
+                            <div class="col-12">
+                                <label asp-for="InvoiceFooter" class="form-label"></label>
+                                <textarea asp-for="InvoiceFooter" class="form-control" rows="2"></textarea>
+                            </div>
+                            <div class="col-12">
+                                <label asp-for="PaymentTerms" class="form-label"></label>
+                                <textarea asp-for="PaymentTerms" class="form-control" rows="3"></textarea>
+                            </div>
+                            <div class="col-12">
+                                <label asp-for="BankDetails" class="form-label"></label>
+                                <textarea asp-for="BankDetails" class="form-control" rows="3" placeholder="اسم البنك، رقم الحساب، IBAN..."></textarea>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-check form-switch">
+                                    <input asp-for="ShowLogoOnInvoice" class="form-check-input" />
+                                    <label asp-for="ShowLogoOnInvoice" class="form-check-label"></label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-check form-switch">
+                                    <input asp-for="ShowSignatureOnInvoice" class="form-check-input" />
+                                    <label asp-for="ShowSignatureOnInvoice" class="form-check-label"></label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-check form-switch">
+                                    <input asp-for="ShowStampOnInvoice" class="form-check-input" />
+                                    <label asp-for="ShowStampOnInvoice" class="form-check-label"></label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-card">
+                    <div class="settings-card-header bg-info-gradient">
+                        <h5><i class="fas fa-envelope"></i> الإرسال التلقائي</h5>
+                    </div>
+                    <div class="settings-card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="form-check form-switch">
+                                    <input asp-for="AutoSendInvoiceEmail" class="form-check-input" />
+                                    <label asp-for="AutoSendInvoiceEmail" class="form-check-label"></label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check form-switch">
+                                    <input asp-for="AutoSendReceiptEmail" class="form-check-input" />
+                                    <label asp-for="AutoSendReceiptEmail" class="form-check-label"></label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="settings-actions mt-4">
+            <button type="submit" class="btn btn-purple btn-lg">
+                <i class="fas fa-save"></i> حفظ الإعدادات
+            </button>
+            <a href="@Url.Action("Index")" class="btn btn-outline-secondary btn-lg">
+                إلغاء <i class="fas fa-times"></i>
+            </a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        function updateInvPreview() {
+            var prefix = $('#InvoiceNumberPrefix').val() || 'INV';
+            var length = parseInt($('#InvoiceNumberLength').val()) || 6;
+            var includeYear = $('#IncludeYearInInvoice').is(':checked');
+            var includeMonth = $('#IncludeMonthInInvoice').is(':checked');
+            var year = new Date().getFullYear().toString().substring(2);
+            var month = String(new Date().getMonth() + 1).padStart(2, '0');
+            var num = '1'.padStart(length, '0');
+            var preview = prefix + '-';
+            if (includeYear) preview += year + '-';
+            if (includeMonth) preview += month + '-';
+            preview += num;
+            $('#invPreview').text(preview);
+        }
+
+        $('#InvoiceNumberPrefix, #InvoiceNumberLength, #IncludeYearInInvoice, #IncludeMonthInInvoice')
+            .on('input change', updateInvPreview);
+        $(document).ready(updateInvPreview);
+    </script>
+}

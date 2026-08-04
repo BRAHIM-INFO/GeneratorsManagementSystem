@@ -1,0 +1,642 @@
+﻿@model GeneratorsManagementSystem.Models.Invoice
+@{
+    ViewData["Title"] = $"فاتورة {Model.InvoiceNumber}";
+}
+
+@section Styles {
+    <style>
+        .invoice-header-card {
+            background: linear-gradient(135deg, #5A67D8, #7886E0);
+            border-radius: 20px;
+            color: white;
+            overflow: hidden;
+        }
+
+        .info-box {
+            padding: 20px;
+            border-radius: 12px;
+            background: #f8f9fc;
+            border-right: 4px solid #5A67D8;
+        }
+
+            .info-box.success {
+                border-color: #48BB78;
+                background: #F0FFF4;
+            }
+
+            .info-box.warning {
+                border-color: #F6AD55;
+                background: #FFFAF0;
+            }
+
+            .info-box.danger {
+                border-color: #FC8181;
+                background: #FFF5F5;
+            }
+
+        .amount-large {
+            font-size: 2rem;
+            font-weight: 900;
+            line-height: 1;
+            direction: ltr;
+            display: inline-block;
+        }
+
+        .amount-mini {
+            font-size: 1.4rem;
+            font-weight: 800;
+            direction: ltr;
+            display: inline-block;
+        }
+
+        .en-numbers {
+            direction: ltr;
+            display: inline-block;
+            font-feature-settings: "tnum";
+        }
+
+        .timeline-item {
+            padding: 15px;
+            border-radius: 10px;
+            background: #f8f9fc;
+            border-right: 3px solid #5A67D8;
+            margin-bottom: 10px;
+            transition: all 0.2s;
+        }
+
+            .timeline-item:hover {
+                transform: translateX(-3px);
+                box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            }
+    </style>
+}
+
+<!-- HEADER -->
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <div>
+        <h4 class="fw-800 mb-1">
+            <i class="fas fa-file-invoice-dollar text-primary me-2"></i>
+            تفاصيل الفاتورة
+        </h4>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0 small">
+                <li class="breadcrumb-item">
+                    <a href="@Url.Action("Index", "Dashboard")"><i class="fas fa-home"></i></a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a href="@Url.Action("Index")">الفواتير</a>
+                </li>
+                <li class="breadcrumb-item active en-numbers">@Model.InvoiceNumber</li>
+            </ol>
+        </nav>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="@Url.Action("Index")" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-right me-2"></i>رجوع
+        </a>
+        <a href="@Url.Action("Print", new { id = Model.Id })"
+           target="_blank" class="btn btn-primary">
+            <i class="fas fa-print me-2"></i>طباعة
+        </a>
+    </div>
+</div>
+
+<!-- MAIN CARD -->
+<div class="card invoice-header-card shadow mb-4">
+    <div class="card-body p-4">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="bg-white bg-opacity-25 rounded-3 p-3">
+                        <i class="fas fa-file-invoice fa-2x"></i>
+                    </div>
+                    <div>
+                        <h3 class="fw-900 mb-1 en-numbers font-monospace">
+                            @Model.InvoiceNumber
+                        </h3>
+                        <span class="badge bg-white text-primary fw-bold py-2 px-3">
+                            @Model.StatusText
+                        </span>
+                        @if (Model.IsOverdue)
+                        {
+                            <span class="badge bg-danger py-2 px-3 ms-2">
+                                <i class="fas fa-exclamation-triangle me-1"></i>
+                                متأخرة <span class="en-numbers">@Model.DueDate</span> يوم
+                            </span>
+                        }
+                    </div>
+                </div>
+                <div class="d-flex flex-wrap gap-3 opacity-75">
+                    <span>
+                        <i class="fas fa-calendar-plus me-1"></i>
+                        الإصدار: <strong class="en-numbers">@Model.IssueDate.ToString("yyyy/MM/dd")</strong>
+                    </span>
+                    <span>
+                        <i class="fas fa-calendar-check me-1"></i>
+                        الاستحقاق: <strong class="en-numbers">@Model.DueDate.ToString("yyyy/MM/dd")</strong>
+                    </span>
+                </div>
+            </div>
+            <div class="col-md-4 text-center">
+                <div class="bg-white bg-opacity-25 rounded-3 p-3">
+                    <small class="d-block opacity-75">المبلغ الإجمالي</small>
+                    <div class="amount-large">@Model.TotalAmount.ToString("N0")</div>
+                    <small class="opacity-75">د.ع</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+
+    <!-- الجانب الأيمن: التفاصيل -->
+    <div class="col-lg-8">
+
+        <!-- المشترك والاشتراك -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-white py-3">
+                        <h6 class="mb-0 fw-bold">
+                            <i class="fas fa-user text-primary me-2"></i>المشترك
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <h5 class="fw-bold">@Model.Subscriber?.FullName</h5>
+                        <p class="mb-1 text-muted font-monospace en-numbers small">
+                            <i class="fas fa-hashtag me-1"></i>@Model.Subscriber?.SubscriberNumber
+                        </p>
+                        @if (!string.IsNullOrEmpty(Model.Subscriber?.Phone))
+                        {
+                            <p class="mb-1">
+                                <i class="fas fa-phone text-success me-2"></i>
+                                <span dir="ltr" class="en-numbers">@Model.Subscriber.Phone</span>
+                            </p>
+                        }
+                        @if (!string.IsNullOrEmpty(Model.Subscriber?.FullAddress) && Model.Subscriber.FullAddress != "—")
+                        {
+                            <p class="mb-0 small text-muted">
+                                <i class="fas fa-map-marker-alt text-danger me-1"></i>
+                                @Model.Subscriber.FullAddress
+                            </p>
+                        }
+                        <a href="@Url.Action("Details", "Subscribers", new { id = Model.SubscriberId })"
+                           class="btn btn-sm btn-outline-primary mt-3">
+                            <i class="fas fa-eye me-1"></i>عرض البطاقة
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-white py-3">
+                        <h6 class="mb-0 fw-bold">
+                            <i class="fas fa-file-contract text-warning me-2"></i>العقد
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <h5 class="fw-bold font-monospace en-numbers">
+                            @Model.Subscription?.ContractNumber
+                        </h5>
+                        <div class="row g-2 mt-2">
+                            <div class="col-6">
+                                <div class="p-2 bg-light rounded text-center">
+                                    <small class="text-muted d-block">النوع</small>
+                                    <strong>@Model.Subscription?.SubscriptionTypeText</strong>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="p-2 bg-warning bg-opacity-10 rounded text-center">
+                                    <small class="text-muted d-block">الأمبير</small>
+                                    <strong class="en-numbers">@Model.Subscription?.Ampere A</strong>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="mb-0 mt-2 small">
+                            <i class="fas fa-bolt text-warning me-1"></i>
+                            المولد: <strong>@Model.Subscription?.Generator?.Name</strong>
+                        </p>
+                        <a href="@Url.Action("Details", "Subscriptions", new { id = Model.SubscriptionId })"
+                           class="btn btn-sm btn-outline-warning mt-3">
+                            <i class="fas fa-eye me-1"></i>عرض العقد
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- تفاصيل الفاتورة -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white py-3">
+                <h6 class="mb-0 fw-bold">
+                    <i class="fas fa-list-ul text-primary me-2"></i>
+                    تفاصيل الفاتورة
+                </h6>
+            </div>
+            <div class="card-body">
+                <!-- فترة الفاتورة -->
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <div class="info-box">
+                            <small class="text-muted d-block">من تاريخ</small>
+                            <strong class="en-numbers">@Model.PeriodStart.ToString("yyyy/MM/dd")</strong>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="info-box">
+                            <small class="text-muted d-block">إلى تاريخ</small>
+                            <strong class="en-numbers">@Model.PeriodEnd.ToString("yyyy/MM/dd")</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- جدول المبالغ -->
+                <div class="table-responsive">
+                    <table class="table table-borderless mb-0">
+                        <tbody>
+                            <tr>
+                                <td class="text-muted">المبلغ الأساسي:</td>
+                                <td class="text-end">
+                                    <strong class="en-numbers amount-mini">@Model.Amount.ToString("N0")</strong>
+                                    <small class="text-muted"> د.ع</small>
+                                </td>
+                            </tr>
+                            @if (Model.Discount > 0)
+                            {
+                                <tr class="text-danger">
+                                    <td>الخصم:</td>
+                                    <td class="text-end">
+                                        <strong class="en-numbers amount-mini">- @Model.Discount.ToString("N0")</strong>
+                                        <small> د.ع</small>
+                                    </td>
+                                </tr>
+                            }
+                            @if (Model.Tax > 0)
+                            {
+                                <tr>
+                                    <td class="text-muted">الضريبة:</td>
+                                    <td class="text-end">
+                                        <strong class="en-numbers amount-mini">@Model.Tax.ToString("N0")</strong>
+                                        <small class="text-muted"> د.ع</small>
+                                    </td>
+                                </tr>
+                            }
+                            @if (Model.AdditionalCharges > 0)
+                            {
+                                <tr>
+                                    <td class="text-muted">رسوم إضافية:</td>
+                                    <td class="text-end">
+                                        <strong class="en-numbers amount-mini">@Model.AdditionalCharges.ToString("N0")</strong>
+                                        <small class="text-muted"> د.ع</small>
+                                    </td>
+                                </tr>
+                            }
+                            <tr class="border-top border-2 border-primary">
+                                <td class="fw-bold pt-3">الإجمالي:</td>
+                                <td class="text-end pt-3">
+                                    <span class="amount-large text-primary en-numbers">@Model.TotalAmount.ToString("N0")</span>
+                                    <small class="text-muted"> د.ع</small>
+                                </td>
+                            </tr>
+                            @if (Model.PaidAmount > 0)
+                            {
+                                <tr class="text-success">
+                                    <td class="fw-bold">المدفوع:</td>
+                                    <td class="text-end">
+                                        <strong class="en-numbers amount-mini">@Model.PaidAmount.ToString("N0")</strong>
+                                        <small> د.ع</small>
+                                    </td>
+                                </tr>
+                                <tr class="@(Model.RemainingAmount > 0 ? "text-danger" : "text-success")">
+                                    <td class="fw-bold">المتبقي:</td>
+                                    <td class="text-end">
+                                        <strong class="en-numbers amount-mini">@Model.RemainingAmount.ToString("N0")</strong>
+                                        <small> د.ع</small>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                @if (!string.IsNullOrEmpty(Model.Notes))
+                {
+                    <div class="alert alert-warning mt-3 mb-0">
+                        <i class="fas fa-sticky-note me-2"></i>
+                        <strong>ملاحظات:</strong> @Model.Notes
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- المدفوعات -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                <h6 class="mb-0 fw-bold">
+                    <i class="fas fa-money-check-alt text-success me-2"></i>
+                    سجل المدفوعات
+                    <span class="badge bg-success ms-2 en-numbers">@(Model.Payments?.Count ?? 0)</span>
+                </h6>
+                @if (Model.Status != InvoiceStatus.Paid && Model.Status != InvoiceStatus.Cancelled)
+                {
+                     <button class="btn btn-sm btn-success btn-add-payment" data-invoice-id="@Model.Id">
+                         <i class="fas fa-plus me-1"></i>تسجيل دفعة
+                    </button>
+
+                   @*  <button class="btn btn-sm btn-success" disabled title="قيد التطوير">
+                        <i class="fas fa-plus me-1"></i>تسجيل دفعة
+                    </button> *@
+                }
+            </div>
+            <div class="card-body">
+                @if (Model.Payments?.Any() == true)
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>الإيصال</th>
+                                    <th>التاريخ</th>
+                                    <th>الطريقة</th>
+                                    <th>المبلغ</th>
+                                    <th>المُستلم</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var pay in Model.Payments.OrderByDescending(p => p.PaymentDate))
+                                {
+                                    <tr>
+                                        <td>
+                                            <span class="badge bg-light text-primary font-monospace en-numbers">
+                                                @pay.ReceiptNumber
+                                            </span>
+                                        </td>
+                                        <td class="en-numbers">
+                                            @pay.PaymentDate.ToString("yyyy/MM/dd")
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-info">
+                                                @pay.PaymentMethodText
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <strong class="text-success en-numbers">
+                                                @pay.Amount.ToString("N0")
+                                            </strong>
+                                            <small class="text-muted">د.ع</small>
+                                        </td>
+                                        <td>@(pay.ReceivedBy ?? "—")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-4">
+                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                        <p class="text-muted mb-0">لا توجد مدفوعات مسجلة على هذه الفاتورة</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- الجانب الأيسر: معلومات جانبية -->
+    <div class="col-lg-4">
+
+        <!-- ملخص سريع -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white py-3">
+                <h6 class="mb-0 fw-bold">
+                    <i class="fas fa-chart-pie text-info me-2"></i>ملخص مالي
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="info-box mb-3">
+                    <small class="text-muted d-block">المبلغ الإجمالي</small>
+                    <div class="amount-mini text-primary en-numbers">
+                        @Model.TotalAmount.ToString("N0")
+                    </div>
+                    <small class="text-muted">د.ع</small>
+                </div>
+                <div class="info-box success mb-3">
+                    <small class="text-muted d-block">المدفوع</small>
+                    <div class="amount-mini text-success en-numbers">
+                        @Model.PaidAmount.ToString("N0")
+                    </div>
+                    <small class="text-muted">د.ع</small>
+                </div>
+                <div class="info-box @(Model.RemainingAmount > 0 ? "danger" : "success")">
+                    <small class="text-muted d-block">المتبقي</small>
+                    <div class="amount-mini @(Model.RemainingAmount > 0 ? "text-danger" : "text-success") en-numbers">
+                        @Model.RemainingAmount.ToString("N0")
+                    </div>
+                    <small class="text-muted">د.ع</small>
+                </div>
+
+                <!-- Progress -->
+                @{
+                    var payPercentage = Model.TotalAmount > 0
+                    ? (double)(Model.PaidAmount / Model.TotalAmount * 100) : 0;
+                }
+                <div class="mt-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <small class="text-muted">نسبة السداد</small>
+                        <small class="fw-bold en-numbers">@payPercentage.ToString("F1")%</small>
+                    </div>
+                    <div class="progress" style="height: 10px">
+                        <div class="progress-bar bg-success"
+                             style="width: @payPercentage.ToString("F1")%"
+                             role="progressbar">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- التواريخ -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white py-3">
+                <h6 class="mb-0 fw-bold">
+                    <i class="fas fa-calendar-alt text-warning me-2"></i>التواريخ
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="timeline-item">
+                    <small class="text-muted d-block">
+                        <i class="fas fa-play me-1"></i>بداية الفترة
+                    </small>
+                    <strong class="en-numbers">@Model.PeriodStart.ToString("yyyy/MM/dd")</strong>
+                </div>
+                <div class="timeline-item">
+                    <small class="text-muted d-block">
+                        <i class="fas fa-flag-checkered me-1"></i>نهاية الفترة
+                    </small>
+                    <strong class="en-numbers">@Model.PeriodEnd.ToString("yyyy/MM/dd")</strong>
+                </div>
+                <div class="timeline-item">
+                    <small class="text-muted d-block">
+                        <i class="fas fa-file-alt me-1"></i>تاريخ الإصدار
+                    </small>
+                    <strong class="en-numbers">@Model.IssueDate.ToString("yyyy/MM/dd")</strong>
+                </div>
+                <div class="timeline-item" style="border-color: @(Model.IsOverdue ? "#dc3545" : "#48BB78")">
+                    <small class="text-muted d-block">
+                        <i class="fas fa-calendar-check me-1"></i>تاريخ الاستحقاق
+                    </small>
+                    <strong class="en-numbers @(Model.IsOverdue ? "text-danger" : "")">
+                        @Model.DueDate.ToString("yyyy/MM/dd")
+                    </strong>
+                    @if (Model.IsOverdue)
+                    {
+                        <br>
+                        <span class="badge bg-danger mt-1">
+                            <i class="fas fa-exclamation-triangle me-1"></i>
+                            متأخرة <span class="en-numbers">@Model.DueDate</span> يوم
+                        </span>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- معلومات الإنشاء -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white py-3">
+                <h6 class="mb-0 fw-bold">
+                    <i class="fas fa-info-circle text-secondary me-2"></i>معلومات إضافية
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-2">
+                    <small class="text-muted d-block">تاريخ الإنشاء</small>
+                    <strong class="en-numbers">@Model.CreatedAt.ToString("yyyy/MM/dd HH:mm")</strong>
+                </div>
+                @if (!string.IsNullOrEmpty(Model.CreatedBy))
+                {
+                    <div class="mb-2">
+                        <small class="text-muted d-block">تم بواسطة</small>
+                        <strong>@Model.CreatedBy</strong>
+                    </div>
+                }
+                @if (Model.UpdatedAt.HasValue)
+                {
+                    <hr>
+                    <div>
+                        <small class="text-muted d-block">آخر تحديث</small>
+                        <strong class="en-numbers">@Model.UpdatedAt.Value.ToString("yyyy/MM/dd HH:mm")</strong>
+                    </div>
+                }
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="paymentModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" id="paymentModalContent"></div>
+    </div>
+</div>
+
+<form id="antiForgeryForm">@Html.AntiForgeryToken()</form>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // فتح نافذة الدفعة
+            document.querySelectorAll('.btn-add-payment').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    var invoiceId = this.getAttribute('data-invoice-id');
+                    loadPaymentModal(invoiceId);
+                });
+            });
+        });
+
+        function loadPaymentModal(invoiceId) {
+            document.getElementById('paymentModalContent').innerHTML = `
+                <div class="modal-body text-center py-5">
+                    <div class="spinner-border text-success"></div>
+                    <p class="mt-3">جارِ التحميل...</p>
+                </div>`;
+
+            var modal = new bootstrap.Modal(document.getElementById('paymentModal'));
+            modal.show();
+
+            fetch('@Url.Action("CreatePayment")?invoiceId=' + invoiceId)
+                .then(r => r.text())
+                .then(html => {
+                    document.getElementById('paymentModalContent').innerHTML = html;
+                    initPaymentForm();
+                })
+                .catch(err => {
+                    console.error('Error loading payment modal:', err);
+                    document.getElementById('paymentModalContent').innerHTML = `
+                        <div class="modal-body text-center py-5">
+                            <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3"></i>
+                            <p class="text-danger fw-bold">فشل تحميل النافذة</p>
+                            <button class="btn btn-outline-secondary" data-bs-dismiss="modal">إغلاق</button>
+                        </div>`;
+                });
+        }
+
+        function initPaymentForm() {
+            var form = document.getElementById('paymentForm');
+            if (!form) return;
+
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+                var btn = form.querySelector('[type="submit"]');
+                var original = btn.innerHTML;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>جارِ التسجيل...';
+                btn.disabled = true;
+
+                fetch(form.getAttribute('action'), {
+                    method: 'POST',
+                    body: new FormData(form)
+                })
+                    .then(r => r.json())
+                    .then(res => {
+                        if (res.success) {
+                            bootstrap.Modal.getInstance(document.getElementById('paymentModal')).hide();
+                            Swal.fire({
+                                icon: 'success',
+                                title: '✅ تم تسجيل الدفعة!',
+                                html: `
+                                    <p class="mb-2">${res.message}</p>
+                                    <hr>
+                                    <p class="mb-0">
+                                        <small class="text-muted">رقم الإيصال:</small><br>
+                                        <strong class="font-monospace fs-5 text-success">${res.receiptNumber}</strong>
+                                    </p>
+                                `,
+                                confirmButtonColor: '#48BB78',
+                                confirmButtonText: 'موافق',
+                                customClass: { popup: 'swal2-rtl' }
+                            }).then(() => location.reload());
+                        } else {
+                            var errHtml = res.errors?.length
+                                ? '<ul class="text-start mt-2">' + res.errors.map(e => `<li>${e}</li>`).join('') + '</ul>'
+                                : '';
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'فشل',
+                                html: res.message + errHtml,
+                                customClass: { popup: 'swal2-rtl' }
+                            });
+                            btn.innerHTML = original;
+                            btn.disabled = false;
+                        }
+                    })
+                    .catch(() => {
+                        Swal.fire({ icon: 'error', title: 'خطأ', text: 'تعذر الاتصال' });
+                        btn.innerHTML = original;
+                        btn.disabled = false;
+                    });
+            });
+        }
+    </script>
+}

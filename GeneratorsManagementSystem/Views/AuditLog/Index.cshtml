@@ -1,0 +1,405 @@
+﻿@model List<GeneratorsManagementSystem.Models.AuditLog>
+@{
+    ViewData["Title"] = "سجل النشاطات";
+    var stats = ViewBag.Stats as GeneratorsManagementSystem.Services.AuditStats;
+    var filter = ViewBag.Filter as GeneratorsManagementSystem.Services.AuditFilter;
+    var totalCount = (int)ViewBag.TotalCount;
+    var currentPage = (int)ViewBag.CurrentPage;
+    var totalPages = (int)ViewBag.TotalPages;
+}
+
+@section Styles {
+    <style>
+        .stat-mini-card {
+            border-radius: 12px;
+            padding: 15px;
+            border: none;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        .stat-mini-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .audit-row {
+            transition: all 0.2s;
+        }
+        .audit-row:hover {
+            background: #f8f9fc !important;
+        }
+        .audit-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1rem;
+        }
+        .filter-card {
+            background: linear-gradient(135deg, #f8f9fc 0%, #ebf4ff 100%);
+            border: none;
+            border-radius: 15px;
+        }
+        .en-numbers {
+            direction: ltr;
+            display: inline-block;
+            font-feature-settings: "tnum";
+        }
+    </style>
+}
+
+<!-- HEADER -->
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <div>
+        <h4 class="fw-800 mb-1">
+            <i class="fas fa-history text-primary me-2"></i>
+            سجل النشاطات
+        </h4>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0 small">
+                <li class="breadcrumb-item">
+                    <a href="@Url.Action("Index", "Dashboard")"><i class="fas fa-home"></i></a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a href="@Url.Action("Index", "Settings")">الإعدادات</a>
+                </li>
+                <li class="breadcrumb-item active">سجل النشاطات</li>
+            </ol>
+        </nav>
+    </div>
+    <button class="btn btn-outline-danger" id="btnDeleteOld">
+        <i class="fas fa-broom me-2"></i>حذف السجلات القديمة
+    </button>
+</div>
+
+<!-- STATS -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="stat-mini-card bg-primary bg-opacity-10">
+            <div class="d-flex align-items-center gap-3">
+                <div class="audit-icon bg-primary">
+                    <i class="fas fa-list"></i>
+                </div>
+                <div>
+                    <small class="text-muted d-block">إجمالي السجلات</small>
+                    <h4 class="fw-900 mb-0 en-numbers">@stats?.TotalLogs.ToString("N0")</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-mini-card bg-success bg-opacity-10">
+            <div class="d-flex align-items-center gap-3">
+                <div class="audit-icon bg-success">
+                    <i class="fas fa-calendar-day"></i>
+                </div>
+                <div>
+                    <small class="text-muted d-block">اليوم</small>
+                    <h4 class="fw-900 mb-0 text-success en-numbers">@stats?.TodayLogs</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-mini-card bg-info bg-opacity-10">
+            <div class="d-flex align-items-center gap-3">
+                <div class="audit-icon bg-info">
+                    <i class="fas fa-calendar-week"></i>
+                </div>
+                <div>
+                    <small class="text-muted d-block">هذا الأسبوع</small>
+                    <h4 class="fw-900 mb-0 text-info en-numbers">@stats?.ThisWeekLogs</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-mini-card bg-warning bg-opacity-10">
+            <div class="d-flex align-items-center gap-3">
+                <div class="audit-icon bg-warning">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div>
+                    <small class="text-muted d-block">مستخدمون نشطون</small>
+                    <h4 class="fw-900 mb-0 text-warning en-numbers">@stats?.UniqueUsersCount</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- FILTERS -->
+<div class="card filter-card shadow-sm mb-4">
+    <div class="card-body">
+        <form method="get" action="@Url.Action("Index")" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label small fw-bold">
+                    <i class="fas fa-search me-1"></i>البحث
+                </label>
+                <input type="text" name="searchTerm" value="@filter?.SearchTerm"
+                       class="form-control" placeholder="بحث..." />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small fw-bold">
+                    <i class="fas fa-folder me-1"></i>الوحدة
+                </label>
+                <select name="module" class="form-select">
+                    <option value="">كل الوحدات</option>
+                    @foreach (var m in Enum.GetValues<GeneratorsManagementSystem.Models.AuditModule>())
+                    {
+                        <option value="@((int)m)" selected="@(filter?.Module == m)">
+                            @m.ToString()
+                        </option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small fw-bold">
+                    <i class="fas fa-bolt me-1"></i>العملية
+                </label>
+                <select name="actionType" class="form-select">
+                    <option value="">كل العمليات</option>
+                    @foreach (var a in Enum.GetValues<GeneratorsManagementSystem.Models.AuditActionType>())
+                    {
+                        <option value="@((int)a)" selected="@(filter?.ActionType == a)">
+                            @a.ToString()
+                        </option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small fw-bold">
+                    <i class="fas fa-calendar me-1"></i>من تاريخ
+                </label>
+                <input type="date" name="startDate" 
+                       value="@(filter?.StartDate?.ToString("yyyy-MM-dd"))" 
+                       class="form-control" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small fw-bold">
+                    <i class="fas fa-calendar me-1"></i>إلى تاريخ
+                </label>
+                <input type="date" name="endDate" 
+                       value="@(filter?.EndDate?.ToString("yyyy-MM-dd"))" 
+                       class="form-control" />
+            </div>
+            <div class="col-md-1 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-filter"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- LOGS TABLE -->
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+        <h6 class="mb-0 fw-bold">
+            <i class="fas fa-clipboard-list me-2 text-primary"></i>
+            السجلات
+            <span class="badge bg-primary ms-2 en-numbers">@totalCount</span>
+        </h6>
+        <small class="text-muted">
+            صفحة <span class="en-numbers">@currentPage</span> من <span class="en-numbers">@totalPages</span>
+        </small>
+    </div>
+    <div class="card-body p-0">
+        @if (Model.Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-3">التاريخ</th>
+                            <th>المستخدم</th>
+                            <th>الوحدة</th>
+                            <th>العملية</th>
+                            <th>الوصف</th>
+                            <th>IP</th>
+                            <th class="text-center">التفاصيل</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var log in Model)
+                        {
+                            <tr class="audit-row @(!log.IsSuccess ? "table-danger" : "")">
+                                <td class="ps-3">
+                                    <div>
+                                        <strong class="en-numbers">@log.Timestamp.ToString("HH:mm:ss")</strong>
+                                        <br>
+                                        <small class="text-muted en-numbers">
+                                            @log.Timestamp.ToString("yyyy/MM/dd")
+                                        </small>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="rounded-circle bg-primary bg-opacity-25 text-primary d-flex align-items-center justify-content-center"
+                                             style="width:32px;height:32px;font-size:0.8rem;font-weight:700">
+                                            @(log.UserName?.FirstOrDefault().ToString().ToUpper() ?? "?")
+                                        </div>
+                                        <div>
+                                            <strong class="small">@(log.UserFullName ?? log.UserName)</strong>
+                                            @if (!string.IsNullOrEmpty(log.UserFullName))
+                                            {
+                                                <br>
+                                                <small class="text-muted">@log.UserName</small>
+                                            }
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary bg-opacity-25 text-secondary">
+                                        <i class="fas @log.ModuleIcon me-1"></i>
+                                        @log.ModuleText
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-@log.ActionColor">
+                                        <i class="fas @log.ActionIcon me-1"></i>
+                                        @log.ActionTypeText
+                                    </span>
+                                </td>
+                                <td>
+                                    <div>
+                                        @log.Description
+                                        @if (!string.IsNullOrEmpty(log.EntityName))
+                                        {
+                                            <br>
+                                            <small class="text-muted">
+                                                <i class="fas fa-tag me-1"></i>
+                                                @log.EntityName
+                                            </small>
+                                        }
+                                        @if (!log.IsSuccess && !string.IsNullOrEmpty(log.ErrorMessage))
+                                        {
+                                            <br>
+                                            <small class="text-danger">
+                                                <i class="fas fa-exclamation-triangle me-1"></i>
+                                                @log.ErrorMessage
+                                            </small>
+                                        }
+                                    </div>
+                                </td>
+                                <td>
+                                    <small class="text-muted font-monospace en-numbers">
+                                        @(log.IpAddress ?? "—")
+                                    </small>
+                                </td>
+                                <td class="text-center">
+                                    <button class="btn btn-sm btn-outline-primary btn-details" 
+                                            data-id="@log.Id"
+                                            title="تفاصيل">
+                                        <i class="fas fa-info-circle"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- PAGINATION -->
+            @if (totalPages > 1)
+            {
+                <div class="p-3 border-top">
+                    <nav>
+                        <ul class="pagination justify-content-center mb-0">
+                            @if (currentPage > 1)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=@(currentPage - 1)&searchTerm=@filter?.SearchTerm&module=@(filter?.Module.HasValue == true ? ((int)filter.Module.Value).ToString() : "")&actionType=@(filter?.ActionType.HasValue == true ? ((int)filter.ActionType.Value).ToString() : "")">
+                                        السابق
+                                    </a>
+                                </li>
+                            }
+
+                            @for (int i = Math.Max(1, currentPage - 2); i <= Math.Min(totalPages, currentPage + 2); i++)
+                            {
+                                <li class="page-item @(i == currentPage ? "active" : "")">
+                                    <a class="page-link en-numbers" href="?page=@i&searchTerm=@filter?.SearchTerm&module=@(filter?.Module.HasValue == true ? ((int)filter.Module.Value).ToString() : "")&actionType=@(filter?.ActionType.HasValue == true ? ((int)filter.ActionType.Value).ToString() : "")">
+                                        @i
+                                    </a>
+                                </li>
+                            }
+
+                            @if (currentPage < totalPages)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=@(currentPage + 1)&searchTerm=@filter?.SearchTerm&module=@(filter?.Module.HasValue == true ? ((int)filter.Module.Value).ToString() : "")&actionType=@(filter?.ActionType.HasValue == true ? ((int)filter.ActionType.Value).ToString() : "")">
+                                        التالي
+                                    </a>
+                                </li>
+                            }
+                        </ul>
+                    </nav>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="text-center py-5">
+                <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                <p class="text-muted">لا توجد سجلات مطابقة للبحث</p>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal fade" id="detailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content" id="detailsContent"></div>
+    </div>
+</div>
+
+<form id="antiForgeryForm">@Html.AntiForgeryToken()</form>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // تفاصيل
+            $(document).on('click', '.btn-details', function () {
+                var id = $(this).data('id');
+                $.get('@Url.Action("Details")/' + id, function (html) {
+                    $('#detailsContent').html(html);
+                    $('#detailsModal').modal('show');
+                });
+            });
+
+            // حذف قديمة
+            $('#btnDeleteOld').on('click', function () {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'حذف السجلات القديمة',
+                    text: 'كم يوم تريد الاحتفاظ بالسجلات؟',
+                    input: 'number',
+                    inputValue: 90,
+                    inputAttributes: { min: 1, max: 365 },
+                    showCancelButton: true,
+                    confirmButtonText: 'حذف',
+                    cancelButtonText: 'إلغاء',
+                    confirmButtonColor: '#dc3545',
+                    customClass: { popup: 'swal2-rtl' }
+                }).then(res => {
+                    if (res.isConfirmed && res.value) {
+                        $.post('@Url.Action("DeleteOld")', {
+                            daysToKeep: res.value,
+                            __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                        }, function (r) {
+                            Swal.fire({
+                                icon: r.success ? 'success' : 'error',
+                                title: r.success ? 'تم' : 'فشل',
+                                text: r.message,
+                                customClass: { popup: 'swal2-rtl' }
+                            }).then(() => r.success && location.reload());
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+}

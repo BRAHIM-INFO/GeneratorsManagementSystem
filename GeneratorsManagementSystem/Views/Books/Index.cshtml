@@ -1,0 +1,774 @@
+﻿@model List<GeneratorsManagementSystem.Models.GeneratorBook>
+@{
+    ViewData["Title"] = "كتب المولدة";
+    var stats = ViewBag.Stats as GeneratorsManagementSystem.Services.BookStats;
+    var currentFilter = ViewBag.CurrentFilter as string;
+    var searchTerm = ViewBag.SearchTerm as string;
+}
+
+@section Styles {
+    <style>
+        /* ═══ Stat Cards ═══ */
+        .stat-card-book {
+            border: none;
+            border-radius: 16px;
+            padding: 20px;
+            transition: all 0.3s;
+            cursor: pointer;
+            text-decoration: none;
+            display: block;
+            color: inherit;
+        }
+
+            .stat-card-book:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+                text-decoration: none;
+            }
+
+            .stat-card-book.active {
+                border: 3px solid #5A67D8;
+            }
+
+        .stat-icon-book {
+            width: 55px;
+            height: 55px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            color: white;
+        }
+
+        /* ═══ Table ═══ */
+        .book-row {
+            transition: all 0.2s;
+        }
+
+            .book-row:hover {
+                background: #f8f9fc !important;
+            }
+
+        .category-badge {
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: white;
+        }
+
+        .attachment-preview {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #EBF4FF;
+            color: #5A67D8;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+            .attachment-preview:hover {
+                background: #5A67D8;
+                color: white;
+                transform: scale(1.1);
+            }
+
+        .btn-action-sm {
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+        }
+
+        /* ═══ Filter Bar ═══ */
+        .filter-bar {
+            background: linear-gradient(135deg, #f8f9fc 0%, #ebf4ff 100%);
+            border: none;
+            border-radius: 15px;
+            padding: 20px;
+        }
+
+        /* ═══ Numbers ═══ */
+        .en-numbers {
+            direction: ltr;
+            display: inline-block;
+            font-feature-settings: "tnum";
+        }
+
+        /* ═══ Indicators ═══ */
+        .expiry-indicator {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            display: inline-block;
+        }
+
+        .amount-cell {
+            font-weight: 800;
+            direction: ltr;
+            display: inline-block;
+        }
+
+        /* ═══ 🆕 Modal Scrolling ═══ */
+        #bookModal .modal-dialog {
+            max-height: 95vh;
+            margin: 20px auto;
+        }
+
+        #bookModal .modal-content {
+            max-height: calc(95vh - 40px);
+            display: flex;
+            flex-direction: column;
+        }
+
+        #bookModal .modal-header,
+        #bookModal .modal-footer {
+            flex-shrink: 0;
+        }
+
+        #bookModal .modal-body {
+            overflow-y: auto;
+            flex-grow: 1;
+        }
+
+            #bookModal .modal-body::-webkit-scrollbar {
+                width: 10px;
+            }
+
+            #bookModal .modal-body::-webkit-scrollbar-track {
+                background: #f8f9fc;
+                border-radius: 10px;
+            }
+
+            #bookModal .modal-body::-webkit-scrollbar-thumb {
+                background: linear-gradient(135deg, #5A67D8, #7886E0);
+                border-radius: 10px;
+            }
+
+                #bookModal .modal-body::-webkit-scrollbar-thumb:hover {
+                    background: linear-gradient(135deg, #4C51BF, #5A67D8);
+                }
+    </style>
+}
+
+<!-- HEADER -->
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <div>
+        <h4 class="fw-800 mb-1">
+            <i class="fas fa-book text-primary me-2"></i>
+            كتب المولدة
+        </h4>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0 small">
+                <li class="breadcrumb-item">
+                    <a href="@Url.Action("Index", "Dashboard")"><i class="fas fa-home"></i></a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a href="@Url.Action("Index", "Generators")">إدارة المولدات</a>
+                </li>
+                <li class="breadcrumb-item active">كتب المولدة</li>
+            </ol>
+        </nav>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+        <a href="@Url.Action("AlertsPage")" class="btn btn-warning">
+            <i class="fas fa-bell me-2"></i>
+            التنبيهات
+            @if (stats?.ExpiringSoon > 0 || stats?.Expired > 0)
+            {
+                <span class="badge bg-danger ms-1 en-numbers">@(stats.ExpiringSoon + stats.Expired)</span>
+            }
+        </a>
+        <button class="btn btn-primary btn-lg px-4" id="btnAddBook">
+            <i class="fas fa-plus me-2"></i>إضافة كتاب جديد
+        </button>
+    </div>
+</div>
+
+<!-- STATS CARDS -->
+<div class="row g-3 mb-4">
+    <div class="col-lg-3 col-md-6">
+        <a href="?" class="stat-card-book bg-primary bg-opacity-10 @(string.IsNullOrEmpty(currentFilter) ? "active" : "")">
+            <div class="d-flex align-items-center gap-3">
+                <div class="stat-icon-book bg-primary">
+                    <i class="fas fa-book"></i>
+                </div>
+                <div>
+                    <small class="text-muted d-block">إجمالي الكتب</small>
+                    <h3 class="fw-900 mb-0 en-numbers text-primary">@stats?.Total</h3>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <a href="?filter=expiring" class="stat-card-book bg-warning bg-opacity-10 @(currentFilter == "expiring" ? "active" : "")">
+            <div class="d-flex align-items-center gap-3">
+                <div class="stat-icon-book bg-warning">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div>
+                    <small class="text-muted d-block">قريبة الانتهاء</small>
+                    <h3 class="fw-900 mb-0 en-numbers text-warning">@stats?.ExpiringSoon</h3>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <a href="?filter=expired" class="stat-card-book bg-danger bg-opacity-10 @(currentFilter == "expired" ? "active" : "")">
+            <div class="d-flex align-items-center gap-3">
+                <div class="stat-icon-book bg-danger">
+                    <i class="fas fa-times-circle"></i>
+                </div>
+                <div>
+                    <small class="text-muted d-block">منتهية</small>
+                    <h3 class="fw-900 mb-0 en-numbers text-danger">@stats?.Expired</h3>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-card-book bg-success bg-opacity-10">
+            <div class="d-flex align-items-center gap-3">
+                <div class="stat-icon-book bg-success">
+                    <i class="fas fa-money-bill-wave"></i>
+                </div>
+                <div>
+                    <small class="text-muted d-block">إجمالي المبالغ</small>
+                    <h4 class="fw-900 mb-0 en-numbers text-success">
+                        @stats?.TotalAmount.ToString("N0")
+                    </h4>
+                    <small class="text-muted">د.ع</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- FILTER BAR -->
+<div class="filter-bar shadow-sm mb-4">
+    <form method="get" action="@Url.Action("Index")" class="row g-3 align-items-end">
+        <div class="col-md-8">
+            <label class="form-label fw-bold small">
+                <i class="fas fa-search me-1"></i>البحث
+            </label>
+            <input type="text" name="searchTerm" value="@searchTerm"
+                   class="form-control" placeholder="ابحث بالاسم، الرقم، الجهة..." />
+        </div>
+        <div class="col-md-2">
+            <label class="form-label fw-bold small">التصفية</label>
+            <select name="filter" class="form-select">
+                <option value="">كل الكتب</option>
+                <option value="expiring" selected="@(currentFilter == "expiring")">قريبة الانتهاء</option>
+                <option value="expired" selected="@(currentFilter == "expired")">منتهية</option>
+                <option value="noexpiry" selected="@(currentFilter == "noexpiry")">بدون تاريخ انتهاء</option>
+                <option value="archived" selected="@(currentFilter == "archived")">المؤرشفة</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary flex-grow-1">
+                    <i class="fas fa-filter me-1"></i>تطبيق
+                </button>
+                <a href="@Url.Action("Index")" class="btn btn-outline-secondary" title="مسح">
+                    <i class="fas fa-times"></i>
+                </a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- TABLE -->
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white py-3">
+        <h6 class="mb-0 fw-bold">
+            <i class="fas fa-list me-2 text-primary"></i>
+            قائمة الكتب
+            <span class="badge bg-primary ms-2 en-numbers">@Model.Count</span>
+        </h6>
+    </div>
+    <div class="card-body p-3">
+        @if (Model.Any())
+        {
+            <table id="booksTable" class="table table-hover align-middle" style="width:100%">
+                <thead class="table-light">
+                    <tr>
+                        <th>الرقم الداخلي</th>
+                        <th>التصنيف</th>
+                        <th>اسم الكتاب</th>
+                        <th>الجهة المصدرة</th>
+                        <th>رقم الكتاب</th>
+                        <th>التاريخ</th>
+                        <th>الانتهاء</th>
+                        <th>المبلغ</th>
+                        <th>المرفق</th>
+                        <th class="text-center">الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var book in Model)
+                    {
+                        <tr class="book-row @(book.IsArchived ? "table-secondary" : "")">
+                            <td>
+                                <span class="badge bg-light text-primary font-monospace en-numbers">
+                                    @book.InternalNumber
+                                </span>
+                            </td>
+                            <td>
+                                <span class="category-badge" style="background: @book.CategoryColor;">
+                                    <i class="fas @book.CategoryIcon"></i>
+                                    @book.CategoryText
+                                </span>
+                            </td>
+                            <td>
+                                <strong>@book.BookName</strong>
+                                @if (book.IsArchived)
+                                {
+                                    <br>
+                                    <span class="badge bg-secondary small">
+                                        <i class="fas fa-archive me-1"></i>مؤرشف
+                                    </span>
+                                }
+                                @if (book.IsRenewed)
+                                {
+                                    <br>
+                                    <span class="badge bg-info small">
+                                        <i class="fas fa-sync me-1"></i>مُجدَّد
+                                    </span>
+                                }
+                            </td>
+                            <td>
+                                <i class="fas fa-building text-muted me-1"></i>
+                                @book.IssuingAuthority
+                            </td>
+                            <td>
+                                <span class="badge bg-secondary bg-opacity-25 text-dark font-monospace en-numbers">
+                                    @book.BookNumber
+                                </span>
+                            </td>
+                            <td>
+                                <small class="en-numbers">
+                                    @book.BookDate.ToString("yyyy/MM/dd")
+                                </small>
+                            </td>
+                            <td>
+                                @if (book.HasExpiry && book.ExpiryDate.HasValue)
+                                {
+                                    <div>
+                                        <small class="en-numbers d-block">
+                                            @book.ExpiryDate.Value.ToString("yyyy/MM/dd")
+                                        </small>
+                                        <span class="expiry-indicator @book.StatusBadgeClass text-white mt-1">
+                                            <i class="fas @book.StatusIcon me-1"></i>
+                                            @book.ExpiryMessage
+                                        </span>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-info">
+                                        <i class="fas fa-infinity me-1"></i>
+                                        دائم
+                                    </span>
+                                }
+                            </td>
+                            <td>
+                                @if (book.Amount.HasValue && book.Amount.Value > 0)
+                                {
+                                    <strong class="amount-cell text-success en-numbers">
+                                        @book.Amount.Value.ToString("N0")
+                                    </strong>
+                                    <small class="text-muted">د.ع</small>
+                                    @if (book.ExpenseId.HasValue)
+                                    {
+                                        <br>
+                                        <small class="text-success">
+                                            <i class="fas fa-check-circle me-1"></i>
+                                            مُسجّل في المحاسبة
+                                        </small>
+                                    }
+                                }
+                                else
+                                {
+                                    <span class="text-muted">—</span>
+                                }
+                            </td>
+                            <td>
+                                @if (book.HasAttachment)
+                                {
+                                    <a href="@Url.Action("ViewAttachment", new { id = book.Id })"
+                                       target="_blank"
+                                       class="attachment-preview"
+                                       title="عرض المرفق">
+                                        <i class="fas @book.AttachmentIcon"></i>
+                                    </a>
+                                    <br>
+                                    <small class="text-muted en-numbers">@book.AttachmentSizeText</small>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">—</span>
+                                }
+                            </td>
+                            <td class="text-center">
+                                <div class="btn-group">
+                                    <a href="@Url.Action("Details", new { id = book.Id })"
+                                       class="btn btn-outline-primary btn-action-sm"
+                                       title="تفاصيل">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <button class="btn btn-outline-success btn-action-sm btn-edit"
+                                            data-id="@book.Id" title="تعديل">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    @if (book.HasExpiry && !book.IsArchived)
+                                    {
+                                        <button class="btn btn-outline-info btn-action-sm btn-renew"
+                                                data-id="@book.Id" title="تجديد">
+                                            <i class="fas fa-sync"></i>
+                                        </button>
+                                    }
+                                    @if (!book.IsArchived)
+                                    {
+                                        <button class="btn btn-outline-warning btn-action-sm btn-archive"
+                                                data-id="@book.Id"
+                                                data-name="@book.BookName"
+                                                title="أرشفة">
+                                            <i class="fas fa-archive"></i>
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <button class="btn btn-outline-success btn-action-sm btn-unarchive"
+                                                data-id="@book.Id"
+                                                title="استعادة">
+                                            <i class="fas fa-undo"></i>
+                                        </button>
+                                    }
+                                    <button class="btn btn-outline-danger btn-action-sm btn-delete"
+                                            data-id="@book.Id"
+                                            data-name="@book.BookName"
+                                            title="حذف">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div class="text-center py-5">
+                <i class="fas fa-book fa-5x text-muted mb-3"></i>
+                <h5 class="text-muted">لا توجد كتب مسجلة</h5>
+                <p class="text-muted mb-3">ابدأ بإضافة أول كتاب رسمي للمولدة</p>
+                <button class="btn btn-primary btn-lg" id="btnAddFirst">
+                    <i class="fas fa-plus me-2"></i>إضافة كتاب جديد
+                </button>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal fade" id="bookModal" tabindex="-1"
+     data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg" id="modalContent"></div>
+    </div>
+</div>
+
+<form id="antiForgeryForm">@Html.AntiForgeryToken()</form>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // DataTable
+            if ($('#booksTable tbody tr').length > 0) {
+                $('#booksTable').DataTable({
+                    language: { url: "//cdn.datatables.net/plug-ins/1.13.7/i18n/ar.json" },
+                    order: [[5, 'desc']],
+                    pageLength: 25,
+                    responsive: true
+                });
+            }
+
+            var token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+            // إضافة
+            document.getElementById('btnAddBook')?.addEventListener('click', function () {
+                loadModal('@Url.Action("Create")');
+            });
+            document.getElementById('btnAddFirst')?.addEventListener('click', function () {
+                loadModal('@Url.Action("Create")');
+            });
+
+            // تعديل
+            $(document).on('click', '.btn-edit', function () {
+                loadModal('@Url.Action("Edit")/' + $(this).data('id'));
+            });
+
+            // تجديد
+            $(document).on('click', '.btn-renew', function () {
+                loadModal('@Url.Action("Renew")/' + $(this).data('id'));
+            });
+
+            // تحميل النافذة
+            function loadModal(url) {
+                document.getElementById('modalContent').innerHTML = `
+                    <div class="modal-body text-center py-5">
+                        <div class="spinner-border text-primary" style="width:3rem;height:3rem"></div>
+                        <p class="mt-3 fw-bold">جارِ التحميل...</p>
+                    </div>`;
+                var modal = new bootstrap.Modal(document.getElementById('bookModal'));
+                modal.show();
+
+                fetch(url)
+                    .then(r => r.text())
+                    .then(html => {
+                        document.getElementById('modalContent').innerHTML = html;
+                        initForm();
+                    })
+                    .catch(err => {
+                        document.getElementById('modalContent').innerHTML = `
+                            <div class="modal-body text-center py-5">
+                                <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3"></i>
+                                <p class="text-danger fw-bold">فشل تحميل النموذج</p>
+                                <button class="btn btn-outline-secondary" data-bs-dismiss="modal">إغلاق</button>
+                            </div>`;
+                    });
+            }
+
+            // تهيئة النموذج
+            function initForm() {
+                var form = document.getElementById('bookForm');
+                if (!form) return;
+
+                // إظهار/إخفاء تاريخ الانتهاء
+                var hasExpiryCheckbox = form.querySelector('[name="HasExpiry"]');
+                var expiryDateContainer = form.querySelector('#expiryDateContainer');
+                var expiryDateInput = form.querySelector('[name="ExpiryDate"]');
+
+                if (hasExpiryCheckbox && expiryDateContainer) {
+                    hasExpiryCheckbox.addEventListener('change', function () {
+                        if (this.checked) {
+                            expiryDateContainer.style.display = 'block';
+                            if (expiryDateInput) expiryDateInput.required = true;
+                        } else {
+                            expiryDateContainer.style.display = 'none';
+                            if (expiryDateInput) {
+                                expiryDateInput.required = false;
+                                expiryDateInput.value = '';
+                            }
+                        }
+                    });
+                    // تطبيق الحالة الأولية
+                    if (hasExpiryCheckbox.checked) {
+                        expiryDateContainer.style.display = 'block';
+                    } else {
+                        expiryDateContainer.style.display = 'none';
+                    }
+                }
+
+                // معاينة الملف قبل الرفع
+                var fileInput = form.querySelector('[name="attachment"]');
+                var filePreview = form.querySelector('#filePreview');
+
+                if (fileInput && filePreview) {
+                    fileInput.addEventListener('change', function () {
+                        var file = this.files[0];
+                        if (!file) {
+                            filePreview.innerHTML = '';
+                            return;
+                        }
+
+                        var sizeInMB = (file.size / (1024 * 1024)).toFixed(2);
+
+                        if (file.size > 10 * 1024 * 1024) {
+                            filePreview.innerHTML = `
+                                <div class="alert alert-danger py-2 mb-0 mt-2">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    الملف كبير جداً (${sizeInMB} MB). الحد الأقصى 10 MB.
+                                </div>`;
+                            this.value = '';
+                            return;
+                        }
+
+                        var allowedExt = ['.pdf', '.jpg', '.jpeg', '.png'];
+                        var ext = '.' + file.name.split('.').pop().toLowerCase();
+                        if (!allowedExt.includes(ext)) {
+                            filePreview.innerHTML = `
+                                <div class="alert alert-danger py-2 mb-0 mt-2">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    نوع الملف غير مسموح. المسموح: PDF, JPG, PNG
+                                </div>`;
+                            this.value = '';
+                            return;
+                        }
+
+                        var icon = ext === '.pdf' ? 'fa-file-pdf text-danger' : 'fa-file-image text-primary';
+                        filePreview.innerHTML = `
+                            <div class="alert alert-success py-2 mb-0 mt-2 d-flex align-items-center gap-2">
+                                <i class="fas ${icon} fa-2x"></i>
+                                <div class="flex-grow-1">
+                                    <strong>${file.name}</strong>
+                                    <br><small class="text-muted en-numbers">${sizeInMB} MB</small>
+                                </div>
+                                <i class="fas fa-check-circle text-success fa-lg"></i>
+                            </div>`;
+                    });
+                }
+
+                // Submit
+                form.addEventListener('submit', function (e) {
+                    e.preventDefault();
+                    var btn = form.querySelector('[type="submit"]');
+                    var original = btn.innerHTML;
+                    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>جارِ الحفظ...';
+                    btn.disabled = true;
+
+                    var formData = new FormData(form);
+
+                    fetch(form.getAttribute('action'), {
+                        method: 'POST',
+                        body: formData
+                    })
+                        .then(r => r.json())
+                        .then(res => {
+                            if (res.success) {
+                                bootstrap.Modal.getInstance(document.getElementById('bookModal')).hide();
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: '✅ تم بنجاح',
+                                    text: res.message,
+                                    confirmButtonColor: '#48BB78',
+                                    timer: 3000,
+                                    timerProgressBar: true,
+                                    customClass: { popup: 'swal2-rtl' }
+                                }).then(() => location.reload());
+                            } else {
+                                var errHtml = '';
+                                if (res.errors && res.errors.length) {
+                                    errHtml = '<ul class="text-start mt-2">';
+                                    res.errors.forEach(e => errHtml += `<li>${e}</li>`);
+                                    errHtml += '</ul>';
+                                }
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'فشل',
+                                    html: res.message + errHtml,
+                                    confirmButtonColor: '#dc3545',
+                                    customClass: { popup: 'swal2-rtl' }
+                                });
+                                btn.innerHTML = original;
+                                btn.disabled = false;
+                            }
+                        })
+                        .catch(() => {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'خطأ',
+                                text: 'تعذر الاتصال بالخادم',
+                                customClass: { popup: 'swal2-rtl' }
+                            });
+                            btn.innerHTML = original;
+                            btn.disabled = false;
+                        });
+                });
+            }
+
+            // أرشفة
+            $(document).on('click', '.btn-archive', function () {
+                var id = $(this).data('id');
+                var name = $(this).data('name');
+
+                Swal.fire({
+                    icon: 'question',
+                    title: 'تأكيد الأرشفة',
+                    html: `هل تريد أرشفة الكتاب <strong>${name}</strong>؟<br/>
+                           <small class="text-muted">لن يظهر في القائمة الرئيسية</small>`,
+                    showCancelButton: true,
+                    confirmButtonText: 'أرشفة',
+                    cancelButtonText: 'إلغاء',
+                    confirmButtonColor: '#F6AD55',
+                    customClass: { popup: 'swal2-rtl' }
+                }).then(res => {
+                    if (res.isConfirmed) {
+                        $.post('@Url.Action("Archive")', {
+                            id: id, __RequestVerificationToken: token
+                        }, function (r) {
+                            Swal.fire({
+                                icon: r.success ? 'success' : 'error',
+                                title: r.success ? 'تم' : 'فشل',
+                                text: r.message, timer: 1500,
+                                customClass: { popup: 'swal2-rtl' }
+                            }).then(() => r.success && location.reload());
+                        });
+                    }
+                });
+            });
+
+            // استعادة من الأرشيف
+            $(document).on('click', '.btn-unarchive', function () {
+                var id = $(this).data('id');
+                $.post('@Url.Action("Unarchive")', {
+                    id: id, __RequestVerificationToken: token
+                }, function (r) {
+                    Swal.fire({
+                        icon: r.success ? 'success' : 'error',
+                        title: r.success ? 'تم' : 'فشل',
+                        text: r.message, timer: 1500,
+                        customClass: { popup: 'swal2-rtl' }
+                    }).then(() => r.success && location.reload());
+                });
+            });
+
+            // حذف
+            $(document).on('click', '.btn-delete', function () {
+                var id = $(this).data('id');
+                var name = $(this).data('name');
+
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'تأكيد الحذف',
+                    html: `هل تريد حذف الكتاب <strong>${name}</strong>؟<br/>
+                           <small class="text-danger">لا يمكن التراجع - سيتم حذف المرفق والمصروف المرتبط</small>`,
+                    showCancelButton: true,
+                    confirmButtonText: '<i class="fas fa-trash me-2"></i>حذف',
+                    cancelButtonText: 'إلغاء',
+                    confirmButtonColor: '#dc3545',
+                    customClass: { popup: 'swal2-rtl' }
+                }).then(res => {
+                    if (res.isConfirmed) {
+                        $.post('@Url.Action("Delete")', {
+                            id: id, __RequestVerificationToken: token
+                        }, function (r) {
+                            Swal.fire({
+                                icon: r.success ? 'success' : 'error',
+                                title: r.success ? 'تم' : 'فشل',
+                                text: r.message, timer: 1500,
+                                customClass: { popup: 'swal2-rtl' }
+                            }).then(() => r.success && location.reload());
+                        });
+                    }
+                });
+            });
+
+              
+        });
+           
+    </script>
+}

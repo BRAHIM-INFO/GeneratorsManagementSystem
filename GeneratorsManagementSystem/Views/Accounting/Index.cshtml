@@ -1,0 +1,757 @@
+﻿@{
+    ViewData["Title"] = "المحاسبة المالية";
+    var dashboard = ViewBag.Dashboard as GeneratorsManagementSystem.Services.AccountingDashboard;
+    var profitability = ViewBag.Profitability as List<GeneratorsManagementSystem.Services.GeneratorProfitability>;
+    var startDate = ViewBag.StartDate as DateTime?;
+    var endDate = ViewBag.EndDate as DateTime?;
+}
+
+@section Styles {
+    <style>
+        .stat-card-lg {
+            border: none;
+            border-radius: 20px;
+            overflow: hidden;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+            .stat-card-lg:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 15px 40px rgba(0,0,0,0.12);
+            }
+
+            .stat-card-lg::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                right: 0;
+                width: 150px;
+                height: 150px;
+                background: rgba(255,255,255,0.1);
+                border-radius: 50%;
+                transform: translate(50px, -50px);
+            }
+
+        .stat-icon-big {
+            width: 60px;
+            height: 60px;
+            border-radius: 15px;
+            background: rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .amount-big {
+            font-size: 2.2rem;
+            font-weight: 900;
+            line-height: 1;
+            direction: ltr;
+            display: inline-block;
+            font-feature-settings: "tnum";
+        }
+
+        .amount-mini {
+            font-size: 1.2rem;
+            font-weight: 800;
+            direction: ltr;
+            display: inline-block;
+        }
+
+        .en-numbers {
+            direction: ltr;
+            display: inline-block;
+            font-feature-settings: "tnum";
+        }
+
+        .chart-container {
+            position: relative;
+            height: 320px;
+        }
+
+        .kpi-tile {
+            padding: 15px;
+            border-radius: 12px;
+            background: #f8f9fc;
+            transition: all 0.2s;
+        }
+
+            .kpi-tile:hover {
+                background: #EBF4FF;
+                transform: translateY(-2px);
+            }
+
+        .category-item {
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 8px;
+            background: #f8f9fc;
+            transition: all 0.2s;
+        }
+
+            .category-item:hover {
+                transform: translateX(-3px);
+                box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            }
+
+        .profitability-card {
+            border-radius: 12px;
+            padding: 15px;
+            transition: all 0.2s;
+            border: 1px solid #e2e8f0;
+        }
+
+            .profitability-card:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            }
+
+        .filter-bar {
+            background: linear-gradient(135deg, #f8f9fc 0%, #ebf4ff 100%);
+            border: none;
+            border-radius: 15px;
+            padding: 20px;
+        }
+    </style>
+}
+
+<!-- HEADER -->
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <div>
+        <h4 class="fw-800 mb-1">
+            <i class="fas fa-calculator text-success me-2"></i>
+            المحاسبة المالية
+        </h4>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0 small">
+                <li class="breadcrumb-item">
+                    <a href="@Url.Action("Index", "Dashboard")"><i class="fas fa-home"></i></a>
+                </li>
+                <li class="breadcrumb-item active">المحاسبة</li>
+            </ol>
+        </nav>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+        <a href="@Url.Action("CreateExpense")" class="btn btn-danger" id="btnAddExpense">
+            <i class="fas fa-minus-circle me-2"></i>مصروف جديد
+        </a>
+        <a href="@Url.Action("Expenses")" class="btn btn-outline-danger">
+            <i class="fas fa-list me-2"></i>كل المصاريف
+        </a>
+        <a href="@Url.Action("Revenues")" class="btn btn-outline-success">
+            <i class="fas fa-list me-2"></i>الإيرادات
+        </a>
+        <a href="@Url.Action("ProfitLoss")" class="btn btn-outline-primary">
+            <i class="fas fa-chart-line me-2"></i>الأرباح والخسائر
+        </a>
+    </div>
+</div>
+
+<!-- Filter Bar -->
+<div class="filter-bar shadow-sm mb-4">
+    <form method="get" action="@Url.Action("Index")" class="row g-3 align-items-end">
+        <div class="col-md-4">
+            <label class="form-label fw-bold small">
+                <i class="fas fa-calendar me-1"></i>من تاريخ
+            </label>
+            <input type="date" name="startDate" value="@(startDate?.ToString("yyyy-MM-dd"))"
+                   class="form-control" />
+        </div>
+        <div class="col-md-4">
+            <label class="form-label fw-bold small">
+                <i class="fas fa-calendar me-1"></i>إلى تاريخ
+            </label>
+            <input type="date" name="endDate" value="@(endDate?.ToString("yyyy-MM-dd"))"
+                   class="form-control" />
+        </div>
+        <div class="col-md-4">
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary flex-grow-1">
+                    <i class="fas fa-filter me-1"></i>تطبيق
+                </button>
+                <a href="@Url.Action("Index")" class="btn btn-outline-secondary">
+                    <i class="fas fa-times"></i>
+                </a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- ═══ Main Stats Cards ═══ -->
+<div class="row g-3 mb-4">
+    <!-- الإيرادات -->
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-card-lg shadow-sm p-4 text-white"
+             style="background: linear-gradient(135deg, #48BB78, #38A169);">
+            <div class="d-flex justify-content-between align-items-start mb-3 position-relative">
+                <div class="stat-icon-big">
+                    <i class="fas fa-arrow-up"></i>
+                </div>
+                <span class="badge bg-white text-success fw-bold">
+                    <i class="fas fa-check-circle me-1"></i>إيرادات
+                </span>
+            </div>
+            <small class="opacity-75 d-block">إجمالي الإيرادات</small>
+            <div class="amount-big text-white">
+                @dashboard?.TotalRevenue.ToString("N0")
+            </div>
+            <small class="opacity-75">د.ع</small>
+            <hr class="opacity-25 my-2">
+            <div class="d-flex justify-content-between small">
+                <div>
+                    <div class="opacity-75">اليوم</div>
+                    <strong class="en-numbers">@dashboard?.TodayRevenue.ToString("N0")</strong>
+                </div>
+                <div>
+                    <div class="opacity-75">الشهر</div>
+                    <strong class="en-numbers">@dashboard?.MonthRevenue.ToString("N0")</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- المصاريف -->
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-card-lg shadow-sm p-4 text-white"
+             style="background: linear-gradient(135deg, #FC8181, #E53E3E);">
+            <div class="d-flex justify-content-between align-items-start mb-3 position-relative">
+                <div class="stat-icon-big">
+                    <i class="fas fa-arrow-down"></i>
+                </div>
+                <span class="badge bg-white text-danger fw-bold">
+                    <i class="fas fa-minus-circle me-1"></i>مصاريف
+                </span>
+            </div>
+            <small class="opacity-75 d-block">إجمالي المصاريف</small>
+            <div class="amount-big text-white">
+                @dashboard?.TotalExpenses.ToString("N0")
+            </div>
+            <small class="opacity-75">د.ع</small>
+            <hr class="opacity-25 my-2">
+            <div class="d-flex justify-content-between small">
+                <div>
+                    <div class="opacity-75">اليوم</div>
+                    <strong class="en-numbers">@dashboard?.TodayExpenses.ToString("N0")</strong>
+                </div>
+                <div>
+                    <div class="opacity-75">الشهر</div>
+                    <strong class="en-numbers">@dashboard?.MonthExpenses.ToString("N0")</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- صافي الربح -->
+    <div class="col-lg-3 col-md-6">
+        @{
+            var profitBg = dashboard?.NetProfit >= 0
+            ? "linear-gradient(135deg, #5A67D8, #4C51BF);"
+            : "linear-gradient(135deg, #ED8936, #DD6B20);";
+        }
+        <div class="stat-card-lg shadow-sm p-4 text-white"
+             style="background: @profitBg">
+            <div class="d-flex justify-content-between align-items-start mb-3 position-relative">
+                <div class="stat-icon-big">
+                    <i class="fas @(dashboard?.NetProfit >= 0 ? "fa-trophy" : "fa-exclamation-circle")"></i>
+                </div>
+                <span class="badge bg-white text-primary fw-bold">
+                    <i class="fas fa-chart-line me-1"></i>صافي
+                </span>
+            </div>
+            <small class="opacity-75 d-block">
+                @(dashboard?.NetProfit >= 0 ? "صافي الربح" : "الخسارة")
+            </small>
+            <div class="amount-big text-white">
+                @dashboard?.NetProfit.ToString("N0")
+            </div>
+            <small class="opacity-75">د.ع</small>
+            <hr class="opacity-25 my-2">
+            <div class="d-flex justify-content-between small">
+                <span class="opacity-75">هامش الربح</span>
+                <strong class="en-numbers">
+                    @dashboard?.ProfitMargin.ToString("F1")%
+                </strong>
+            </div>
+        </div>
+    </div>
+
+    <!-- المستحقات -->
+    <div class="col-lg-3 col-md-6">
+        <div class="stat-card-lg shadow-sm p-4 text-white"
+             style="background: linear-gradient(135deg, #F6AD55, #DD6B20);">
+            <div class="d-flex justify-content-between align-items-start mb-3 position-relative">
+                <div class="stat-icon-big">
+                    <i class="fas fa-hourglass-half"></i>
+                </div>
+                <span class="badge bg-white text-warning fw-bold">
+                    <i class="fas fa-clock me-1"></i>مستحقات
+                </span>
+            </div>
+            <small class="opacity-75 d-block">المستحقات المعلقة</small>
+            <div class="amount-big text-white">
+                @dashboard?.PendingReceivables.ToString("N0")
+            </div>
+            <small class="opacity-75">د.ع</small>
+            <hr class="opacity-25 my-2">
+            <div class="d-flex justify-content-between small">
+                <div>
+                    <div class="opacity-75">غير مدفوعة</div>
+                    <strong class="en-numbers">@dashboard?.UnpaidInvoicesCount</strong>
+                </div>
+                <div>
+                    <div class="opacity-75">متأخرة</div>
+                    <strong class="en-numbers">@dashboard?.OverdueInvoicesCount</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ Charts Row ═══ -->
+<div class="row g-3 mb-4">
+    <!-- Monthly Chart -->
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                <h6 class="mb-0 fw-bold">
+                    <i class="fas fa-chart-area text-primary me-2"></i>
+                    الإيرادات مقابل المصاريف (آخر 6 شهور)
+                </h6>
+                <div class="btn-group btn-group-sm">
+                    <button class="btn btn-outline-primary chart-period active" data-months="6">6 شهور</button>
+                    <button class="btn btn-outline-primary chart-period" data-months="12">سنة</button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <div id="monthlyChart"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Categories Chart -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white py-3">
+                <h6 class="mb-0 fw-bold">
+                    <i class="fas fa-chart-pie text-danger me-2"></i>
+                    المصاريف حسب الفئة
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <div id="categoryChart"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ Categories & Profitability ═══ -->
+<div class="row g-3 mb-4">
+    <!-- Top Expense Categories -->
+    <div class="col-lg-5">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white py-3">
+                <h6 class="mb-0 fw-bold">
+                    <i class="fas fa-list-ol text-danger me-2"></i>
+                    أعلى فئات المصاريف
+                </h6>
+            </div>
+            <div class="card-body">
+                @if (dashboard?.TopExpenseCategories?.Any() == true)
+                {
+                    @foreach (var cat in dashboard.TopExpenseCategories.Take(6))
+                    {
+                        <div class="category-item">
+                            <div class="d-flex align-items-center justify-content-between mb-1">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="rounded-3 p-2 d-flex align-items-center justify-content-center"
+                                         style="background: @cat.CategoryColor; color: white; width: 40px; height: 40px;">
+                                        <i class="fas @cat.CategoryIcon"></i>
+                                    </div>
+                                    <div>
+                                        <strong class="d-block">@cat.CategoryText</strong>
+                                        <small class="text-muted">
+                                            <span class="en-numbers">@cat.Count</span> عملية
+                                        </small>
+                                    </div>
+                                </div>
+                                <div class="text-end">
+                                    <strong class="text-danger amount-mini en-numbers">
+                                        @cat.Amount.ToString("N0")
+                                    </strong>
+                                    <br>
+                                    <small class="text-muted">د.ع</small>
+                                </div>
+                            </div>
+                            <div class="progress" style="height: 6px;">
+                                <div class="progress-bar"
+                                     style="width: @cat.Percentage.ToString("F1")%; background: @cat.CategoryColor;">
+                                </div>
+                            </div>
+                            <small class="text-muted en-numbers">
+                                @cat.Percentage.ToString("F1")% من الإجمالي
+                            </small>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="text-center py-4">
+                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                        <p class="text-muted mb-0">لا توجد مصاريف مسجلة</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Generator Profitability -->
+    <div class="col-lg-7">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                <h6 class="mb-0 fw-bold">
+                    <i class="fas fa-trophy text-warning me-2"></i>
+                    ربحية المولدات
+                </h6>
+                <a href="@Url.Action("Profitability")" class="btn btn-sm btn-outline-primary">
+                    عرض الكل <i class="fas fa-arrow-left ms-1"></i>
+                </a>
+            </div>
+            <div class="card-body">
+                @if (profitability?.Any() == true)
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>المولد</th>
+                                    <th>مشتركين</th>
+                                    <th>الإيرادات</th>
+                                    <th>المصاريف</th>
+                                    <th>الربح</th>
+                                    <th>الهامش</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @{
+                                    int rank = 1;
+                                }
+                                @foreach (var gen in profitability.Take(5))
+                                {
+                                    <tr>
+                                        <td>
+                                            @if (rank == 1)
+                                            {
+                                                <span class="badge bg-warning text-white">🥇</span>
+                                            }
+                                            else if (rank == 2)
+                                            {
+                                                <span class="badge bg-secondary text-white">🥈</span>
+                                            }
+                                            else if (rank == 3)
+                                            {
+                                                <span class="badge bg-danger text-white">🥉</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-light text-dark en-numbers">@rank</span>
+                                            }
+                                            @{
+                                                rank++;
+                                            }
+                                        </td>
+                                        <td>
+                                            <strong>@gen.GeneratorName</strong>
+                                            <br>
+                                            <small class="text-muted font-monospace en-numbers">@gen.GeneratorNumber</small>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-info text-white">
+                                                <i class="fas fa-users me-1"></i>
+                                                <span class="en-numbers">@gen.ActiveSubscribers</span>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="text-success fw-bold en-numbers">
+                                                @gen.Revenue.ToString("N0")
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="text-danger fw-bold en-numbers">
+                                                @gen.Expenses.ToString("N0")
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="fw-bold en-numbers @(gen.Profit >= 0 ? "text-primary" : "text-danger")">
+                                                @gen.Profit.ToString("N0")
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="badge @(gen.ProfitMargin >= 30 ? "bg-success" : gen.ProfitMargin >= 10 ? "bg-warning" : "bg-danger")">
+                                                <span class="en-numbers">@gen.ProfitMargin.ToString("F1")%</span>
+                                            </span>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-4">
+                        <i class="fas fa-chart-bar fa-3x text-muted mb-3"></i>
+                        <p class="text-muted mb-0">لا توجد بيانات كافية</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="expenseModal" tabindex="-1"
+     data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg" id="modalContent"></div>
+    </div>
+</div>
+
+<form id="antiForgeryForm">@Html.AntiForgeryToken()</form>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <script>
+        var monthlyChart = null;
+        var categoryChart = null;
+
+        document.addEventListener('DOMContentLoaded', function () {
+            loadMonthlyChart(6);
+            loadCategoryChart();
+
+            // زر إضافة مصروف
+            document.getElementById('btnAddExpense').addEventListener('click', function (e) {
+                e.preventDefault();
+                loadExpenseModal('@Url.Action("CreateExpense")');
+            });
+
+            // Chart Period Buttons
+            document.querySelectorAll('.chart-period').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    document.querySelectorAll('.chart-period').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    loadMonthlyChart(parseInt(this.getAttribute('data-months')));
+                });
+            });
+        });
+
+        // ═══ Monthly Chart ═══
+        function loadMonthlyChart(months) {
+            fetch('@Url.Action("MonthlyChartData")?months=' + months)
+                .then(r => r.json())
+                .then(data => {
+                    if (monthlyChart) monthlyChart.destroy();
+
+                    var options = {
+                        chart: {
+                            type: 'area',
+                            height: 320,
+                            fontFamily: 'Cairo, sans-serif',
+                            toolbar: { show: false }
+                        },
+                        series: [
+                            { name: 'الإيرادات', data: data.revenue },
+                            { name: 'المصاريف', data: data.expenses },
+                            { name: 'الربح', data: data.profit }
+                        ],
+                        colors: ['#48BB78', '#FC8181', '#5A67D8'],
+                        xaxis: {
+                            categories: data.labels,
+                            labels: {
+                                style: { fontFamily: 'Cairo', fontSize: '12px' }
+                            }
+                        },
+                        yaxis: {
+                            labels: {
+                                formatter: (v) => v.toLocaleString('en-US')
+                            }
+                        },
+                        stroke: { curve: 'smooth', width: 3 },
+                        fill: {
+                            type: 'gradient',
+                            gradient: {
+                                shadeIntensity: 1,
+                                opacityFrom: 0.4,
+                                opacityTo: 0.1
+                            }
+                        },
+                        tooltip: {
+                            y: {
+                                formatter: (v) => v.toLocaleString('en-US') + ' د.ع'
+                            }
+                        },
+                        legend: {
+                            position: 'top',
+                            fontFamily: 'Cairo',
+                            fontSize: '13px'
+                        },
+                        dataLabels: { enabled: false },
+                        grid: { borderColor: '#e2e8f0' }
+                    };
+
+                    monthlyChart = new ApexCharts(
+                        document.querySelector("#monthlyChart"), options);
+                    monthlyChart.render();
+                });
+        }
+
+        // ═══ Category Chart ═══
+        function loadCategoryChart() {
+            var url = '@Url.Action("CategoryChartData")';
+            @if (startDate.HasValue)
+            {
+                    <text>url += '?startDate=@startDate.Value.ToString("yyyy-MM-dd")';</text>
+            }
+            @if (endDate.HasValue)
+            {
+                    <text>url += (url.includes('?') ? '&' : '?') + 'endDate=@endDate.Value.ToString("yyyy-MM-dd")';</text>
+            }
+
+            fetch(url)
+                .then(r => r.json())
+                .then(data => {
+                    if (categoryChart) categoryChart.destroy();
+
+                    if (!data.labels || data.labels.length === 0) {
+                        document.querySelector("#categoryChart").innerHTML =
+                            '<div class="text-center py-5 text-muted"><i class="fas fa-chart-pie fa-3x mb-3"></i><br>لا توجد بيانات</div>';
+                        return;
+                    }
+
+                    var options = {
+                        chart: {
+                            type: 'donut',
+                            height: 320,
+                            fontFamily: 'Cairo, sans-serif'
+                        },
+                        series: data.amounts,
+                        labels: data.labels,
+                        colors: data.colors,
+                        legend: {
+                            position: 'bottom',
+                            fontFamily: 'Cairo',
+                            fontSize: '12px'
+                        },
+                        dataLabels: {
+                            enabled: true,
+                            formatter: (val) => val.toFixed(1) + '%',
+                            style: { fontFamily: 'Cairo' }
+                        },
+                        plotOptions: {
+                            pie: {
+                                donut: {
+                                    size: '65%',
+                                    labels: {
+                                        show: true,
+                                        total: {
+                                            show: true,
+                                            label: 'الإجمالي',
+                                            fontFamily: 'Cairo',
+                                            formatter: function (w) {
+                                                var total = w.globals.seriesTotals.reduce((a, b) => a + b, 0);
+                                                return total.toLocaleString('en-US') + ' د.ع';
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        tooltip: {
+                            y: {
+                                formatter: (v) => v.toLocaleString('en-US') + ' د.ع'
+                            }
+                        }
+                    };
+
+                    categoryChart = new ApexCharts(
+                        document.querySelector("#categoryChart"), options);
+                    categoryChart.render();
+                });
+        }
+
+        // ═══ Modal Handling ═══
+        function loadExpenseModal(url) {
+            document.getElementById('modalContent').innerHTML = `
+                <div class="modal-body text-center py-5">
+                    <div class="spinner-border text-primary" style="width:3rem;height:3rem"></div>
+                    <p class="mt-3 fw-bold">جارِ التحميل...</p>
+                </div>
+            `;
+            var modal = new bootstrap.Modal(document.getElementById('expenseModal'));
+            modal.show();
+
+            fetch(url)
+                .then(r => r.text())
+                .then(html => {
+                    document.getElementById('modalContent').innerHTML = html;
+                    initExpenseForm();
+                });
+        }
+
+        function initExpenseForm() {
+            var form = document.getElementById('expenseForm');
+            if (!form) return;
+
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+                var btn = form.querySelector('[type="submit"]');
+                var originalText = btn.innerHTML;
+
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>جارِ الحفظ...';
+                btn.disabled = true;
+
+                var formData = new FormData(form);
+
+                fetch(form.getAttribute('action'), {
+                    method: 'POST',
+                    body: formData
+                })
+                    .then(r => r.json())
+                    .then(res => {
+                        if (res.success) {
+                            bootstrap.Modal.getInstance(document.getElementById('expenseModal')).hide();
+                            Swal.fire({
+                                icon: 'success', title: 'تم', text: res.message,
+                                confirmButtonColor: '#48BB78', timer: 2000,
+                                customClass: { popup: 'swal2-rtl' }
+                            }).then(() => location.reload());
+                        } else {
+                            var errHtml = '';
+                            if (res.errors && res.errors.length) {
+                                errHtml = '<ul class="text-start mt-2">';
+                                res.errors.forEach(e => errHtml += `<li>${e}</li>`);
+                                errHtml += '</ul>';
+                            }
+                            Swal.fire({
+                                icon: 'error', title: 'فشل', html: res.message + errHtml,
+                                customClass: { popup: 'swal2-rtl' }
+                            });
+                            btn.innerHTML = originalText;
+                            btn.disabled = false;
+                        }
+                    })
+                    .catch(() => {
+                        Swal.fire({ icon: 'error', title: 'خطأ', text: 'تعذر الاتصال' });
+                        btn.innerHTML = originalText;
+                        btn.disabled = false;
+                    });
+            });
+        }
+    </script>
+}

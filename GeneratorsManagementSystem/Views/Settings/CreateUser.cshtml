@@ -1,0 +1,297 @@
+﻿@model GeneratorsManagementSystem.Models.ViewModels.Settings.UserFormViewModel
+@{
+    ViewData["Title"] = "إضافة مستخدم جديد";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/settings.css" />
+}
+
+<div class="settings-page">
+    <div class="page-header d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="page-title">
+                <i class="fas fa-user-plus text-purple"></i>
+                إضافة مستخدم جديد
+            </h2>
+            <p class="page-subtitle text-muted mb-0">إنشاء حساب مستخدم جديد في النظام</p>
+        </div>
+        <a href="@Url.Action("Users")" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-right"></i> رجوع
+        </a>
+    </div>
+
+    <form asp-action="CreateUser" method="post" enctype="multipart/form-data" id="userForm">
+        @Html.AntiForgeryToken()
+
+        <div class="row g-3">
+            <!-- Left Column: Profile Picture -->
+            <div class="col-md-4">
+                <div class="settings-card">
+                    <div class="settings-card-header bg-purple-gradient">
+                        <h5><i class="fas fa-camera"></i> الصورة الشخصية</h5>
+                    </div>
+                    <div class="settings-card-body text-center">
+                        <div class="profile-preview" id="profilePreview">
+                            <i class="fas fa-user"></i>
+                            <p>لا توجد صورة</p>
+                        </div>
+                        <label class="btn btn-outline-purple mt-3">
+                            <i class="fas fa-upload"></i> رفع صورة
+                            <input asp-for="ProfilePictureFile" type="file" accept="image/*" hidden onchange="previewProfile(this)" />
+                        </label>
+                        <small class="text-muted d-block mt-2">PNG, JPG (أقصى 2MB)</small>
+                    </div>
+                </div>
+
+                <!-- Status Card -->
+                <div class="settings-card mt-3">
+                    <div class="settings-card-header bg-success-gradient">
+                        <h5><i class="fas fa-toggle-on"></i> حالة الحساب</h5>
+                    </div>
+                    <div class="settings-card-body">
+                        <div class="form-check form-switch mb-3">
+                            <input asp-for="IsActive" class="form-check-input" />
+                            <label asp-for="IsActive" class="form-check-label">
+                                <strong>حساب نشط</strong>
+                            </label>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input asp-for="EmailConfirmed" class="form-check-input" />
+                            <label asp-for="EmailConfirmed" class="form-check-label">
+                                <strong>البريد مؤكد</strong>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Form Fields -->
+            <div class="col-md-8">
+                <!-- Basic Info -->
+                <div class="settings-card">
+                    <div class="settings-card-header bg-primary-gradient">
+                        <h5><i class="fas fa-info-circle"></i> البيانات الأساسية</h5>
+                    </div>
+                    <div class="settings-card-body">
+                        <div class="row g-3">
+                            <div class="col-md-12">
+                                <label asp-for="FullName" class="form-label">
+                                    <span class="text-danger">*</span>
+                                </label>
+                                <input asp-for="FullName" class="form-control" />
+                                <span asp-validation-for="FullName" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="UserName" class="form-label">
+                                    <span class="text-danger">*</span>
+                                </label>
+                                <input asp-for="UserName" class="form-control" dir="ltr" />
+                                <span asp-validation-for="UserName" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Email" class="form-label">
+                                    <span class="text-danger">*</span>
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                                    <input asp-for="Email" class="form-control" dir="ltr" />
+                                </div>
+                                <span asp-validation-for="Email" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="PhoneNumber" class="form-label"></label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-phone"></i></span>
+                                    <input asp-for="PhoneNumber" class="form-control" dir="ltr" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Language" class="form-label"></label>
+                                <select asp-for="Language" class="form-select">
+                                    <option value="ar">العربية</option>
+                                    <option value="en">English</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Department" class="form-label"></label>
+                                <input asp-for="Department" class="form-control" />
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="JobTitle" class="form-label"></label>
+                                <input asp-for="JobTitle" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Password -->
+                <div class="settings-card mt-3">
+                    <div class="settings-card-header bg-warning-gradient">
+                        <h5><i class="fas fa-lock"></i> كلمة المرور</h5>
+                    </div>
+                    <div class="settings-card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label asp-for="Password" class="form-label">
+                                    <span class="text-danger">*</span>
+                                </label>
+                                <div class="input-group">
+                                    <input asp-for="Password" class="form-control" type="password" id="passwordField" />
+                                    <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('passwordField', this)">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                <span asp-validation-for="Password" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="ConfirmPassword" class="form-label">
+                                    <span class="text-danger">*</span>
+                                </label>
+                                <div class="input-group">
+                                    <input asp-for="ConfirmPassword" class="form-control" type="password" id="confirmPasswordField" />
+                                    <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('confirmPasswordField', this)">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                            </div>
+                            <div class="col-12">
+                                <button type="button" class="btn btn-sm btn-outline-purple" onclick="generatePassword()">
+                                    <i class="fas fa-key"></i> توليد كلمة مرور قوية
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Roles -->
+                <div class="settings-card mt-3">
+                    <div class="settings-card-header bg-info-gradient">
+                        <h5><i class="fas fa-user-shield"></i> الأدوار والصلاحيات</h5>
+                    </div>
+                    <div class="settings-card-body">
+                        @if (Model.AvailableRoles.Any())
+                        {
+                            <div class="row g-2">
+                                @foreach (var role in Model.AvailableRoles)
+                                {
+                                    var roleId = "role_" + role.Id;
+                                    var isChecked = Model.SelectedRoles.Contains(role.Name);
+                                    <div class="col-md-4">
+                                        <div class="role-checkbox">
+                                            @if (isChecked)
+                                            {
+                                                <input type="checkbox" name="SelectedRoles" value="@role.Name"
+                                                       id="@roleId" class="form-check-input" checked />
+                                            }
+                                            else
+                                            {
+                                                <input type="checkbox" name="SelectedRoles" value="@role.Name"
+                                                       id="@roleId" class="form-check-input" />
+                                            }
+                                            <label for="@roleId" class="role-label">
+                                                <i class="fas fa-user-tag"></i>
+                                                @role.Name
+                                            </label>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="alert alert-warning mb-0">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                لا توجد أدوار معرفة. <a href="@Url.Action("CreateRole")">إنشاء دور جديد</a>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="settings-actions mt-4">
+            <button type="submit" class="btn btn-purple btn-lg">
+                <i class="fas fa-save"></i> حفظ المستخدم
+            </button>
+            @* <a href="@Url.Action("Users")" class="btn btn-outline-secondary btn-lg">
+                <i class="fas fa-times"></i> إلغاء
+            </a> *@
+            <a href="@Url.Action("Users")" class="btn btn-outline-secondary btn-lg">
+                إلغاء <i class="fas fa-times"></i>
+            </a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        function previewProfile(input) {
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                if (file.size > 2 * 1024 * 1024) {
+                    Swal.fire('خطأ', 'حجم الصورة يجب أن لا يتجاوز 2MB', 'error');
+                    input.value = '';
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    $('#profilePreview').html('<img src="' + e.target.result + '" alt="Profile" />');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function togglePassword(fieldId, btn) {
+            const field = document.getElementById(fieldId);
+            const icon = btn.querySelector('i');
+            if (field.type === 'password') {
+                field.type = 'text';
+                icon.classList.replace('fa-eye', 'fa-eye-slash');
+            } else {
+                field.type = 'password';
+                icon.classList.replace('fa-eye-slash', 'fa-eye');
+            }
+        }
+
+        function generatePassword() {
+            var chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+            var password = '';
+            for (var i = 0; i < 12; i++) {
+                password += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            $('#passwordField').val(password).attr('type', 'text');
+            $('#confirmPasswordField').val(password).attr('type', 'text');
+            Swal.fire({
+                icon: 'success',
+                title: 'تم توليد كلمة المرور',
+                text: password
+            });
+        }
+
+        // إظهار Loading فقط عند التحقق من صحة النموذج
+        $('#userForm').on('submit', function (e) {
+            var form = $(this);
+
+            // التحقق من صحة النموذج قبل إظهار Loading
+            if (form[0].checkValidity() === false) {
+                return true;
+            }
+
+            // إظهار Loading
+            Swal.fire({
+                title: 'جاري الحفظ...',
+                html: 'يرجى الانتظار',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                showConfirmButton: false,
+                didOpen: function() {
+                    Swal.showLoading();
+                }
+            });
+        });
+    </script>
+}

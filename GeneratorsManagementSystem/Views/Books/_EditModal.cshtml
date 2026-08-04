@@ -1,0 +1,166 @@
+﻿@model GeneratorsManagementSystem.Models.GeneratorBook
+
+<form id="bookForm" asp-action="Edit" method="post" enctype="multipart/form-data">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="Id" />
+    <input type="hidden" asp-for="InternalNumber" />
+    <input type="hidden" asp-for="CreatedAt" />
+    <input type="hidden" asp-for="CreatedBy" />
+    <input type="hidden" asp-for="ExpenseId" />
+    <input type="hidden" asp-for="IsArchived" />
+    <input type="hidden" asp-for="IsRenewed" />
+    <input type="hidden" asp-for="RenewedFromBookId" />
+    <input type="hidden" asp-for="AttachmentPath" />
+    <input type="hidden" asp-for="AttachmentName" />
+    <input type="hidden" asp-for="AttachmentSize" />
+    <input type="hidden" asp-for="AttachmentType" />
+
+    <div class="modal-header text-white py-3"
+         style="background:linear-gradient(135deg,#38A169,#48BB78)">
+        <div class="d-flex align-items-center gap-3 flex-grow-1">
+            <div class="bg-white bg-opacity-25 rounded-circle p-2 d-flex align-items-center justify-content-center"
+                 style="width:50px;height:50px">
+                <i class="fas fa-edit fa-lg"></i>
+            </div>
+            <div>
+                <h5 class="modal-title fw-800 mb-0">تعديل الكتاب</h5>
+                <small class="opacity-75 font-monospace">@Model.InternalNumber</small>
+            </div>
+        </div>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+    </div>
+
+    <div class="modal-body p-4" style="max-height: calc(100vh - 250px); overflow-y: auto;">
+        <div class="row g-3">
+            <!-- البيانات الأساسية -->
+            <div class="col-md-8">
+                <label class="form-label fw-bold">
+                    اسم الكتاب <span class="text-danger">*</span>
+                </label>
+                <input asp-for="BookName" class="form-control" required />
+            </div>
+            @* <div class="col-md-4">
+                <label class="form-label fw-bold">التصنيف</label>
+                <select asp-for="Category" class="form-select">
+                    @foreach (var cat in Enum.GetValues<GeneratorsManagementSystem.Models.BookCategory>())
+                    {
+                        <option value="@((int)cat)" selected="@(Model.Category == cat)">
+                            @cat.ToString()
+                        </option>
+                    }
+                </select>
+            </div> *@
+            <div class="col-md-6">
+                <label class="form-label fw-bold">
+                    الجهة المصدرة <span class="text-danger">*</span>
+                </label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light"><i class="fas fa-building text-primary"></i></span>
+                    <input asp-for="IssuingAuthority" class="form-control" required />
+                </div>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-bold">
+                    العدد (رقم الكتاب) <span class="text-danger">*</span>
+                </label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light"><i class="fas fa-hashtag text-primary"></i></span>
+                    <input asp-for="BookNumber" class="form-control" required />
+                </div>
+            </div>
+
+            <!-- التواريخ -->
+            <div class="col-md-6">
+                <label class="form-label fw-bold">تاريخ الكتاب <span class="text-danger">*</span></label>
+                <input asp-for="BookDate" type="date" class="form-control form-control-lg" required />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">تاريخ الانتهاء</label>
+                <div class="form-check form-switch fs-5 mb-2">
+                    <input class="form-check-input" type="checkbox" asp-for="HasExpiry" role="switch" />
+                    <label class="form-check-label fw-bold" asp-for="HasExpiry">يوجد تاريخ انتهاء</label>
+                </div>
+                <div id="expiryDateContainer" style="display: none;">
+                    <input asp-for="ExpiryDate" type="date" class="form-control form-control-lg" />
+                </div>
+            </div>
+
+            <!-- المبلغ -->
+            <div class="col-12">
+                <label class="form-label">المبلغ (اختياري)</label>
+                <div class="input-group input-group-lg">
+                    <input asp-for="Amount" type="number" step="any" min="0"
+                           class="form-control text-center fw-bold" style="direction:ltr" />
+                    <span class="input-group-text bg-warning text-white">د.ع</span>
+                </div>
+                @if (Model.ExpenseId.HasValue)
+                {
+                    <div class="alert alert-info py-2 mt-2 mb-0 small">
+                        <i class="fas fa-info-circle me-1"></i>
+                        <strong>مصروف مرتبط:</strong>
+                        تم تسجيل مصروف تلقائي بمعرف #<span class="en-numbers">@Model.ExpenseId</span>
+                    </div>
+                }
+            </div>
+
+            <!-- المرفق الحالي -->
+            @if (Model.HasAttachment)
+            {
+                <div class="col-12">
+                    <label class="form-label fw-bold">المرفق الحالي</label>
+                    <div class="alert alert-info d-flex align-items-center gap-2 mb-2">
+                        <i class="fas @Model.AttachmentIcon fa-2x"></i>
+                        <div class="flex-grow-1">
+                            <strong>@Model.AttachmentName</strong>
+                            <br>
+                            <small class="text-muted en-numbers">@Model.AttachmentSizeText</small>
+                        </div>
+                        <a href="@Url.Action("ViewAttachment", new { id = Model.Id })"
+                           target="_blank" class="btn btn-sm btn-info">
+                            <i class="fas fa-eye me-1"></i>عرض
+                        </a>
+                        <a href="@Url.Action("DownloadAttachment", new { id = Model.Id })"
+                           class="btn btn-sm btn-primary">
+                            <i class="fas fa-download me-1"></i>تحميل
+                        </a>
+                    </div>
+                </div>
+            }
+
+            <!-- استبدال المرفق -->
+            <div class="col-12">
+                <label class="form-label">
+                    @(Model.HasAttachment ? "استبدال المرفق" : "إرفاق ملف")
+                    <small class="text-muted">
+                        (PDF, JPG, PNG - الحد الأقصى <span class="en-numbers">10 MB</span>)
+                    </small>
+                </label>
+                <input type="file" name="attachment" class="form-control form-control-lg"
+                       accept=".pdf,.jpg,.jpeg,.png" />
+                <div id="filePreview"></div>
+                @if (Model.HasAttachment)
+                {
+                    <small class="text-warning mt-1 d-block">
+                        <i class="fas fa-exclamation-triangle me-1"></i>
+                        رفع ملف جديد سيحل محل المرفق الحالي
+                    </small>
+                }
+            </div>
+
+            <!-- الملاحظات -->
+            <div class="col-12">
+                <label class="form-label">ملاحظات</label>
+                <textarea asp-for="Notes" class="form-control" rows="3"></textarea>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-footer bg-light">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+            <i class="fas fa-times me-2"></i>إلغاء
+        </button>
+        <button type="submit" class="btn btn-success btn-lg px-5">
+            <i class="fas fa-save me-2"></i>حفظ التغييرات
+        </button>
+    </div>
+</form>

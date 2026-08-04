@@ -1,0 +1,187 @@
+﻿@{
+    ViewData["Title"] = "لوحة القيادة";
+    ViewData["PageTitle"] = "إدارة أسطول المولدات";
+}
+
+<!-- عنوان القسم -->
+<div class="section-header">
+    <div>
+        <h1>لوحة التحكم</h1>
+        <p>يوليو 2024 - تقرير الأداء الحالي</p>
+    </div>
+    <div class="status-badge">
+        <i class="fas fa-chart-line"></i>
+        نظام نشط ومستقر
+    </div>
+</div>
+
+<!-- البطاقات الإحصائية -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-header">
+            <div class="stat-icon icon-blue">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-title">
+                <span>إجمالي المشتركين</span>
+                <h2>1,248</h2>
+            </div>
+        </div>
+        <div class="stat-footer">
+            <span class="text-muted">48 موقع</span>
+            <span class="text-success">1,200 فعال</span>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-header">
+            <div class="stat-icon icon-red">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="stat-title">
+                <span>المتأخرون بالدفع</span>
+                <h2>12</h2>
+            </div>
+        </div>
+        <div class="stat-footer">
+            <span class="text-muted">هذا الشهر</span>
+            <span class="text-danger">زيادة 2%</span>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-header">
+            <div class="stat-icon icon-teal">
+                <i class="fas fa-clock"></i>
+            </div>
+            <div class="stat-title">
+                <span>ساعات التشغيل</span>
+                <h2>420h</h2>
+            </div>
+        </div>
+        <div class="stat-footer">
+            <span class="text-muted">معدل 14س/يوم</span>
+            <span class="text-success">طبيعي</span>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-header">
+            <div class="stat-icon icon-orange">
+                <i class="fas fa-gas-pump"></i>
+            </div>
+            <div class="stat-title">
+                <span>تكلفة الوقود</span>
+                <h2>1,450 د.ع</h2>
+            </div>
+        </div>
+        <div class="stat-footer">
+            <span class="text-muted">850 لتر</span>
+            <span class="text-success">متبقي 12%</span>
+        </div>
+    </div>
+</div>
+
+<!-- شريط التقدم -->
+<div class="progress-card">
+    <div class="progress-header">
+        <h3>نسبة التحصيل هذا الشهر</h3>
+        <div class="progress-value">
+            <h2>100%</h2>
+            <span>المستهدف: 80%</span>
+        </div>
+    </div>
+    <div class="progress-bar-container">
+        <div class="progress-bar" style="width: 100%;">
+            <div class="progress-marker" style="right: 80%;"></div>
+        </div>
+    </div>
+    <div class="progress-labels">
+        <span>0%</span>
+        <span>هدف 80%</span>
+        <span>100%</span>
+    </div>
+</div>
+
+<!-- المخططات -->
+<div class="charts-grid">
+    <div class="chart-card">
+        <div class="chart-header">
+            <h3>الإيرادات - آخر 6 أشهر</h3>
+            <div class="chart-tabs">
+                <button class="tab active">شهري</button>
+                <button class="tab">سنوي</button>
+            </div>
+        </div>
+        <div class="chart-body">
+            <div class="bar-chart">
+                <div class="bar-item">
+                    <div class="bar" style="height: 40%;"></div>
+                    <span>فبراير</span>
+                </div>
+                <div class="bar-item">
+                    <div class="bar" style="height: 55%;"></div>
+                    <span>مارس</span>
+                </div>
+                <div class="bar-item">
+                    <div class="bar" style="height: 45%;"></div>
+                    <span>أبريل</span>
+                </div>
+                <div class="bar-item">
+                    <div class="bar" style="height: 75%;"></div>
+                    <span>مايو</span>
+                </div>
+                <div class="bar-item">
+                    <div class="bar" style="height: 60%;"></div>
+                    <span>يونيو</span>
+                </div>
+                <div class="bar-item">
+                    <div class="bar active" style="height: 95%;"></div>
+                    <span>يوليو</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="chart-card">
+        <div class="chart-header">
+            <h3>نسبة التحصيل</h3>
+        </div>
+        <div class="chart-body">
+            <div class="donut-chart">
+                <svg viewBox="0 0 200 200">
+                    <circle cx="100" cy="100" r="80" fill="none" stroke="#e5e7eb" stroke-width="20" />
+                    <circle cx="100" cy="100" r="80" fill="none" stroke="#14b8a6" stroke-width="20"
+                            stroke-dasharray="502" stroke-dashoffset="0"
+                            transform="rotate(-90 100 100)" />
+                </svg>
+                <div class="donut-center">
+                    <h2>100%</h2>
+                    <span>من المطلوب</span>
+                </div>
+            </div>
+            <div class="donut-legend">
+                <div class="legend-item">
+                    <span class="legend-label">المحصل فعلياً</span>
+                    <span class="legend-value">50,000 د.ع</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-label">الإيراد المتوقع</span>
+                    <span class="legend-value">50,000 د.ع</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // تفعيل التبويبات (شهري/سنوي)
+        document.querySelectorAll('.chart-tabs .tab').forEach(tab => {
+            tab.addEventListener('click', function () {
+                document.querySelectorAll('.chart-tabs .tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+    </script>
+}

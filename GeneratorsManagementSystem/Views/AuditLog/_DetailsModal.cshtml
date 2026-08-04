@@ -1,0 +1,102 @@
+﻿@model GeneratorsManagementSystem.Models.AuditLog
+
+<div class="modal-header text-white bg-@Model.ActionColor">
+    <h5 class="modal-title fw-bold">
+        <i class="fas @Model.ActionIcon me-2"></i>
+        تفاصيل السجل #@Model.Id
+    </h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+</div>
+
+<div class="modal-body">
+    <div class="row g-3">
+        <div class="col-md-6">
+            <div class="p-3 bg-light rounded">
+                <small class="text-muted d-block">التاريخ والوقت</small>
+                <strong class="en-numbers">@Model.Timestamp.ToString("yyyy/MM/dd HH:mm:ss")</strong>
+                <br><small class="text-muted">@Model.TimeAgo</small>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="p-3 bg-light rounded">
+                <small class="text-muted d-block">المستخدم</small>
+                <strong>@(Model.UserFullName ?? Model.UserName)</strong>
+                <br><small class="text-muted">@Model.UserName</small>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="p-3 bg-primary bg-opacity-10 rounded">
+                <small class="text-muted d-block">الوحدة</small>
+                <strong><i class="fas @Model.ModuleIcon me-1"></i>@Model.ModuleText</strong>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="p-3 bg-@Model.ActionColor bg-opacity-10 rounded">
+                <small class="text-muted d-block">العملية</small>
+                <strong class="text-@Model.ActionColor">
+                    <i class="fas @Model.ActionIcon me-1"></i>@Model.ActionTypeText
+                </strong>
+            </div>
+        </div>
+        <div class="col-12">
+            <div class="p-3 bg-light rounded">
+                <small class="text-muted d-block">الوصف</small>
+                <strong>@Model.Description</strong>
+                @if (!string.IsNullOrEmpty(Model.EntityName))
+                {
+                    <br>
+                    <small><i class="fas fa-tag me-1"></i>@Model.EntityType: @Model.EntityName</small>
+                }
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(Model.Changes))
+        {
+            <div class="col-12">
+                <div class="p-3 bg-warning bg-opacity-10 rounded">
+                    <small class="text-muted d-block fw-bold">
+                        <i class="fas fa-exchange-alt me-1"></i>التغييرات
+                    </small>
+                    <code class="d-block mt-2" style="white-space:pre-wrap">@Model.Changes</code>
+                </div>
+            </div>
+        }
+
+        @if (!string.IsNullOrEmpty(Model.NewValues))
+        {
+            <div class="col-12">
+                <details>
+                    <summary class="fw-bold text-primary" style="cursor:pointer">
+                        <i class="fas fa-code me-1"></i>عرض البيانات (JSON)
+                    </summary>
+                    <div class="mt-2 p-3 bg-dark text-white rounded">
+                        <pre class="mb-0" style="color:#00ff88;font-size:0.85rem"><code>@Model.NewValues</code></pre>
+                    </div>
+                </details>
+            </div>
+        }
+
+        @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+        {
+            <div class="col-12">
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>خطأ:</strong> @Model.ErrorMessage
+                </div>
+            </div>
+        }
+
+        <div class="col-md-6">
+            <small class="text-muted d-block">IP</small>
+            <code class="en-numbers">@(Model.IpAddress ?? "—")</code>
+        </div>
+        <div class="col-md-6">
+            <small class="text-muted d-block">الرابط</small>
+            <code>@(Model.Url ?? "—")</code>
+        </div>
+    </div>
+</div>
+
+<div class="modal-footer">
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+</div>

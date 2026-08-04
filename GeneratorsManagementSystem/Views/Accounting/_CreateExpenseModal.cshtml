@@ -1,0 +1,150 @@
+﻿@model GeneratorsManagementSystem.Models.Accounting.Expense
+@{
+    var generators = ViewBag.Generators as List<GeneratorsManagementSystem.Models.Generator>;
+}
+
+<form id="expenseForm" asp-action="CreateExpense" method="post">
+    @Html.AntiForgeryToken()
+
+    <div class="modal-header text-white py-3"
+         style="background:linear-gradient(135deg,#E53E3E,#FC8181)">
+        <div class="d-flex align-items-center gap-3 flex-grow-1">
+            <div class="bg-white bg-opacity-25 rounded-circle p-2 d-flex align-items-center justify-content-center"
+                 style="width:50px;height:50px">
+                <i class="fas fa-minus-circle fa-lg"></i>
+            </div>
+            <div>
+                <h5 class="modal-title fw-800 mb-0">تسجيل مصروف جديد</h5>
+                <small class="opacity-75 font-monospace">@Model.ExpenseNumber</small>
+            </div>
+        </div>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+    </div>
+
+    <div class="modal-body p-4">
+        <div class="text-center mb-4">
+            <div class="d-inline-block px-4 py-2 rounded-pill"
+                 style="background:#FFF5F5;border:2px dashed #E53E3E">
+                <small class="text-muted d-block">رقم المصروف (يتولد تلقائياً)</small>
+                <strong class="text-danger fs-5 font-monospace">@Model.ExpenseNumber</strong>
+            </div>
+        </div>
+
+        <div class="row g-3">
+            <!-- الفئة -->
+            <div class="col-md-6">
+                <label class="form-label fw-bold">
+                    الفئة <span class="text-danger">*</span>
+                </label>
+                <select asp-for="Category" class="form-select">
+                    <option value="1">🔴 وقود</option>
+                    <option value="2">🔧 صيانة</option>
+                    <option value="3">⚙️ قطع غيار</option>
+                    <option value="4">👥 رواتب</option>
+                    <option value="5">🏢 إيجار</option>
+                    <option value="6">⚡ كهرباء رسمية</option>
+                    <option value="7">🛢️ زيوت وفلاتر</option>
+                    <option value="8">🔨 معدات</option>
+                    <option value="9">🚚 نقل ومواصلات</option>
+                    <option value="10">📞 اتصالات</option>
+                    <option value="11">💼 مصاريف إدارية</option>
+                    <option value="12">📋 ضرائب ورسوم</option>
+                    <option value="99">📌 أخرى</option>
+                </select>
+            </div>
+
+            <!-- المولد المرتبط -->
+            <div class="col-md-6">
+                <label class="form-label">
+                    المولد المرتبط
+                    <small class="text-muted">(اختياري - لتتبع الربحية)</small>
+                </label>
+                <select asp-for="GeneratorId" class="form-select">
+                    <option value="">-- عام (غير مرتبط) --</option>
+                    @foreach (var g in generators ?? new())
+                    {
+                        <option value="@g.Id">@g.GeneratorNumber - @g.Name</option>
+                    }
+                </select>
+            </div>
+
+            <!-- البيان -->
+            <div class="col-12">
+                <label class="form-label fw-bold">
+                    البيان <span class="text-danger">*</span>
+                </label>
+                <input asp-for="Description" class="form-control"
+                       placeholder="مثال: تعبئة 100 لتر ديزل" autofocus />
+            </div>
+
+            <!-- المبلغ -->
+            <div class="col-md-6">
+                <label class="form-label fw-bold">
+                    المبلغ <span class="text-danger">*</span>
+                </label>
+                <div class="input-group input-group-lg">
+                    <input asp-for="Amount" type="number" step="any" min="0.01"
+                           class="form-control text-center fw-bold"
+                           style="direction:ltr" placeholder="0" />
+                    <span class="input-group-text bg-danger text-white">د.ع</span>
+                </div>
+            </div>
+
+            <!-- تاريخ المصروف -->
+            <div class="col-md-6">
+                <label class="form-label fw-bold">
+                    تاريخ المصروف <span class="text-danger">*</span>
+                </label>
+                <input asp-for="ExpenseDate" type="date" class="form-control form-control-lg" />
+            </div>
+
+            <!-- طريقة الدفع -->
+            <div class="col-md-6">
+                <label class="form-label">طريقة الدفع</label>
+                <select asp-for="PaymentMethod" class="form-select">
+                    <option value="1">💵 نقدي</option>
+                    <option value="2">🏦 تحويل بنكي</option>
+                    <option value="3">💳 بطاقة</option>
+                    <option value="4">📱 محفظة إلكترونية</option>
+                    <option value="5">📄 شيك</option>
+                    <option value="99">📌 أخرى</option>
+                </select>
+            </div>
+
+            <!-- المرجع -->
+            <div class="col-md-6">
+                <label class="form-label">
+                    المرجع
+                    <small class="text-muted">(رقم فاتورة/شيك)</small>
+                </label>
+                <input asp-for="Reference" class="form-control" placeholder="اختياري" />
+            </div>
+
+            <!-- المستفيد -->
+            <div class="col-12">
+                <label class="form-label">
+                    المستفيد / المورد
+                    <small class="text-muted">(اختياري)</small>
+                </label>
+                <input asp-for="Beneficiary" class="form-control"
+                       placeholder="مثال: محطة الوقود الأهلية" />
+            </div>
+
+            <!-- الملاحظات -->
+            <div class="col-12">
+                <label class="form-label">ملاحظات</label>
+                <textarea asp-for="Notes" class="form-control" rows="2"
+                          placeholder="أي ملاحظات إضافية..."></textarea>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-footer bg-light">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+            <i class="fas fa-times me-2"></i>إلغاء
+        </button>
+        <button type="submit" class="btn btn-danger btn-lg px-5">
+            <i class="fas fa-save me-2"></i>حفظ المصروف
+        </button>
+    </div>
+</form>

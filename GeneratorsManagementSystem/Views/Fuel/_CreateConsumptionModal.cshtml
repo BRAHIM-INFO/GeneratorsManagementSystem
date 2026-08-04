@@ -1,0 +1,163 @@
+﻿@model GeneratorsManagementSystem.Models.Fuel.FuelConsumption
+@{
+    var generators = ViewBag.Generators as List<GeneratorsManagementSystem.Models.Generator>;
+    var allocations = ViewBag.Allocations as List<GeneratorsManagementSystem.Models.Fuel.FuelAllocation>;
+}
+
+<form id="fuelForm" asp-action="CreateConsumption" method="post">
+    @Html.AntiForgeryToken()
+
+    <div class="modal-header text-white py-3"
+         style="background:linear-gradient(135deg,#E53E3E,#C53030)">
+        <div class="d-flex align-items-center gap-3 flex-grow-1">
+            <div class="bg-white bg-opacity-25 rounded-circle p-2 d-flex align-items-center justify-content-center"
+                 style="width:50px;height:50px">
+                <i class="fas fa-tint fa-lg"></i>
+            </div>
+            <div>
+                <h5 class="modal-title fw-800 mb-0">تسجيل استهلاك وقود</h5>
+                <small class="opacity-75 font-monospace">@Model.ConsumptionNumber</small>
+            </div>
+        </div>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+    </div>
+
+    <div class="modal-body p-4">
+        <div class="text-center mb-4">
+            <div class="d-inline-block px-4 py-2 rounded-pill"
+                 style="background:#FFF5F5;border:2px dashed #E53E3E">
+                <small class="text-muted d-block">رقم السجل (يتولد تلقائياً)</small>
+                <strong class="text-danger fs-5 font-monospace">@Model.ConsumptionNumber</strong>
+            </div>
+        </div>
+
+        <div class="row g-3">
+            <!-- المولد -->
+            <div class="col-md-6">
+                <label class="form-label fw-bold">
+                    المولد <span class="text-danger">*</span>
+                </label>
+                <select asp-for="GeneratorId" class="form-select form-select-lg">
+                    <option value="">-- اختر المولد --</option>
+                    @foreach (var g in generators ?? new())
+                    {
+                        <option value="@g.Id">@g.GeneratorNumber - @g.Name</option>
+                    }
+                </select>
+            </div>
+
+            <!-- نوع الوقود -->
+            <div class="col-md-6">
+                <label class="form-label fw-bold">
+                    نوع الوقود <span class="text-danger">*</span>
+                </label>
+                <select asp-for="FuelKind" class="form-select form-select-lg">
+                    <option value="1">🔴 ديزل</option>
+                    <option value="2">⛽ بنزين</option>
+                    <option value="3">🔥 غاز</option>
+                    <option value="4">🛢️ زيت أسود</option>
+                </select>
+            </div>
+
+            <!-- الحصة -->
+            <div class="col-12">
+                <label class="form-label">
+                    الربط بحصة (اختياري)
+                    <small class="text-muted">- يُخصم من الحصة تلقائياً</small>
+                </label>
+                <select asp-for="FuelAllocationId" class="form-select">
+                    <option value="">-- بدون ربط بحصة --</option>
+                    @foreach (var a in allocations ?? new())
+                    {
+                        <option value="@a.Id">
+                            @a.AllocationNumber (@a.SourceText) - متبقي: @a.RemainingQuantity.ToString("N2") لتر
+                        </option>
+                    }
+                </select>
+            </div>
+
+            <!-- الكمية -->
+            <div class="col-md-6">
+                <label class="form-label fw-bold">
+                    الكمية المستهلكة <span class="text-danger">*</span>
+                </label>
+                <div class="input-group input-group-lg">
+                    <input asp-for="Quantity" type="number" step="any" min="0.01"
+                           class="form-control text-center fw-bold text-danger"
+                           style="direction:ltr;font-size:1.3rem" placeholder="0" />
+                    <span class="input-group-text bg-danger text-white">لتر</span>
+                </div>
+            </div>
+
+            <!-- التكلفة -->
+            <div class="col-md-6">
+                <label class="form-label">
+                    التكلفة
+                    <small class="text-muted">(تُحسب تلقائياً إذا رُبطت بحصة)</small>
+                </label>
+                <div class="input-group input-group-lg">
+                    <input asp-for="Cost" type="number" step="any" min="0"
+                           class="form-control text-center" style="direction:ltr" placeholder="0" />
+                    <span class="input-group-text">د.ع</span>
+                </div>
+            </div>
+
+            <!-- المستوى قبل -->
+            <div class="col-md-6">
+                <label class="form-label">
+                    المستوى قبل التعبئة
+                    <small class="text-muted">(اختياري)</small>
+                </label>
+                <div class="input-group">
+                    <input asp-for="LevelBefore" type="number" step="any" min="0"
+                           class="form-control text-center" style="direction:ltr" />
+                    <span class="input-group-text">لتر</span>
+                </div>
+            </div>
+
+            <!-- المستوى بعد -->
+            <div class="col-md-6">
+                <label class="form-label">
+                    المستوى بعد التعبئة
+                    <small class="text-muted">(يُحدّث خزان المولد)</small>
+                </label>
+                <div class="input-group">
+                    <input asp-for="LevelAfter" type="number" step="any" min="0"
+                           class="form-control text-center" style="direction:ltr" />
+                    <span class="input-group-text">لتر</span>
+                </div>
+            </div>
+
+            <!-- التاريخ -->
+            <div class="col-md-6">
+                <label class="form-label fw-bold">
+                    تاريخ الاستهلاك <span class="text-danger">*</span>
+                </label>
+                <input asp-for="ConsumptionDate" type="datetime-local" class="form-control form-control-lg" />
+            </div>
+
+            <!-- المسؤول -->
+            <div class="col-md-6">
+                <label class="form-label">المسؤول عن التعبئة</label>
+                <input asp-for="FilledBy" class="form-control form-control-lg"
+                       placeholder="اسم المسؤول" />
+            </div>
+
+            <!-- ملاحظات -->
+            <div class="col-12">
+                <label class="form-label">ملاحظات</label>
+                <textarea asp-for="Notes" class="form-control" rows="2"
+                          placeholder="أي ملاحظات..."></textarea>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-footer bg-light">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+            <i class="fas fa-times me-2"></i>إلغاء
+        </button>
+        <button type="submit" class="btn btn-danger btn-lg px-5">
+            <i class="fas fa-save me-2"></i>تسجيل الاستهلاك
+        </button>
+    </div>
+</form>

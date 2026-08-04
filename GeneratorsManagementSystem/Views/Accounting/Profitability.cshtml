@@ -1,0 +1,302 @@
+﻿@model List<GeneratorsManagementSystem.Services.GeneratorProfitability>
+@{
+    ViewData["Title"] = "ربحية المولدات";
+    var startDate = ViewBag.StartDate as DateTime?;
+    var endDate = ViewBag.EndDate as DateTime?;
+}
+
+@section Styles {
+    <style>
+        .gen-card {
+            border-radius: 20px;
+            padding: 25px;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+            background: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+            .gen-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+            }
+
+            .gen-card.excellent {
+                border-color: #48BB78;
+            }
+
+            .gen-card.good {
+                border-color: #4299E1;
+            }
+
+            .gen-card.average {
+                border-color: #F6AD55;
+            }
+
+            .gen-card.poor {
+                border-color: #E53E3E;
+            }
+
+        .rank-badge {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 1.1rem;
+        }
+
+        .gen-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .stat-line {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px dashed #e2e8f0;
+        }
+
+            .stat-line:last-child {
+                border-bottom: none;
+            }
+
+        .en-numbers {
+            direction: ltr;
+            display: inline-block;
+            font-feature-settings: "tnum";
+        }
+
+        .filter-bar {
+            background: linear-gradient(135deg, #f8f9fc 0%, #ebf4ff 100%);
+            border-radius: 15px;
+            padding: 20px;
+        }
+    </style>
+}
+
+<!-- HEADER -->
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <div>
+        <h4 class="fw-800 mb-1">
+            <i class="fas fa-trophy text-warning me-2"></i>
+            ربحية المولدات
+        </h4>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0 small">
+                <li class="breadcrumb-item"><a href="@Url.Action("Index", "Dashboard")"><i class="fas fa-home"></i></a></li>
+                <li class="breadcrumb-item"><a href="@Url.Action("Index")">المحاسبة</a></li>
+                <li class="breadcrumb-item active">ربحية المولدات</li>
+            </ol>
+        </nav>
+    </div>
+    <a href="@Url.Action("Index")" class="btn btn-outline-primary">
+        <i class="fas fa-arrow-right me-2"></i>لوحة المحاسبة
+    </a>
+</div>
+
+<!-- Filter -->
+<div class="filter-bar shadow-sm mb-4">
+    <form method="get" action="@Url.Action("Profitability")" class="row g-3 align-items-end">
+        <div class="col-md-4">
+            <label class="form-label fw-bold small">من تاريخ</label>
+            <input type="date" name="startDate" value="@(startDate?.ToString("yyyy-MM-dd"))" class="form-control" />
+        </div>
+        <div class="col-md-4">
+            <label class="form-label fw-bold small">إلى تاريخ</label>
+            <input type="date" name="endDate" value="@(endDate?.ToString("yyyy-MM-dd"))" class="form-control" />
+        </div>
+        <div class="col-md-4">
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary flex-grow-1">
+                    <i class="fas fa-filter me-1"></i>تطبيق
+                </button>
+                <a href="@Url.Action("Profitability")" class="btn btn-outline-secondary">
+                    <i class="fas fa-times"></i>
+                </a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Summary -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm text-center p-3">
+            <small class="text-muted">عدد المولدات</small>
+            <h3 class="fw-900 text-primary mb-0 en-numbers">@Model.Count</h3>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm text-center p-3 bg-success bg-opacity-10">
+            <small class="text-muted">إجمالي الإيرادات</small>
+            <h4 class="fw-900 text-success mb-0 en-numbers">
+                @Model.Sum(g => g.Revenue).ToString("N0")
+            </h4>
+            <small class="text-muted">د.ع</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm text-center p-3 bg-danger bg-opacity-10">
+            <small class="text-muted">إجمالي المصاريف</small>
+            <h4 class="fw-900 text-danger mb-0 en-numbers">
+                @Model.Sum(g => g.Expenses).ToString("N0")
+            </h4>
+            <small class="text-muted">د.ع</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm text-center p-3 bg-primary bg-opacity-10">
+            <small class="text-muted">إجمالي الأرباح</small>
+            <h4 class="fw-900 text-primary mb-0 en-numbers">
+                @Model.Sum(g => g.Profit).ToString("N0")
+            </h4>
+            <small class="text-muted">د.ع</small>
+        </div>
+    </div>
+</div>
+
+<!-- Generators Grid -->
+<div class="row g-3">
+    @{
+        int rank = 1;
+    }
+    @foreach (var gen in Model)
+    {
+        var rating = gen.ProfitMargin >= 30 ? "excellent"
+        : gen.ProfitMargin >= 15 ? "good"
+        : gen.ProfitMargin >= 0 ? "average" : "poor";
+        var ratingColor = rating switch
+        {
+            "excellent" => "#48BB78",
+            "good" => "#4299E1",
+            "average" => "#F6AD55",
+            _ => "#E53E3E"
+        };
+        var ratingLabel = rating switch
+        {
+            "excellent" => "ممتاز",
+            "good" => "جيد",
+            "average" => "متوسط",
+            _ => "ضعيف"
+        };
+        var rankMedal = rank switch
+        {
+            1 => "🥇",
+            2 => "🥈",
+            3 => "🥉",
+            _ => rank.ToString()
+        };
+        var rankBg = rank switch
+        {
+            1 => "linear-gradient(135deg, #FFD700, #FFA500)",
+            2 => "linear-gradient(135deg, #C0C0C0, #A0A0A0)",
+            3 => "linear-gradient(135deg, #CD7F32, #B87333)",
+            _ => "#e2e8f0"
+        };
+
+        <div class="col-lg-4 col-md-6">
+            <div class="gen-card @rating shadow-sm">
+                <div class="rank-badge text-white" style="background: @rankBg;">
+                    @rankMedal
+                </div>
+
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="gen-icon" style="background: @ratingColor;">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <div>
+                        <h5 class="fw-bold mb-1">@gen.GeneratorName</h5>
+                        <span class="badge bg-light text-primary font-monospace en-numbers">
+                            @gen.GeneratorNumber
+                        </span>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <span class="badge" style="background: @ratingColor; color: white; padding: 8px 15px; font-size: 0.9rem;">
+                        <i class="fas fa-star me-1"></i>
+                        @ratingLabel - <span class="en-numbers">@gen.ProfitMargin.ToString("F1")%</span>
+                    </span>
+                </div>
+
+                <div class="mb-3">
+                    <div class="stat-line">
+                        <span class="text-muted small">
+                            <i class="fas fa-users me-1"></i>المشتركون النشطون
+                        </span>
+                        <strong class="en-numbers">@gen.ActiveSubscribers</strong>
+                    </div>
+                    <div class="stat-line">
+                        <span class="text-success small">
+                            <i class="fas fa-arrow-up me-1"></i>الإيرادات
+                        </span>
+                        <strong class="text-success en-numbers">
+                            @gen.Revenue.ToString("N0") د.ع
+                        </strong>
+                    </div>
+                    <div class="stat-line">
+                        <span class="text-danger small">
+                            <i class="fas fa-arrow-down me-1"></i>المصاريف
+                        </span>
+                        <strong class="text-danger en-numbers">
+                            @gen.Expenses.ToString("N0") د.ع
+                        </strong>
+                    </div>
+                    <div class="stat-line">
+                        <span class="fw-bold small">
+                            <i class="fas fa-chart-line me-1"></i>الربح
+                        </span>
+                        <strong class="fs-5 en-numbers @(gen.Profit >= 0 ? "text-primary" : "text-danger")">
+                            @gen.Profit.ToString("N0") د.ع
+                        </strong>
+                    </div>
+                </div>
+
+                <!-- Progress -->
+                <div>
+                    <div class="d-flex justify-content-between mb-1 small">
+                        <span class="text-muted">هامش الربح</span>
+                        <strong class="en-numbers" style="color: @ratingColor;">
+                            @gen.ProfitMargin.ToString("F1")%
+                        </strong>
+                    </div>
+                    <div class="progress" style="height: 8px;">
+                        <div class="progress-bar"
+                             style="width: @(Math.Min(Math.Max(gen.ProfitMargin, 0), 100).ToString("F1"))%; background: @ratingColor;">
+                        </div>
+                    </div>
+                </div>
+
+                <a href="@Url.Action("Details", "Generators", new { id = gen.GeneratorId })"
+                   class="btn btn-outline-primary btn-sm w-100 mt-3">
+                    <i class="fas fa-eye me-1"></i>عرض تفاصيل المولد
+                </a>
+            </div>
+        </div>
+        rank++;
+    }
+</div>
+
+@if (!Model.Any())
+{
+    <div class="text-center py-5">
+        <i class="fas fa-chart-bar fa-5x text-muted mb-3"></i>
+        <h5 class="text-muted">لا توجد بيانات لعرضها</h5>
+        <p class="text-muted">أضف مولدات ومشتركين وإيرادات لتظهر البيانات هنا</p>
+    </div>
+}

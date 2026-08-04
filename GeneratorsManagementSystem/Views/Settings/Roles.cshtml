@@ -1,0 +1,203 @@
+﻿@model List<GeneratorsManagementSystem.Models.ViewModels.Settings.RoleListViewModel>
+@{
+    ViewData["Title"] = "الأدوار والصلاحيات";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/settings.css" />
+    <link rel="stylesheet" href="~/css/roles.css" />
+}
+
+<div class="settings-page">
+    <div class="page-header d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="page-title">
+                <i class="fas fa-user-shield text-purple"></i>
+                الأدوار والصلاحيات
+            </h2>
+            <p class="page-subtitle text-muted mb-0">إدارة أدوار المستخدمين والصلاحيات في النظام</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="@Url.Action("Index")" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-right"></i> رجوع
+            </a>
+            <a href="@Url.Action("CreateRole")" class="btn btn-purple">
+                <i class="fas fa-plus-circle"></i> إضافة دور جديد
+            </a>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            <i class="fas fa-check-circle"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Stats Bar -->
+    <div class="roles-stats-bar mb-4">
+        <div class="stat-block">
+            <i class="fas fa-user-shield"></i>
+            <div>
+                <span class="stat-num">@Model.Count</span>
+                <span class="stat-txt">إجمالي الأدوار</span>
+            </div>
+        </div>
+        <div class="stat-block">
+            <i class="fas fa-lock"></i>
+            <div>
+                <span class="stat-num">@Model.Count(r => r.IsSystemRole)</span>
+                <span class="stat-txt">أدوار نظام</span>
+            </div>
+        </div>
+        <div class="stat-block">
+            <i class="fas fa-user-tag"></i>
+            <div>
+                <span class="stat-num">@Model.Count(r => !r.IsSystemRole)</span>
+                <span class="stat-txt">أدوار مخصصة</span>
+            </div>
+        </div>
+        <div class="stat-block">
+            <i class="fas fa-users"></i>
+            <div>
+                <span class="stat-num">@Model.Sum(r => r.UsersCount)</span>
+                <span class="stat-txt">إجمالي المستخدمين</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Roles Grid -->
+    <div class="row g-4">
+        @{
+            var roleColors = new Dictionary<string, string>
+                {
+                {"Admin", "danger"},
+                {"Manager", "primary"},
+                {"Employee", "success"},
+                {"Subscriber", "info"}
+                };
+
+            var roleIcons = new Dictionary<string, string>
+                {
+                {"Admin", "fa-crown"},
+                {"Manager", "fa-user-tie"},
+                {"Employee", "fa-user"},
+                {"Subscriber", "fa-user-friends"}
+                };
+        }
+
+        @foreach (var role in Model)
+        {
+            var color = roleColors.ContainsKey(role.Name) ? roleColors[role.Name] : "purple";
+            var icon = roleIcons.ContainsKey(role.Name) ? roleIcons[role.Name] : "fa-user-shield";
+
+            <div class="col-lg-4 col-md-6">
+                <div class="role-card-new role-@color">
+                    <!-- Card Top -->
+                    <div class="role-top">
+                        <div class="role-icon-wrap">
+                            <div class="role-icon-bg role-bg-@color">
+                                <i class="fas @icon"></i>
+                            </div>
+                            @if (role.IsSystemRole)
+                            {
+                                <span class="role-badge-system">
+                                    <i class="fas fa-lock"></i> نظام
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="role-badge-custom">
+                                    <i class="fas fa-user-cog"></i> مخصص
+                                </span>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Card Body -->
+                    <div class="role-body">
+                        <h4 class="role-title">@role.DisplayName</h4>
+                        <div class="role-name-tag">@role.Name</div>
+                        <p class="role-desc">@role.Description</p>
+                    </div>
+
+                    <!-- Card Stats -->
+                    <div class="role-stats-new">
+                        <div class="role-stat">
+                            <div class="stat-icon-sm bg-primary-soft">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="stat-info">
+                                <div class="stat-number">@role.UsersCount</div>
+                                <div class="stat-caption">مستخدم</div>
+                            </div>
+                        </div>
+                        <div class="role-stat">
+                            <div class="stat-icon-sm bg-success-soft">
+                                <i class="fas fa-key"></i>
+                            </div>
+                            <div class="stat-info">
+                                <div class="stat-number">@role.PermissionsCount</div>
+                                <div class="stat-caption">صلاحية</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card Actions -->
+                    <div class="role-actions">
+                        <a href="@Url.Action("EditRole", new { id = role.Id })" class="role-btn role-btn-edit">
+                            <i class="fas fa-edit"></i>
+                            <span>تعديل</span>
+                        </a>
+                        @if (!role.IsSystemRole)
+                        {
+                            <button type="button" class="role-btn role-btn-delete"
+                                    onclick="deleteRole('@role.Id', '@role.DisplayName')">
+                                <i class="fas fa-trash-alt"></i>
+                                <span>حذف</span>
+                            </button>
+                        }
+                        else
+                        {
+                            <button type="button" class="role-btn role-btn-locked" disabled>
+                                <i class="fas fa-lock"></i>
+                                <span>محمي</span>
+                            </button>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function deleteRole(id, name) {
+            Swal.fire({
+                title: 'تأكيد الحذف',
+                html: 'هل أنت متأكد من حذف الدور <strong>' + name + '</strong>؟',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonText: 'إلغاء',
+                confirmButtonText: 'نعم، احذف'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.post('@Url.Action("DeleteRole")', {
+                        id: id,
+                        __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                    }, function (response) {
+                        if (response.success) {
+                            Swal.fire('تم!', response.message, 'success').then(() => location.reload());
+                        } else {
+                            Swal.fire('خطأ!', response.message, 'error');
+                        }
+                    });
+                }
+            });
+        }
+    </script>
+    @Html.AntiForgeryToken()
+}

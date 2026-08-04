@@ -1,0 +1,1469 @@
+﻿@model List<GeneratorsManagementSystem.Models.Generator>
+@{
+    ViewData["Title"] = "المولدات";
+    ViewData["PageTitle"] = "إدارة المولدات";
+    var stats = ViewBag.Stats as
+        GeneratorsManagementSystem.Services.GeneratorDashboardStats;
+}
+
+@section Styles {
+    <style>
+        /* ─── Stats ─── */
+        .gen-stat {
+            background: white;
+            border-radius: 12px;
+            padding: 16px 20px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            transition: var(--transition);
+        }
+
+            .gen-stat:hover {
+                transform: translateY(-2px);
+                box-shadow: var(--shadow-md);
+            }
+
+        .gen-stat-icon {
+            width: 46px;
+            height: 46px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        .gen-stat-val {
+            font-size: 1.5rem;
+            font-weight: 800;
+            line-height: 1;
+        }
+
+        .gen-stat-lbl {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        /* ─── Generator Cards ─── */
+        .gen-card {
+            background: white;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            transition: var(--transition);
+            position: relative;
+        }
+
+            .gen-card:hover {
+                transform: translateY(-4px);
+                box-shadow: var(--shadow-md);
+            }
+
+        .gen-card-header {
+            padding: 16px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .gen-number {
+            font-family: monospace;
+            font-size: 0.75rem;
+            font-weight: 700;
+            background: rgba(90,103,216,0.08);
+            color: var(--primary);
+            padding: 2px 10px;
+            border-radius: 20px;
+        }
+
+        .gen-status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-left: 6px;
+            animation: pulse-dot 2s infinite;
+        }
+        @@keyframes pulse-dot {
+            0%,100%
+
+        {
+            opacity: 1;
+        }
+
+        50% {
+            opacity: 0.4;
+        }
+
+        }
+
+        .gen-card-body {
+            padding: 16px 18px;
+        }
+
+        .gen-name {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 4px;
+        }
+
+        .gen-location {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* ─── Load Bar ─── */
+        .load-bar-wrap {
+            margin: 12px 0;
+        }
+
+        .load-bar-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .load-bar {
+            height: 8px;
+            border-radius: 10px;
+            background: var(--border);
+            overflow: hidden;
+        }
+
+        .load-bar-fill {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.8s ease;
+        }
+
+        /* ─── Metrics Grid ─── */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .metric-item {
+            background: var(--bg);
+            border-radius: 8px;
+            padding: 8px;
+            text-align: center;
+        }
+
+        .metric-val {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--text);
+            line-height: 1;
+        }
+
+        .metric-lbl {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            margin-top: 3px;
+        }
+
+        /* ─── Fuel Gauge ─── */
+        .fuel-gauge-wrap {
+            position: relative;
+            width: 60px;
+            height: 60px;
+            flex-shrink: 0;
+        }
+
+        /* ─── Status Colors ─── */
+        .s-active {
+            color: #48BB78;
+        }
+
+        .s-stopped {
+            color: #718096;
+        }
+
+        .s-maintenance {
+            color: #F6AD55;
+        }
+
+        .s-fault {
+            color: #FC8181;
+        }
+
+        .s-standby {
+            color: #63B3ED;
+        }
+
+        .sb-active {
+            background: #48BB78;
+        }
+
+        .sb-stopped {
+            background: #718096;
+        }
+
+        .sb-maintenance {
+            background: #F6AD55;
+        }
+
+        .sb-fault {
+            background: #FC8181;
+        }
+
+        .sb-standby {
+            background: #63B3ED;
+        }
+
+        .badge-active {
+            background: rgba(72,187,120,0.12);
+            color: #276749;
+        }
+
+        .badge-stopped {
+            background: rgba(113,128,150,0.12);
+            color: #4A5568;
+        }
+
+        .badge-maintenance {
+            background: rgba(246,173,85,0.15);
+            color: #975A16;
+        }
+
+        .badge-fault {
+            background: rgba(252,129,129,0.15);
+            color: #9B2C2C;
+        }
+
+        .badge-standby {
+            background: rgba(99,179,237,0.15);
+            color: #2C5282;
+        }
+
+        .status-pill {
+            padding: 3px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        /* ─── Alert Banner ─── */
+        .alert-banner {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 4px 12px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            text-align: center;
+            color: white;
+            z-index: 1;
+        }
+
+        /* ─── Live indicator ─── */
+        .live-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #48BB78;
+            background: rgba(72,187,120,0.1);
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+
+        .live-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #48BB78;
+            animation: pulse-dot 1s infinite;
+        }
+
+        /* View Toggle */
+        .view-toggle .btn {
+            border-radius: 8px;
+        }
+
+            .view-toggle .btn.active {
+                background: var(--primary);
+                color: white;
+                border-color: var(--primary);
+            }
+    </style>
+}
+
+<!-- ═══ HEADER ═══ -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="fw-800 mb-1">
+            <i class="fas fa-bolt text-primary me-2"></i>
+            إدارة المولدات
+        </h4>
+        <p class="text-muted mb-0 small">
+            إجمالي @(stats?.Total ?? 0) مولد
+            <span class="live-badge me-2">
+                <span class="live-dot"></span>مباشر
+            </span>
+        </p>
+    </div>
+    <div class="d-flex gap-2">
+        <!-- View Toggle -->
+        <div class="view-toggle btn-group">
+            <button class="btn btn-outline-secondary active" id="btnCardView" title="عرض البطاقات">
+                <i class="fas fa-th-large"></i>
+            </button>
+            <button class="btn btn-outline-secondary" id="btnTableView" title="عرض الجدول">
+                <i class="fas fa-list"></i>
+            </button>
+        </div>
+        <a href="@Url.Action("Create", "Generators")"
+           class="btn btn-primary px-4">
+            <i class="fas fa-plus me-2"></i>إضافة مولد
+        </a>
+    </div>
+</div>
+
+<!-- ═══ STATS ROW ═══ -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-4 col-xl-2">
+        <div class="gen-stat">
+            <div class="gen-stat-icon" style="background:rgba(90,103,216,0.1)">
+                <i class="fas fa-bolt" style="color:#5A67D8"></i>
+            </div>
+            <div>
+                <div class="gen-stat-val">@(stats?.Total ?? 0)</div>
+                <div class="gen-stat-lbl">إجمالي المولدات</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-xl-2">
+        <div class="gen-stat">
+            <div class="gen-stat-icon" style="background:rgba(72,187,120,0.1)">
+                <i class="fas fa-check-circle" style="color:#38A169"></i>
+            </div>
+            <div>
+                <div class="gen-stat-val" style="color:#38A169">@(stats?.Active ?? 0)</div>
+                <div class="gen-stat-lbl">تعمل الآن</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-xl-2">
+        <div class="gen-stat">
+            <div class="gen-stat-icon" style="background:rgba(252,129,129,0.1)">
+                <i class="fas fa-exclamation-triangle" style="color:#E53E3E"></i>
+            </div>
+            <div>
+                <div class="gen-stat-val" style="color:#E53E3E">@(stats?.Fault ?? 0)</div>
+                <div class="gen-stat-lbl">أعطال</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-xl-2">
+        <div class="gen-stat">
+            <div class="gen-stat-icon" style="background:rgba(246,173,85,0.1)">
+                <i class="fas fa-tools" style="color:#D69E2E"></i>
+            </div>
+            <div>
+                <div class="gen-stat-val" style="color:#D69E2E">@(stats?.Maintenance ?? 0)</div>
+                <div class="gen-stat-lbl">صيانة</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-xl-2">
+        <div class="gen-stat">
+            <div class="gen-stat-icon" style="background:rgba(99,179,237,0.1)">
+                <i class="fas fa-users" style="color:#3182CE"></i>
+            </div>
+            <div>
+                <div class="gen-stat-val" style="color:#3182CE">
+                    @(stats?.TotalSubscribers ?? 0)
+                </div>
+                <div class="gen-stat-lbl">مشتركون نشطون</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-4 col-xl-2">
+        <div class="gen-stat">
+            <div class="gen-stat-icon" style="background:rgba(252,129,129,0.1)">
+                <i class="fas fa-gas-pump" style="color:#E53E3E"></i>
+            </div>
+            <div>
+                <div class="gen-stat-val" style="color:#E53E3E">@(stats?.LowFuel ?? 0)</div>
+                <div class="gen-stat-lbl">وقود منخفض</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ CARD VIEW ═══ -->
+<div id="cardView">
+    <div class="row g-3" id="generatorsGrid">
+        @foreach (var gen in Model)
+        {
+            var statusClass = gen.Status switch
+            {
+                GeneratorStatus.Active => "active",
+                GeneratorStatus.Stopped => "stopped",
+                GeneratorStatus.Maintenance => "maintenance",
+                GeneratorStatus.Fault => "fault",
+                _ => "standby"
+            };
+            var statusLabel = gen.Status switch
+            {
+                GeneratorStatus.Active => "يعمل",
+                GeneratorStatus.Stopped => "متوقف",
+                GeneratorStatus.Maintenance => "صيانة",
+                GeneratorStatus.Fault => "عطل",
+                _ => "احتياط"
+            };
+            var loadPct = (double)gen.LoadPercentage;
+            var loadColor = loadPct >= 90 ? "#FC8181"
+            : loadPct >= 70 ? "#F6AD55"
+            : "#48BB78";
+            var fuelPct = (double)(gen.FuelLevelPercentage ?? 0);
+            var fuelColor = fuelPct < 20 ? "#FC8181"
+            : fuelPct < 40 ? "#F6AD55"
+            : "#48BB78";
+
+            <div class="col-md-6 col-xl-4">
+                <div class="gen-card" data-gen-id="@gen.Id">
+
+                    @if (gen.NeedsMaintenanceSoon)
+                    {
+                        <div class="alert-banner" style="background:#F6AD55">
+                            <i class="fas fa-tools me-1"></i>
+                            تحتاج صيانة قريباً
+                        </div>
+                        <div style="height:26px"></div>
+                    }
+                    @if (gen.Status == GeneratorStatus.Fault)
+                    {
+                        <div class="alert-banner" style="background:#FC8181">
+                            <i class="fas fa-exclamation-triangle me-1"></i>
+                            عطل - يحتاج تدخل فوري
+                        </div>
+                        <div style="height:26px"></div>
+                    }
+
+                    <!-- Card Header -->
+                    <div class="gen-card-header">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="gen-status-dot sb-@statusClass"></span>
+                            <span class="gen-number">@gen.GeneratorNumber</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="status-pill badge-@statusClass">@statusLabel</span>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-light"
+                                        data-bs-toggle="dropdown">
+                                    <i class="fas fa-ellipsis-v"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-start">
+                                    <li>
+                                        <a class="dropdown-item"
+                                           href="@Url.Action("Details", "Generators", new { id = gen.Id })">
+                                            <i class="fas fa-eye me-2 text-info"></i>مراقبة مباشرة
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item"
+                                           href="@Url.Action("Edit", "Generators", new { id = gen.Id })">
+                                            <i class="fas fa-edit me-2 text-success"></i>تعديل
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    @if (gen.Status != GeneratorStatus.Active)
+                                    {
+                                        <li>
+                                            <button class="dropdown-item btn-gen-status"
+                                                    data-id="@gen.Id" data-status="1"
+                                                    data-label="تشغيل">
+                                                <i class="fas fa-play-circle me-2 text-success"></i>
+                                                تشغيل
+                                            </button>
+                                        </li>
+                                    }
+                                    @if (gen.Status != GeneratorStatus.Stopped)
+                                    {
+                                        <li>
+                                            <button class="dropdown-item btn-gen-status"
+                                                    data-id="@gen.Id" data-status="2"
+                                                    data-label="إيقاف" data-needs-reason="true">
+                                                <i class="fas fa-stop-circle me-2 text-secondary"></i>
+                                                إيقاف
+                                            </button>
+                                        </li>
+                                    }
+                                    <li>
+                                        <button class="dropdown-item btn-gen-status"
+                                                data-id="@gen.Id" data-status="3"
+                                                data-label="صيانة">
+                                            <i class="fas fa-tools me-2 text-warning"></i>
+                                            وضع الصيانة
+                                        </button>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <button type="button"
+                                                class="btn btn-outline-danger btn-action btn-delete"
+                                                data-id="@gen.Id"
+                                                data-name="@gen.Name"
+                                                data-number="@gen.GeneratorNumber" ← تأكد من وجود هذا
+                                                title="حذف">
+                                            <i class="fas fa-trash"></i>حذف
+                                        </button>
+                                       @*  <button class="dropdown-item text-danger btn-gen-delete"
+                                                data-id="@gen.Id" data-name="@gen.Name">
+                                            <i class="fas fa-trash me-2"></i>حذف
+                                        </button> *@
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card Body -->
+                    <div class="gen-card-body">
+                        <div class="gen-name">@gen.Name</div>
+                        <div class="gen-location">
+                            <i class="fas fa-map-marker-alt s-@statusClass"></i>
+                            @(gen.Area ?? "—")
+                            @if (!string.IsNullOrEmpty(gen.Brand))
+                            {
+                                <span class="text-muted ms-auto">@gen.Brand</span>
+                            }
+                        </div>
+
+                        <!-- Load Bar -->
+                        <div class="load-bar-wrap" gen-id="@gen.Id">
+                            <div class="load-bar-label">
+                                <span>تحميل الأمبير</span>
+                                <span class="load-pct-text">
+                                    @gen.LoadPercentage%
+                                    (@gen.UsedAmpere A / @(gen.MaxAmpere ?? 0) A)
+                                </span>
+                            </div>
+                            <div class="load-bar">
+                                <div class="load-bar-fill load-pct-fill"
+                                     style="width:@gen.LoadPercentage%;background:@loadColor">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Fuel Bar -->
+                        <div class="load-bar-wrap">
+                            <div class="load-bar-label">
+                                <span>
+                                    <i class="fas fa-gas-pump me-1"></i>الوقود
+                                </span>
+                                <span class="fuel-pct-text gen-@gen.Id">
+                                    @(gen.FuelLevelPercentage?.ToString("0") ?? "—")%
+                                </span>
+                            </div>
+                            <div class="load-bar">
+                                <div class="load-bar-fill fuel-pct-fill gen-@gen.Id"
+                                     style="width:@(gen.FuelLevelPercentage ?? 0)%;
+                                                background:@fuelColor">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Metrics -->
+                        <div class="metrics-grid">
+                            <div class="metric-item">
+                                <div class="metric-val gen-temp-@gen.Id">
+                                    @(gen.Temperature?.ToString("0") ?? "—")°
+                                </div>
+                                <div class="metric-lbl">الحرارة</div>
+                            </div>
+                            <div class="metric-item">
+                                <div class="metric-val gen-load-@gen.Id">
+                                    @(gen.CurrentLoad?.ToString("0.0") ?? "—")A
+                                </div>
+                                <div class="metric-lbl">الحمل</div>
+                            </div>
+                            <div class="metric-item">
+                                <div class="metric-val">
+                                    @gen.ActiveSubscribersCount
+                                </div>
+                                <div class="metric-lbl">مشترك</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card Footer -->
+                    <div class="d-flex justify-content-between align-items-center
+                                    px-3 py-2 border-top bg-light">
+                        <small class="text-muted gen-last-update-@gen.Id">
+                            <i class="fas fa-sync fa-xs me-1"></i>
+                            @(gen.LastDataUpdate?.ToString("HH:mm") ?? "لا يوجد")
+                        </small>
+                        <a href="@Url.Action("Details", "Generators", new { id = gen.Id })"
+                           class="btn btn-sm btn-primary px-3">
+                            <i class="fas fa-chart-line me-1"></i>مراقبة
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="card text-center py-5">
+            <div class="card-body">
+                <i class="fas fa-bolt fa-4x text-muted mb-3 d-block"></i>
+                <h5 class="text-muted">لا توجد مولدات بعد</h5>
+                <a href="@Url.Action("Create", "Generators")"
+                   class="btn btn-primary mt-2">
+                    <i class="fas fa-plus me-2"></i>إضافة أول مولد
+                </a>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- ═══ TABLE VIEW (مخفي) ═══ -->
+<div id="tableView" style="display:none">
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>الرقم</th>
+                            <th>المولد</th>
+                            <th>المنطقة</th>
+                            <th>الطاقة</th>
+                            <th>التحميل</th>
+                            <th>الوقود</th>
+                            <th>المشتركون</th>
+                            <th>الحالة</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var gen in Model)
+                        {
+                            var statusLabel = gen.Status switch
+                            {
+                                GeneratorStatus.Active => "يعمل",
+                                GeneratorStatus.Stopped => "متوقف",
+                                GeneratorStatus.Maintenance => "صيانة",
+                                GeneratorStatus.Fault => "عطل",
+                                _ => "احتياط"
+                            };
+                            var statusClass = gen.Status switch
+                            {
+                                GeneratorStatus.Active => "active",
+                                GeneratorStatus.Stopped => "stopped",
+                                GeneratorStatus.Maintenance => "maintenance",
+                                GeneratorStatus.Fault => "fault",
+                                _ => "standby"
+                            };
+                            <tr>
+                                <td><code>@gen.GeneratorNumber</code></td>
+                                <td>
+                                    <div class="fw-600">@gen.Name</div>
+                                    <small class="text-muted">@(gen.Brand ?? "")</small>
+                                </td>
+                                <td>@(gen.Area ?? "—")</td>
+                                <td>@(gen.PowerKVA.HasValue? gen.PowerKVA + " KVA" : "—")</td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="load-bar" style="width:80px">
+                                            <div class="load-bar-fill"
+                                                 style="width:@gen.LoadPercentage%;
+                                                            background:@(gen.LoadPercentage >= 90 ? "#FC8181" : gen.LoadPercentage >= 70 ? "#F6AD55" : "#48BB78")">
+                                            </div>
+                                        </div>
+                                        <small>@gen.LoadPercentage%</small>
+                                    </div>
+                                </td>
+                                <td>
+                                    @if (gen.FuelLevelPercentage.HasValue)
+                                    {
+                                        <span style="color:@(gen.FuelLevelPercentage < 20 ? "#FC8181" : gen.FuelLevelPercentage < 40 ? "#F6AD55" : "#48BB78")">
+                                            @gen.FuelLevelPercentage%
+                                        </span>
+                                    }
+                                    else
+                                    {
+
+                                        <span class="text-muted">—</span>
+                                    }
+                                </td>
+                                <td>@gen.ActiveSubscribersCount</td>
+                                <td>
+                                    <span class="status-pill badge-@statusClass">
+                                        @statusLabel
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="d-flex gap-1">
+                                        <a href="@Url.Action("Details", "Generators", new { id = gen.Id })"
+                                           class="action-btn view" title="مراقبة">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="@Url.Action("Edit", "Generators", new { id = gen.Id })"
+                                           class="action-btn edit" title="تعديل">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <button class="action-btn delete btn-gen-delete"
+                                                data-id="@gen.Id"
+                                                data-name="@gen.Name">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<form id="deleteGenForm" method="post" style="display:none">
+    @Html.AntiForgeryToken()
+</form>
+
+@section Scripts {
+    <script src="~/lib/microsoft/signalr/dist/browser/signalr.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+
+            // ═══ View Toggle ═══
+            document.getElementById('btnCardView').addEventListener('click', function () {
+                document.getElementById('cardView').style.display  = '';
+                document.getElementById('tableView').style.display = 'none';
+                this.classList.add('active');
+                document.getElementById('btnTableView').classList.remove('active');
+            });
+
+            document.getElementById('btnTableView').addEventListener('click', function () {
+                document.getElementById('tableView').style.display = '';
+                document.getElementById('cardView').style.display  = 'none';
+                this.classList.add('active');
+                document.getElementById('btnCardView').classList.remove('active');
+            });
+
+            // ═══ SignalR Connection ═══
+            const connection = new signalR.HubConnectionBuilder()
+                .withUrl("/generatorsHub")
+                .withAutomaticReconnect()
+                .build();
+
+            connection.start().then(function () {
+                connection.invoke("JoinDashboard");
+            }).catch(console.error);
+
+            // ─── استقبال تحديثات البيانات ───
+            connection.on("GeneratorDataUpdate", function (data) {
+                updateGeneratorCard(data);
+            });
+
+            // ─── استقبال تغيير الحالة ───
+            connection.on("GeneratorStatusChanged", function (data) {
+                GMS.toast('info', `تم تغيير حالة المولد`);
+                setTimeout(() => location.reload(), 1500);
+            });
+
+            // ─── استقبال التحذيرات ───
+            connection.on("GeneratorAlert", function (alert) {
+                const icon  = alert.level === 'danger' ? 'error' : 'warning';
+                GMS.toast(icon, alert.message, 5000);
+            });
+
+            // ─── تحديث بطاقة المولد ───
+            function updateGeneratorCard(data) {
+                // Fuel
+                const fuelFill = document.querySelector(
+                    `.gen-${data.GeneratorId} .fuel-pct-fill`);
+                const fuelText = document.querySelector(
+                    `.gen-${data.GeneratorId} .fuel-pct-text`);
+                if (fuelFill && data.FuelLevel !== undefined) {
+                    fuelFill.style.width = data.FuelLevel + '%';
+                    if (fuelText) fuelText.textContent = data.FuelLevel + '%';
+                }
+
+                // Temperature
+                const tempEl = document.querySelector(`.gen-temp-${data.GeneratorId}`);
+                if (tempEl && data.Temperature !== undefined)
+                    tempEl.textContent = data.Temperature + '°';
+
+                // Load
+                const loadEl = document.querySelector(`.gen-load-${data.GeneratorId}`);
+                if (loadEl && data.CurrentLoad !== undefined)
+                    loadEl.textContent = data.CurrentLoad + 'A';
+
+                // Last Update
+                const updateEl = document.querySelector(
+                    `.gen-last-update-${data.GeneratorId}`);
+                if (updateEl)
+                    updateEl.innerHTML = `<i class="fas fa-sync fa-xs me-1"></i>${data.Timestamp}`;
+            }
+
+            // ═══ Auto Refresh كل 30 ثانية ═══
+            setInterval(function () {
+                fetch('/Generators/GetAllRealtimeData')
+                    .then(r => r.json())
+                    .then(function (generators) {
+                        generators.forEach(function (gen) {
+                            updateGeneratorCard({
+                                GeneratorId : gen.id,
+                                FuelLevel   : gen.fuelLevelPct,
+                                Temperature : gen.temperature,
+                                CurrentLoad : gen.currentLoad,
+                                Timestamp   : gen.lastUpdate
+                            });
+                        });
+                    })
+                    .catch(console.error);
+            }, 30000);
+
+            // ═══ Change Status ═══
+            document.querySelectorAll('.btn-gen-status').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    const id     = this.dataset.id;
+                    const status = this.dataset.status;
+                    const label  = this.dataset.label;
+                    const needs  = this.dataset.needsReason;
+
+                    if (needs) {
+                        Swal.fire({
+                            title: label + ' المولد',
+                            input: 'textarea',
+                            inputLabel: 'سبب الإيقاف',
+                            inputPlaceholder: 'اكتب السبب...',
+                            showCancelButton: true,
+                            confirmButtonText: label,
+                            cancelButtonText: 'إلغاء',
+                            confirmButtonColor: '#5A67D8',
+                            customClass: { popup: 'swal2-rtl' }
+                        }).then(r => {
+                            if (r.isConfirmed) doChangeStatus(id, status, r.value);
+                        });
+                    } else {
+                        doChangeStatus(id, status, '');
+                    }
+                });
+            });
+
+            function doChangeStatus(id, status, reason) {
+                const token = document.querySelector(
+                    'input[name="__RequestVerificationToken"]');
+                fetch('/Generators/ChangeStatus', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: `id=${id}&status=${status}&reason=${encodeURIComponent(reason || '')}&__RequestVerificationToken=${token?.value || ''}`
+                })
+                .then(r => r.json())
+                .then(d => {
+                    if (d.success) {
+                        GMS.toast('success', d.message);
+                        setTimeout(() => location.reload(), 1200);
+                    } else {
+                        GMS.toast('error', d.message);
+                    }
+                });
+            }
+
+                            // ═══ حذف المولد ═══
+                document.querySelectorAll('.btn-delete').forEach(function (btn) {
+                    btn.addEventListener('click', function () {
+                        const id = this.getAttribute('data-id');
+                        const name = this.getAttribute('data-name');
+                        const number = this.getAttribute('data-number');
+
+                        // أولاً: تأكيد بسيط
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'تأكيد الحذف',
+                            html: `
+                                <div class="text-start">
+                                    <p>هل تريد حذف المولد؟</p>
+                                    <div class="alert alert-light border">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="rounded-circle bg-warning bg-opacity-25 p-3">
+                                                <i class="fas fa-bolt fa-lg text-warning"></i>
+                                            </div>
+                                            <div>
+                                                <strong class="d-block">${name}</strong>
+                                                <small class="text-muted font-monospace">${number}</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <small class="text-danger">
+                                        <i class="fas fa-exclamation-triangle me-1"></i>
+                                        سيتم التحقق من وجود اشتراكات مرتبطة
+                                    </small>
+                                </div>
+                            `,
+                            showCancelButton: true,
+                            confirmButtonColor: '#dc3545',
+                            cancelButtonColor: '#6c757d',
+                            confirmButtonText: '<i class="fas fa-trash me-2"></i>متابعة',
+                            cancelButtonText: 'إلغاء',
+                            customClass: { popup: 'swal2-rtl' }
+                        }).then(function (result) {
+                            if (result.isConfirmed) {
+                                performDelete(id, name, number);
+                            }
+                        });
+                    });
+                });
+
+                // ═══ تنفيذ الحذف مع معالجة الأخطاء ═══
+                function performDelete(id, name, number) {
+                    // Loading
+                    Swal.fire({
+                        title: 'جارِ المعالجة...',
+                        html: 'يرجى الانتظار',
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        showConfirmButton: false,
+                        customClass: { popup: 'swal2-rtl' },
+                        didOpen: () => Swal.showLoading()
+                    });
+
+                    const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+
+                    fetch('@Url.Action("Delete")', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: `id=${id}&__RequestVerificationToken=${encodeURIComponent(token)}`
+                    })
+                        .then(r => r.json())
+                        .then(res => {
+                            // ✅ الحذف نجح
+                            if (res.success) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'تم الحذف بنجاح',
+                                    text: res.message,
+                                    timer: 2000,
+                                    timerProgressBar: true,
+                                    customClass: { popup: 'swal2-rtl' }
+                                }).then(() => location.reload());
+                                return;
+                            }
+
+                            // ⚠️ يوجد اشتراكات نشطة
+                            if (res.errorType === 'hasActiveSubscriptions') {
+                                showActiveSubscriptionsDialog(res.details, id);
+                                return;
+                            }
+
+                            // ❌ خطأ عام
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'فشل الحذف',
+                                text: res.message,
+                                confirmButtonColor: '#dc3545',
+                                customClass: { popup: 'swal2-rtl' }
+                            });
+                        })
+                        .catch(() => {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'خطأ في الاتصال',
+                                text: 'تعذر الاتصال بالخادم. حاول مرة أخرى.',
+                                customClass: { popup: 'swal2-rtl' }
+                            });
+                        });
+                }
+
+        //             // ═══ حذف المولد ═══
+        // $(document).on('click', '.btn-delete', function () {
+        //     var id = $(this).data('id');
+        //     var name = $(this).data('name');
+        //     var number = $(this).data('number');
+
+        //     // أولاً: تأكيد بسيط
+        //     Swal.fire({
+        //         icon: 'warning',
+        //         title: 'تأكيد الحذف',
+        //         html: `
+        //             <div class="text-start">
+        //                 <p>هل تريد حذف المولد؟</p>
+        //                 <div class="alert alert-light border">
+        //                     <div class="d-flex align-items-center gap-3">
+        //                         <div class="rounded-circle bg-warning bg-opacity-25 p-3">
+        //                             <i class="fas fa-bolt fa-lg text-warning"></i>
+        //                         </div>
+        //                         <div>
+        //                             <strong class="d-block">${name}</strong>
+        //                             <small class="text-muted font-monospace">${number}</small>
+        //                         </div>
+        //                     </div>
+        //                 </div>
+        //                 <small class="text-danger">
+        //                     <i class="fas fa-exclamation-triangle me-1"></i>
+        //                     سيتم التحقق من وجود اشتراكات مرتبطة
+        //                 </small>
+        //             </div>
+        //         `,
+        //         showCancelButton: true,
+        //         confirmButtonColor: '#dc3545',
+        //         cancelButtonColor: '#6c757d',
+        //         confirmButtonText: '<i class="fas fa-trash me-2"></i>متابعة',
+        //         cancelButtonText: 'إلغاء',
+        //         customClass: { popup: 'swal2-rtl' }
+        //     }).then(function (result) {
+        //         if (result.isConfirmed) {
+        //             performDelete(id, name, number);
+        //         }
+        //     });
+        // });
+
+        // // ═══ تنفيذ الحذف مع معالجة الأخطاء ═══
+        // function performDelete(id, name, number) {
+        //     // Loading
+        //     Swal.fire({
+        //         title: 'جارِ المعالجة...',
+        //         html: 'يرجى الانتظار',
+        //         allowOutsideClick: false,
+        //         allowEscapeKey: false,
+        //         showConfirmButton: false,
+        //         customClass: { popup: 'swal2-rtl' },
+        //         didOpen: () => Swal.showLoading()
+        //     });
+
+        //     $.ajax({
+        //         url: '@Url.Action("Delete")',
+        //         type: 'POST',
+        //         data: {
+        //             id: id,
+        //             __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+        //         },
+        //         success: function (res) {
+        //             // ✅ الحذف نجح
+        //             if (res.success) {
+        //                 Swal.fire({
+        //                     icon: 'success',
+        //                     title: 'تم الحذف بنجاح',
+        //                     text: res.message,
+        //                     timer: 2000,
+        //                     timerProgressBar: true,
+        //                     customClass: { popup: 'swal2-rtl' }
+        //                 }).then(() => location.reload());
+        //                 return;
+        //             }
+
+        //             // ⚠️ يوجد اشتراكات نشطة
+        //             if (res.errorType === 'hasActiveSubscriptions') {
+        //                 showActiveSubscriptionsDialog(res.details, id);
+        //                 return;
+        //             }
+
+        //             // ❌ خطأ عام
+        //             Swal.fire({
+        //                 icon: 'error',
+        //                 title: 'فشل الحذف',
+        //                 text: res.message,
+        //                 confirmButtonColor: '#dc3545',
+        //                 customClass: { popup: 'swal2-rtl' }
+        //             });
+        //         },
+        //         error: function () {
+        //             Swal.fire({
+        //                 icon: 'error',
+        //                 title: 'خطأ في الاتصال',
+        //                 text: 'تعذر الاتصال بالخادم. حاول مرة أخرى.',
+        //                 customClass: { popup: 'swal2-rtl' }
+        //             });
+        //         }
+        //     });
+        // }
+
+        // ═══ عرض تفاصيل الاشتراكات النشطة ═══
+        function showActiveSubscriptionsDialog(details, generatorId) {
+            var subscribersHtml = '';
+            var totalMonthly = 0;
+
+            details.subscribers.forEach(function (sub, index) {
+                totalMonthly += sub.monthlyAmount;
+                subscribersHtml += `
+                    <div class="active-sub-item">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="sub-number">${index + 1}</span>
+                            <div class="flex-grow-1 text-start">
+                                <strong class="d-block">${sub.subscriberName}</strong>
+                                <small class="text-muted">
+                                    <span class="font-monospace">${sub.subscriberNumber}</span>
+                                    •
+                                    <span class="badge bg-warning bg-opacity-25 text-warning">
+                                        ${sub.ampere} A
+                                    </span>
+                                    •
+                                    <span class="text-success fw-bold en-numbers">
+                                        ${sub.monthlyAmount.toLocaleString('en-US')} د.ع/شهر
+                                    </span>
+                                </small>
+                                <br>
+                                <small class="text-muted font-monospace">
+                                    <i class="fas fa-file-contract me-1"></i>${sub.contractNumber}
+                                </small>
+                            </div>
+                            <a href="/Subscriptions/Details/${sub.subscriptionId}"
+                               target="_blank"
+                               class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-external-link-alt"></i>
+                            </a>
+                        </div>
+                    </div>
+                `;
+            });
+
+            Swal.fire({
+                icon: null,
+                title: null,
+                html: `
+                    <div class="active-subs-dialog">
+                        <!-- Header -->
+                        <div class="dialog-header">
+                            <div class="warning-icon-wrapper">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <h4 class="dialog-title">لا يمكن حذف المولد</h4>
+                            <p class="dialog-subtitle">
+                                <strong>${details.generatorName}</strong>
+                                <span class="badge bg-light text-primary font-monospace">
+                                    ${details.generatorNumber}
+                                </span>
+                            </p>
+                        </div>
+
+                        <!-- Info Cards -->
+                        <div class="info-row">
+                            <div class="info-card danger">
+                                <i class="fas fa-file-contract"></i>
+                                <div>
+                                    <div class="info-number en-numbers">${details.activeCount}</div>
+                                    <div class="info-label">اشتراك نشط</div>
+                                </div>
+                            </div>
+                            <div class="info-card warning">
+                                <i class="fas fa-money-bill-wave"></i>
+                                <div>
+                                    <div class="info-number en-numbers">${totalMonthly.toLocaleString('en-US')}</div>
+                                    <div class="info-label">د.ع/شهرياً</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Reason -->
+                        <div class="reason-box">
+                            <i class="fas fa-info-circle"></i>
+                            <div>
+                                <strong>لماذا لا يمكن الحذف؟</strong>
+                                <p class="mb-0 mt-1">
+                                    هذا المولد لديه <strong>${details.activeCount}</strong> اشتراك نشط.
+                                    حذفه سيؤدي لفقدان بيانات المشتركين وفواتيرهم.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Subscribers List -->
+                        <div class="subs-list-container">
+                            <div class="subs-list-header">
+                                <i class="fas fa-users me-2"></i>
+                                المشتركون في هذا المولد:
+                            </div>
+                            <div class="subs-list">
+                                ${subscribersHtml}
+                            </div>
+                        </div>
+
+                        <!-- Solutions -->
+                        <div class="solutions-box">
+                            <h6 class="solutions-title">
+                                <i class="fas fa-lightbulb me-2"></i>
+                                الحلول المقترحة:
+                            </h6>
+                            <div class="solution-item">
+                                <span class="step-number">1</span>
+                                <div>
+                                    <strong>إلغاء الاشتراكات:</strong>
+                                    <small class="d-block text-muted">
+                                        اذهب لكل عقد وقم بإلغائه (سيتم حفظ التاريخ)
+                                    </small>
+                                </div>
+                            </div>
+                            <div class="solution-item">
+                                <span class="step-number">2</span>
+                                <div>
+                                    <strong>نقل المشتركين لمولد آخر:</strong>
+                                    <small class="d-block text-muted">
+                                        عدّل كل عقد وغيّر المولد المرتبط
+                                    </small>
+                                </div>
+                            </div>
+                            <div class="solution-item">
+                                <span class="step-number">3</span>
+                                <div>
+                                    <strong>تعطيل المولد بدلاً من الحذف:</strong>
+                                    <small class="d-block text-muted">
+                                        غيّر حالة المولد إلى "متوقف" للاحتفاظ بالبيانات
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <style>
+                        .active-subs-dialog {
+                            text-align: right;
+                            direction: rtl;
+                            max-height: 70vh;
+                            overflow-y: auto;
+                            padding: 0 10px;
+                        }
+                        .dialog-header {
+                            text-align: center;
+                            margin-bottom: 20px;
+                        }
+                        .warning-icon-wrapper {
+                            width: 80px;
+                            height: 80px;
+                            margin: 0 auto 15px;
+                            background: linear-gradient(135deg, #FED7D7, #FC8181);
+                            border-radius: 50%;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            font-size: 40px;
+                            color: white;
+                            box-shadow: 0 10px 30px rgba(220, 53, 69, 0.3);
+                            animation: pulse 2s infinite;
+                        }
+                        @@keyframes pulse {
+                            0%, 100% { transform: scale(1); }
+                            50% { transform: scale(1.05); }
+                        }
+                        .dialog-title {
+                            font-weight: 900;
+                            color: #C53030;
+                            margin-bottom: 10px;
+                        }
+                        .dialog-subtitle {
+                            color: #718096;
+                            font-size: 14px;
+                        }
+                        .info-row {
+                            display: grid;
+                            grid-template-columns: 1fr 1fr;
+                            gap: 10px;
+                            margin-bottom: 20px;
+                        }
+                        .info-card {
+                            padding: 15px;
+                            border-radius: 12px;
+                            display: flex;
+                            align-items: center;
+                            gap: 12px;
+                            font-family: 'Cairo', sans-serif;
+                        }
+                        .info-card.danger {
+                            background: linear-gradient(135deg, #FFF5F5, #FED7D7);
+                            border: 2px solid #FC8181;
+                        }
+                        .info-card.warning {
+                            background: linear-gradient(135deg, #FFFAF0, #FEEBC8);
+                            border: 2px solid #F6AD55;
+                        }
+                        .info-card i {
+                            font-size: 24px;
+                            color: #C53030;
+                        }
+                        .info-card.warning i { color: #C05621; }
+                        .info-number {
+                            font-size: 24px;
+                            font-weight: 900;
+                            line-height: 1;
+                        }
+                        .info-label {
+                            font-size: 12px;
+                            color: #718096;
+                            margin-top: 3px;
+                        }
+                        .reason-box {
+                            background: #EBF4FF;
+                            border-right: 4px solid #5A67D8;
+                            padding: 15px;
+                            border-radius: 10px;
+                            display: flex;
+                            gap: 12px;
+                            margin-bottom: 20px;
+                            text-align: right;
+                        }
+                        .reason-box i {
+                            color: #5A67D8;
+                            font-size: 20px;
+                            flex-shrink: 0;
+                            margin-top: 2px;
+                        }
+                        .reason-box strong {
+                            color: #2D3748;
+                            display: block;
+                            margin-bottom: 5px;
+                        }
+                        .reason-box p {
+                            font-size: 13px;
+                            color: #4A5568;
+                            line-height: 1.6;
+                        }
+                        .subs-list-container {
+                            background: #F7FAFC;
+                            border-radius: 12px;
+                            padding: 15px;
+                            margin-bottom: 20px;
+                            border: 1px solid #E2E8F0;
+                        }
+                        .subs-list-header {
+                            font-weight: 700;
+                            color: #2D3748;
+                            margin-bottom: 12px;
+                            padding-bottom: 10px;
+                            border-bottom: 2px dashed #CBD5E0;
+                            text-align: right;
+                        }
+                        .subs-list {
+                            max-height: 250px;
+                            overflow-y: auto;
+                        }
+                        .active-sub-item {
+                            background: white;
+                            padding: 12px;
+                            border-radius: 10px;
+                            margin-bottom: 8px;
+                            border: 1px solid #E2E8F0;
+                            transition: all 0.2s;
+                        }
+                        .active-sub-item:hover {
+                            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+                            transform: translateX(-3px);
+                            border-color: #5A67D8;
+                        }
+                        .sub-number {
+                            width: 30px;
+                            height: 30px;
+                            background: #5A67D8;
+                            color: white;
+                            border-radius: 50%;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            font-weight: 700;
+                            font-size: 14px;
+                            flex-shrink: 0;
+                        }
+                        .solutions-box {
+                            background: linear-gradient(135deg, #F0FFF4, #C6F6D5);
+                            border: 2px solid #48BB78;
+                            border-radius: 12px;
+                            padding: 15px;
+                        }
+                        .solutions-title {
+                            color: #22543D;
+                            font-weight: 700;
+                            margin-bottom: 15px;
+                            text-align: right;
+                        }
+                        .solution-item {
+                            background: white;
+                            padding: 12px;
+                            border-radius: 10px;
+                            margin-bottom: 8px;
+                            display: flex;
+                            align-items: flex-start;
+                            gap: 12px;
+                            text-align: right;
+                            border: 1px solid rgba(72, 187, 120, 0.3);
+                        }
+                        .solution-item:last-child {
+                            margin-bottom: 0;
+                        }
+                        .step-number {
+                            width: 28px;
+                            height: 28px;
+                            background: #48BB78;
+                            color: white;
+                            border-radius: 50%;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            font-weight: 700;
+                            font-size: 13px;
+                            flex-shrink: 0;
+                        }
+                        .solution-item strong {
+                            color: #2D3748;
+                            font-size: 14px;
+                        }
+                        .en-numbers {
+                            direction: ltr;
+                            display: inline-block;
+                            font-feature-settings: "tnum";
+                        }
+
+                        /* Custom scrollbar */
+                        .active-subs-dialog::-webkit-scrollbar,
+                        .subs-list::-webkit-scrollbar {
+                            width: 8px;
+                        }
+                        .active-subs-dialog::-webkit-scrollbar-track,
+                        .subs-list::-webkit-scrollbar-track {
+                            background: #f1f1f1;
+                            border-radius: 4px;
+                        }
+                        .active-subs-dialog::-webkit-scrollbar-thumb,
+                        .subs-list::-webkit-scrollbar-thumb {
+                            background: #cbd5e0;
+                            border-radius: 4px;
+                        }
+                        .active-subs-dialog::-webkit-scrollbar-thumb:hover,
+                        .subs-list::-webkit-scrollbar-thumb:hover {
+                            background: #a0aec0;
+                        }
+                    </style>
+                `,
+                width: '650px',
+                showCancelButton: true,
+                showConfirmButton: true,
+                confirmButtonText: '<i class="fas fa-list me-2"></i>عرض الاشتراكات',
+                cancelButtonText: '<i class="fas fa-times me-2"></i>إغلاق',
+                confirmButtonColor: '#5A67D8',
+                cancelButtonColor: '#718096',
+                customClass: {
+                    popup: 'swal2-rtl swal-active-subs',
+                    confirmButton: 'btn-lg px-4',
+                    cancelButton: 'btn-lg px-4'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // انتقل لصفحة الاشتراكات مفلترة بهذا المولد
+                    window.location.href = '/Subscriptions?generatorId=' + generatorId;
+                }
+            });
+        } 
+            
+        });
+    </script>
+}

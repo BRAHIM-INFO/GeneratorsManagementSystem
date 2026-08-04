@@ -1,0 +1,675 @@
+﻿@{
+    ViewData["Title"] = "لوحة التحكم";
+    ViewData["PageTitle"] = "لوحة التحكم الرئيسية";
+    ViewData["Breadcrumb"] = "لوحة التحكم";
+}
+
+@section Styles {
+    <style>
+        .stat-mini-chart {
+            height: 50px;
+        }
+
+        .circular-chart-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+}
+
+<!-- ==========================================
+     STATS CARDS ROW
+     ========================================== -->
+<div class="row g-3 mb-4">
+
+    <!-- إجمالي الإيرادات -->
+    <div class="col-xl-3 col-md-6">
+        <div class="card stat-card green h-100">
+            <div class="d-flex justify-content-between align-items-start p-3">
+                <div>
+                    <p class="stat-label">إجمالي الإيرادات</p>
+                    <h2 class="stat-value" data-count="32454">32,454 د.ع</h2>
+                </div>
+                <div class="stat-card-icon">
+                    <i class="fas fa-credit-card fa-2x text-white opacity-75"></i>
+                </div>
+            </div>
+            <div id="chart-revenue" class="stat-mini-chart"></div>
+            <i class="fas fa-chart-line stat-icon"></i>
+        </div>
+    </div>
+
+    <!-- إجمالي المشتركين -->
+    <div class="col-xl-3 col-md-6">
+        <div class="card stat-card purple h-100">
+            <div class="d-flex justify-content-between align-items-start p-3">
+                <div>
+                    <p class="stat-label">إجمالي المشتركين</p>
+                    <h2 class="stat-value" data-count="458">458</h2>
+                </div>
+                <div class="stat-card-icon">
+                    <i class="fas fa-users fa-2x text-white opacity-75"></i>
+                </div>
+            </div>
+            <div id="chart-subscribers" class="stat-mini-chart"></div>
+            <i class="fas fa-users stat-icon"></i>
+        </div>
+    </div>
+
+    <!-- إجمالي الضرائب -->
+    <div class="col-xl-3 col-md-6">
+        <div class="card stat-card orange h-100">
+            <div class="d-flex justify-content-between align-items-start p-3">
+                <div>
+                    <p class="stat-label">إجمالي الضرائب</p>
+                    <h2 class="stat-value" data-count="2156">2,156 د.ع</h2>
+                </div>
+                <div class="stat-card-icon">
+                    <i class="fas fa-percentage fa-2x text-white opacity-75"></i>
+                </div>
+            </div>
+            <div id="chart-tax" class="stat-mini-chart"></div>
+            <i class="fas fa-percentage stat-icon"></i>
+        </div>
+    </div>
+
+    <!-- إجمالي التكاليف -->
+    <div class="col-xl-3 col-md-6">
+        <div class="card stat-card blue h-100">
+            <div class="d-flex justify-content-between align-items-start p-3">
+                <div>
+                    <p class="stat-label">إجمالي التكاليف</p>
+                    <h2 class="stat-value" data-count="15678">15,678 د.ع</h2>
+                </div>
+                <div class="stat-card-icon">
+                    <i class="fas fa-coins fa-2x text-white opacity-75"></i>
+                </div>
+            </div>
+            <div id="chart-cost" class="stat-mini-chart"></div>
+            <i class="fas fa-coins stat-icon"></i>
+        </div>
+    </div>
+</div>
+
+<!-- ==========================================
+     CHARTS ROW
+     ========================================== -->
+<div class="row g-3 mb-4">
+    <!-- تحليل الاستهلاك -->
+    <div class="col-xl-8">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-0">تحليل الإيرادات الشهرية</h5>
+                    <small class="text-muted">صافي الربح مقابل الإيراد</small>
+                </div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-sm btn-outline-secondary">
+                        <i class="fas fa-ellipsis-v"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div id="salesAnalysisChart" style="min-height: 300px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- المشتركون النشطون -->
+    <div class="col-xl-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="mb-0">أعلى المشتركين استهلاكاً</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="subscriber-list">
+                    @foreach (var item in new[] {
+                                        new { Name = "أحمد محمد", Amp = "5 أمبير", Color = "purple", Initial = "أ" },
+                                        new { Name = "محمد علي", Amp = "7 أمبير", Color = "blue", Initial = "م" },
+                                        new { Name = "سعد خالد", Amp = "3 أمبير", Color = "green", Initial = "س" },
+                                        new { Name = "فاطمة حسن", Amp = "10 أمبير", Color = "orange", Initial = "ف" },
+                                        new { Name = "ياسر قاسم", Amp = "5 أمبير", Color = "red", Initial = "ي" },
+                                        new { Name = "نور أحمد", Amp = "7 أمبير", Color = "purple", Initial = "ن" },
+                                        new { Name = "عمر سليم", Amp = "3 أمبير", Color = "teal", Initial = "ع" },
+                                        })
+                    {
+                        <div class="d-flex align-items-center p-3 border-bottom subscriber-list-item">
+                            <div class="subscriber-avatar bg-@item.Color me-3">
+                                @item.Initial
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="fw-600">@item.Name</div>
+                                <small class="text-muted">@item.Amp</small>
+                            </div>
+                            <button class="btn btn-sm btn-light rounded-circle">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==========================================
+     CIRCULAR CHARTS ROW
+     ========================================== -->
+<div class="row g-3 mb-4">
+
+    <!-- ساعات التشغيل اليومية -->
+    <div class="col-xl-4 col-md-6">
+        <div class="card h-100">
+            <div class="card-body text-center p-4">
+                <h6 class="text-danger fw-bold mb-1">ساعات التشغيل</h6>
+                <div class="h1 fw-bold text-dark mb-3">
+                    <small class="fs-5 text-muted">hrs</small>18.5
+                </div>
+                <div id="runningHoursChart" style="height: 180px;"></div>
+                <div class="mt-3">
+                    <div class="text-muted mb-1">الهدف اليومي</div>
+                    <strong>24 ساعة</strong>
+                </div>
+                <button class="btn btn-danger btn-sm mt-3 px-4">
+                    <i class="fas fa-eye me-1"></i> التفاصيل
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- استهلاك الوقود اليومي -->
+    <div class="col-xl-4 col-md-6">
+        <div class="card h-100">
+            <div class="card-body text-center p-4">
+                <h6 class="text-primary fw-bold mb-1">استهلاك الوقود</h6>
+                <div class="h1 fw-bold text-dark mb-3">
+                    <small class="fs-5 text-muted">L</small>450
+                </div>
+                <div id="fuelChart" style="height: 180px;"></div>
+                <div class="mt-3">
+                    <div class="text-muted mb-1">الهدف اليومي</div>
+                    <strong>600 لتر</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- عدد الأعطال -->
+    <div class="col-xl-4 col-md-6">
+        <div class="card h-100">
+            <div class="card-body text-center p-4">
+                <h6 class="text-warning fw-bold mb-1">حوادث اليوم</h6>
+                <div class="h1 fw-bold text-dark mb-3">3</div>
+                <div id="incidentsChart" style="height: 180px;"></div>
+                <div class="mt-3">
+                    <div class="text-muted mb-1">الهدف الأسبوعي</div>
+                    <strong>صفر حوادث</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==========================================
+     STATS & INFO ROW
+     ========================================== -->
+<div class="row g-3 mb-4">
+
+    <!-- الإحصائيات - Line Chart -->
+    <div class="col-xl-6">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between">
+                <h5 class="mb-0">إحصائيات الأداء</h5>
+                <div>
+                    <span class="badge bg-success me-1">● الربح</span>
+                    <span class="badge bg-primary">● النمو</span>
+                </div>
+            </div>
+            <div class="card-body">
+                <div id="statsChart" style="min-height: 250px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- أحوال الطقس / حالة المولدات -->
+    <div class="col-xl-6">
+        <div class="card h-100">
+            <div class="card-body p-0">
+                <div class="weather-banner position-relative overflow-hidden"
+                     style="height: 200px; background: linear-gradient(135deg, #FF9F43, #FF6B6B);">
+                    <div class="position-absolute bottom-0 start-0 p-3">
+                        <h4 class="text-white mb-0">حالة تشغيل ممتازة</h4>
+                    </div>
+                    <div class="position-absolute top-0 end-0 p-3">
+                        <i class="fas fa-sun fa-3x text-white opacity-50"></i>
+                    </div>
+                </div>
+                <div class="d-flex overflow-auto p-3 gap-3 generator-status-row">
+                    @foreach (var gen in new[] {
+                                        new { Day = "السبت", Status = "fa-bolt", Color = "text-warning", Temp = "٣٨°" },
+                                        new { Day = "الجمعة", Status = "fa-cloud-sun", Color = "text-info", Temp = "٣٦°" },
+                                        new { Day = "الخميس", Status = "fa-bolt", Color = "text-warning", Temp = "٤٠°" },
+                                        new { Day = "الأربعاء", Status = "fa-check-circle", Color = "text-success", Temp = "٣٥°" },
+                                        new { Day = "الثلاثاء", Status = "fa-bolt", Color = "text-warning", Temp = "٣٩°" },
+                                        new { Day = "الإثنين", Status = "fa-sun", Color = "text-warning", Temp = "٤١°" },
+                                        })
+                    {
+                        <div class="text-center flex-shrink-0">
+                            <small class="d-block text-muted mb-1">@gen.Day</small>
+                            <i class="fas @gen.Status @gen.Color mb-1"></i>
+                            <div class="small fw-bold">@gen.Temp</div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==========================================
+     BOTTOM ROW
+     ========================================== -->
+<div class="row g-3 mb-4">
+
+    <!-- قائمة المولدات -->
+    <div class="col-xl-4">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="text-muted small">مصمم النظام</div>
+                    <strong>حالة المولدات</strong>
+                </div>
+                <button class="btn btn-primary btn-sm">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+            <div class="card-body text-center">
+                <div class="generator-admin-avatar mb-3">
+                    <div class="avatar-xl mx-auto">
+                        <i class="fas fa-cog fa-3x text-primary"></i>
+                    </div>
+                </div>
+                <h5 class="mb-1">مولدات نشطة: 12</h5>
+                <p class="text-muted small">مدير الشبكة الكهربائية</p>
+                <div class="d-flex justify-content-center gap-3 mb-3">
+                    <div>
+                        <span class="fw-bold text-success">4.7</span>
+                        <i class="fas fa-star text-warning"></i>
+                        <div class="small text-muted">التقييم</div>
+                    </div>
+                    <div class="border-start border-end px-3">
+                        <span class="fw-bold">365</span>
+                        <div class="small text-muted">أيام عمل</div>
+                    </div>
+                    <div>
+                        <i class="fas fa-users text-primary"></i>
+                        <div class="small text-muted">المشتركون</div>
+                    </div>
+                </div>
+                <div class="px-3 mb-3">
+                    <div class="d-flex justify-content-between small mb-1">
+                        <span>اليوم: 458 د.ع</span>
+                        <span class="text-muted">65%</span>
+                    </div>
+                    <div class="progress" style="height: 8px;">
+                        <div class="progress-bar bg-success" style="width: 30%"></div>
+                        <div class="progress-bar bg-warning" style="width: 20%"></div>
+                        <div class="progress-bar bg-danger" style="width: 15%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- أحدث الفواتير -->
+    <div class="col-xl-4">
+        <div class="card h-100">
+            <div class="card-img-top overflow-hidden" style="height: 200px;">
+                <div style="background: linear-gradient(135deg, #E040FB, #7C4DFF, #00BCD4);
+                            height: 100%; display: flex; align-items: center; justify-content: center;">
+                    <div class="text-center text-white p-3">
+                        <i class="fas fa-file-invoice-dollar fa-4x mb-2 opacity-75"></i>
+                        <div class="h5">إدارة الفواتير</div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <h5 class="card-title">نظام الفواتير الذكي</h5>
+                <p class="card-text text-muted small">
+                    إدارة شاملة للفواتير مع إمكانية التصدير والطباعة
+                </p>
+                <div class="d-flex gap-2">
+                    <span class="badge bg-danger">متأخر</span>
+                    <span class="badge bg-warning text-dark">جزئي</span>
+                    <span class="badge bg-success">مدفوع</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- الأرباح -->
+    <div class="col-xl-4">
+        <div class="card h-100">
+            <div class="card-header text-end">
+                <div class="text-muted small">الإثنين 18 - الأحد 21</div>
+                <div class="text-muted small">الأرباح</div>
+            </div>
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    <i class="fas fa-arrow-up text-success me-2"></i>
+                    <div class="h3 mb-0 fw-bold">4,295.36 د.ع</div>
+                </div>
+                <div class="text-muted small mb-3">إجمالي الأرباح الأسبوعية</div>
+                <div id="earningsChart" style="height: 120px;"></div>
+                <div class="d-flex gap-2 mt-3">
+                    <button class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-print me-1"></i>طباعة
+                    </button>
+                    <button class="btn btn-primary btn-sm flex-grow-1">
+                        <i class="fas fa-eye me-1"></i>عرض كامل
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==========================================
+     COLOR CARDS ROW
+     ========================================== -->
+<div class="row g-3 mb-4">
+    <div class="col-xl-4">
+        <div class="card text-center"
+             style="background: linear-gradient(135deg, #B39DDB, #9575CD); color: white; min-height: 140px;">
+            <div class="card-body d-flex flex-column align-items-center justify-content-center">
+                <i class="fas fa-mobile-alt fa-2x mb-2 opacity-75"></i>
+                <h6 class="mb-1">تطبيق المشترك</h6>
+                <p class="small opacity-75 mb-0">متاح على منصات iOS وAndroid</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-4">
+        <div class="card text-center"
+             style="background: linear-gradient(135deg, #A5D6A7, #66BB6A); color: white; min-height: 140px;">
+            <div class="card-body d-flex flex-column align-items-center justify-content-center">
+                <i class="fas fa-watch fa-2x mb-2 opacity-75"></i>
+                <h6 class="mb-1">مراقبة مستمرة</h6>
+                <p class="small opacity-75 mb-0">تتبع المولدات بوقت فعلي</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-4">
+        <div class="card text-center"
+             style="background: linear-gradient(135deg, #FFE082, #FFB300); color: white; min-height: 140px;">
+            <div class="card-body d-flex flex-column align-items-center justify-content-center">
+                <i class="fas fa-desktop fa-2x mb-2 opacity-75"></i>
+                <h6 class="mb-1">لوحة تحكم متقدمة</h6>
+                <p class="small opacity-75 mb-0">تقارير وإحصاءات شاملة</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==========================================
+     TABLES ROW
+     ========================================== -->
+<div class="row g-3 mb-4">
+    <!-- جدول أحدث المشتركين -->
+    <div class="col-xl-6">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-0">أحدث الفواتير</h5>
+                    <small class="text-muted">الفواتير الأخيرة - @DateTime.Now.Year</small>
+                </div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-sm btn-outline-secondary">
+                        <i class="fas fa-ellipsis-v"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <tbody>
+                            @foreach (var item in new[] {
+                                                        new { Label = "2.5k", Text = "أحمد - مولد 1", Color = "#FF9F43" },
+                                                        new { Label = "3.7k", Text = "محمد - مولد 2", Color = "#EA5455" },
+                                                        new { Label = "2.2k", Text = "سعد - مولد 3", Color = "#28C76F" },
+                                                        new { Label = "4.1k", Text = "فاطمة - مولد 4", Color = "#7367F0" },
+                                                        new { Label = "2.8k", Text = "ياسر - مولد 5", Color = "#FF9F43" },
+                                                        new { Label = "5.6k", Text = "نور - مولد 6", Color = "#00CFE8" },
+                                                        })
+                            {
+                                <tr>
+                                    <td>
+                                        <span class="badge rounded-pill fw-bold px-3 py-2"
+                                              style="background: @item.Color">
+                                            @item.Label
+                                        </span>
+                                    </td>
+                                    <td>@item.Text</td>
+                                    <td class="text-end">
+                                        <div class="progress" style="height: 6px; width: 120px; margin-right: auto;">
+                                            <div class="progress-bar"
+                                                 style="width: @(new Random().Next(30, 90))%; background: @item.Color"></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <div class="text-center mt-3">
+                    <button class="btn btn-primary px-4">
+                        <i class="fas fa-user me-2"></i>عرض الكل
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- مخطط طلبات الصيانة -->
+    <div class="col-xl-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">طلبات الصيانة</h5>
+                <small class="text-muted">
+                    <span class="text-success">● مكتملة</span>
+                    <span class="text-warning ms-2">● معلقة</span>
+                </small>
+            </div>
+            <div class="card-body">
+                <div id="maintenanceChart" style="min-height: 280px;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+
+            // ============================================
+            // Mini Sparkline Charts for Stat Cards
+            // ============================================
+            const miniChartConfig = (color, data) => ({
+                chart: { type: 'line', height: 50, sparkline: { enabled: true } },
+                series: [{ data: data }],
+                stroke: { curve: 'smooth', width: 2 },
+                colors: ['rgba(255,255,255,0.7)'],
+                tooltip: { enabled: false },
+                fill: {
+                    type: 'gradient',
+                    gradient: {
+                        shadeIntensity: 1,
+                        opacityFrom: 0.4,
+                        opacityTo: 0.1
+                    }
+                }
+            });
+
+            new ApexCharts(document.querySelector("#chart-revenue"),
+                miniChartConfig('#fff', [30, 40, 35, 50, 49, 60, 70, 91, 125])).render();
+            new ApexCharts(document.querySelector("#chart-subscribers"),
+                miniChartConfig('#fff', [50, 40, 60, 55, 70, 65, 80, 90, 85])).render();
+            new ApexCharts(document.querySelector("#chart-tax"),
+                miniChartConfig('#fff', [20, 30, 25, 35, 40, 30, 45, 40, 55])).render();
+            new ApexCharts(document.querySelector("#chart-cost"),
+                miniChartConfig('#fff', [60, 55, 70, 65, 80, 75, 60, 70, 65])).render();
+
+            // ============================================
+            // Sales Analysis Bar Chart
+            // ============================================
+            new ApexCharts(document.querySelector("#salesAnalysisChart"), {
+                chart: { type: 'bar', height: 300, toolbar: { show: false },
+                         fontFamily: 'Cairo, sans-serif' },
+                series: [
+                    { name: 'صافي الربح', data: [44, 55, 41, 67, 22, 43, 21, 33, 45] },
+                    { name: 'الإيراد', data: [13, 23, 20, 8, 13, 27, 33, 12, 15] }
+                ],
+                colors: ['#7367F0', '#B4B4E0'],
+                plotOptions: { bar: { horizontal: false, columnWidth: '55%', borderRadius: 4 } },
+                dataLabels: { enabled: false },
+                xaxis: {
+                    categories: ['فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
+                                 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر'],
+                    labels: { style: { fontFamily: 'Cairo, sans-serif' } }
+                },
+                yaxis: { labels: { style: { fontFamily: 'Cairo, sans-serif' } } },
+                legend: {
+                    position: 'top',
+                    fontFamily: 'Cairo, sans-serif',
+                    markers: { radius: 4 }
+                },
+                grid: { borderColor: '#f1f1f1' },
+                fill: { opacity: 1 }
+            }).render();
+
+            // ============================================
+            // Circular Charts
+            // ============================================
+            // Running Hours
+            new ApexCharts(document.querySelector("#runningHoursChart"), {
+                chart: { type: 'radialBar', height: 180, fontFamily: 'Cairo, sans-serif' },
+                series: [77],
+                colors: ['#EA5455'],
+                plotOptions: {
+                    radialBar: {
+                        hollow: { size: '65%' },
+                        dataLabels: {
+                            name: { show: false },
+                            value: { show: false }
+                        },
+                        track: { background: '#f0f0f0' }
+                    }
+                },
+                labels: ['ساعات التشغيل']
+            }).render();
+
+            // Fuel
+            new ApexCharts(document.querySelector("#fuelChart"), {
+                chart: { type: 'radialBar', height: 180, fontFamily: 'Cairo, sans-serif' },
+                series: [75],
+                colors: ['#00CFE8'],
+                plotOptions: {
+                    radialBar: {
+                        hollow: { size: '65%' },
+                        dataLabels: {
+                            name: { show: false },
+                            value: { show: false }
+                        },
+                        track: { background: '#f0f0f0' }
+                    }
+                },
+                labels: ['الوقود']
+            }).render();
+
+            // Incidents
+            new ApexCharts(document.querySelector("#incidentsChart"), {
+                chart: { type: 'radialBar', height: 180, fontFamily: 'Cairo, sans-serif' },
+                series: [30],
+                colors: ['#FF9F43'],
+                plotOptions: {
+                    radialBar: {
+                        hollow: { size: '65%' },
+                        dataLabels: {
+                            name: { show: false },
+                            value: { show: false }
+                        },
+                        track: { background: '#f0f0f0' }
+                    }
+                }
+            }).render();
+
+            // ============================================
+            // Stats Line Chart
+            // ============================================
+            new ApexCharts(document.querySelector("#statsChart"), {
+                chart: { type: 'line', height: 250, toolbar: { show: false },
+                         fontFamily: 'Cairo, sans-serif' },
+                series: [
+                    { name: 'الربح', data: [110, 105, 115, 100, 120, 115, 130, 125, 140, 135, 145, 150] },
+                    { name: 'النمو', data: [100, 110, 105, 115, 110, 120, 115, 125, 120, 130, 125, 140] }
+                ],
+                colors: ['#28C76F', '#7367F0'],
+                stroke: { curve: 'smooth', width: [2, 2] },
+                markers: { size: 4, strokeWidth: 0 },
+                xaxis: {
+                    categories: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
+                                 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'],
+                    labels: { style: { fontFamily: 'Cairo, sans-serif' } }
+                },
+                yaxis: { labels: { style: { fontFamily: 'Cairo, sans-serif' } } },
+                legend: { position: 'top', fontFamily: 'Cairo, sans-serif' },
+                grid: { borderColor: '#f1f1f1' }
+            }).render();
+
+            // ============================================
+            // Earnings Sparkline
+            // ============================================
+            new ApexCharts(document.querySelector("#earningsChart"), {
+                chart: { type: 'line', height: 120, sparkline: { enabled: true },
+                         fontFamily: 'Cairo, sans-serif' },
+                series: [{ name: 'الأرباح', data: [30, 50, 25, 60, 45, 70, 55, 80, 65, 90] }],
+                stroke: { curve: 'smooth', width: 2 },
+                colors: ['#7367F0'],
+                fill: {
+                    type: 'gradient',
+                    gradient: { shadeIntensity: 1, opacityFrom: 0.3, opacityTo: 0.05 }
+                },
+                tooltip: {
+                    y: { formatter: (val) => val.toLocaleString('ar') + ' د.ع' }
+                }
+            }).render();
+
+            // ============================================
+            // Maintenance Area Chart
+            // ============================================
+            new ApexCharts(document.querySelector("#maintenanceChart"), {
+                chart: { type: 'area', height: 280, toolbar: { show: false },
+                         fontFamily: 'Cairo, sans-serif' },
+                series: [
+                    { name: 'مكتملة', data: [30, 25, 35, 28, 32, 27, 30, 25, 28, 33] },
+                    { name: 'معلقة', data: [10, 15, 8, 12, 9, 14, 11, 7, 13, 10] }
+                ],
+                colors: ['#28C76F', '#FF9F43'],
+                stroke: { curve: 'smooth', width: [2, 2] },
+                fill: {
+                    type: 'gradient',
+                    gradient: { shadeIntensity: 1, opacityFrom: 0.3, opacityTo: 0.05 }
+                },
+                markers: { size: 4, strokeWidth: 0 },
+                xaxis: {
+                    categories: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'],
+                    labels: { style: { fontFamily: 'Cairo, sans-serif' } }
+                },
+                yaxis: { labels: { style: { fontFamily: 'Cairo, sans-serif' } } },
+                legend: { position: 'top', fontFamily: 'Cairo, sans-serif' },
+                grid: { borderColor: '#f1f1f1' }
+            }).render();
+        });
+    </script>
+}

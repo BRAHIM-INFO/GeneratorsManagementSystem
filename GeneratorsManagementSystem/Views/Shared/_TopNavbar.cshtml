@@ -1,0 +1,340 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using GeneratorsManagementSystem.Models.Identity
+@inject UserManager<ApplicationUser> UserManager
+
+@{
+    var user = await UserManager.GetUserAsync(User);
+}
+
+<nav class="top-navbar" id="topNavbar">
+    <div class="navbar-inner">
+
+        <!-- Right: Toggle + Breadcrumb -->
+        <div class="navbar-right-section">
+            <button class="mobile-toggle d-lg-none" id="mobileSidebarToggle">
+                <i class="fas fa-bars"></i>
+            </button>
+
+            <div class="breadcrumb-area d-none d-lg-flex">
+                <h5 class="page-title-text">@(ViewData["PageTitle"] ?? "لوحة التحكم")</h5>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-0">
+                        <li class="breadcrumb-item">
+                            <a href="@Url.Action("Index", "Dashboard")">
+                                <i class="fas fa-home"></i>
+                            </a>
+                        </li>
+                        <li class="breadcrumb-item active">
+                            @(ViewData["PageTitle"] ?? "لوحة التحكم")
+                        </li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Left: Actions -->
+        <div class="navbar-left-section">
+
+            <!-- Search -->
+            <div class="nav-search">
+                <button class="nav-icon-btn" id="searchBtn">
+                    <i class="fas fa-search"></i>
+                </button>
+                <div class="search-dropdown" id="searchDropdown">
+                    <input type="text" placeholder="بحث في النظام..." class="search-input" id="searchInput">
+                </div>
+            </div>
+
+            <!-- Fullscreen -->
+            <button class="nav-icon-btn" id="fullscreenBtn" title="ملء الشاشة">
+                <i class="fas fa-expand" id="fsIcon"></i>
+            </button>
+
+            <!-- ═══ Notifications ═══ -->
+            <div class="dropdown me-3">
+                <button class="btn btn-link position-relative p-2" 
+                        id="notificationsDropdown"
+                        data-bs-toggle="dropdown" 
+                        aria-expanded="false">
+                    <i class="fas fa-bell fa-lg"></i>
+                    <span class="position-absolute top-0 start-0 translate-middle badge rounded-pill bg-danger d-none"
+                          id="notifBadge">
+                        0
+                    </span>
+                </button>
+                <div class="dropdown-menu dropdown-menu-end shadow-lg border-0 p-0"
+                     aria-labelledby="notificationsDropdown"
+                     style="width: 400px; max-height: 500px; overflow-y: auto;">
+                    
+                    <div class="p-3 border-bottom bg-primary text-white rounded-top">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0 fw-bold">
+                                <i class="fas fa-bell me-2"></i>التنبيهات
+                            </h6>
+                            <a href="@Url.Action("AlertsPage", "Invoices")" 
+                               class="text-white text-decoration-none small">
+                                عرض الكل →
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <div id="notificationsList">
+                        <div class="p-4 text-center text-muted">
+                            <div class="spinner-border spinner-border-sm"></div>
+                            <p class="mb-0 mt-2 small">جارِ التحميل...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <script>
+    // ═══ تحميل التنبيهات ═══
+    function loadNotifications() {
+        // تحميل تنبيهات الفواتير
+        var invoicePromise = fetch('/Invoices/Alerts?daysAhead=7')
+            .then(r => r.json())
+            .catch(() => ({ count: 0, alerts: [] }));
+
+        // تحميل تنبيهات الكتب
+        var bookPromise = fetch('/Books/Alerts?daysAhead=30')
+            .then(r => r.json())
+            .catch(() => ({ count: 0, alerts: [] }));
+
+        Promise.all([invoicePromise, bookPromise])
+            .then(function ([invoiceRes, bookRes]) {
+                var listEl = document.getElementById('notificationsList');
+                var badgeEl = document.getElementById('notifBadge');
+
+                if (!listEl || !badgeEl) return;
+
+                var totalCount = (invoiceRes.count || 0) + (bookRes.count || 0);
+
+                if (totalCount > 0) {
+                    badgeEl.textContent = totalCount;
+                    badgeEl.classList.remove('d-none');
+
+                    var html = '';
+
+                    // ═══ تنبيهات الفواتير ═══
+                    if (invoiceRes.count > 0) {
+                        html += '<div class="px-3 py-2 bg-primary bg-opacity-10 border-bottom">';
+                        html += '<small class="fw-bold text-primary"><i class="fas fa-file-invoice-dollar me-1"></i>';
+                        html += 'الفواتير (' + invoiceRes.count + ')</small></div>';
+
+                        if (invoiceRes.overdueCount > 0) {
+                            html += '<div class="px-3 py-2 bg-danger bg-opacity-10 border-bottom">';
+                            html += '<small class="fw-bold text-danger">';
+                            html += '<i class="fas fa-exclamation-triangle me-1"></i>';
+                            html += invoiceRes.overdueCount + ' فاتورة متأخرة</small></div>';
+                        }
+
+                        (invoiceRes.alerts || []).slice(0, 5).forEach(function (a) {
+                            html += '<a href="/Invoices/Details/' + a.invoiceId + '" ';
+                            html += 'class="d-block text-decoration-none text-dark border-bottom notification-item p-3">';
+                            html += '<div class="d-flex gap-3">';
+                            html += '<div class="' + a.badgeClass + ' text-white rounded-circle d-flex align-items-center justify-content-center" ';
+                            html += 'style="width:40px;height:40px;flex-shrink:0">';
+                            html += '<i class="fas ' + a.alertIcon + '"></i></div>';
+                            html += '<div class="flex-grow-1">';
+                            html += '<div class="d-flex justify-content-between">';
+                            html += '<strong class="small">' + a.subscriberName + '</strong>';
+                            html += '<small class="text-muted">' + a.invoiceNumber + '</small>';
+                            html += '</div>';
+                            html += '<div class="small text-muted mt-1">' + a.alertMessage + '</div>';
+                            html += '</div></div></a>';
+                        });
+                    }
+
+                    // ═══ تنبيهات الكتب ═══
+                    if (bookRes.count > 0) {
+                        html += '<div class="px-3 py-2 bg-info bg-opacity-10 border-bottom">';
+                        html += '<small class="fw-bold text-info"><i class="fas fa-book me-1"></i>';
+                        html += 'كتب المولدة (' + bookRes.count + ')</small></div>';
+
+                        if (bookRes.expiredCount > 0) {
+                            html += '<div class="px-3 py-2 bg-danger bg-opacity-10 border-bottom">';
+                            html += '<small class="fw-bold text-danger">';
+                            html += '<i class="fas fa-times-circle me-1"></i>';
+                            html += bookRes.expiredCount + ' كتاب منتهي</small></div>';
+                        }
+
+                        if (bookRes.urgentCount > 0) {
+                            html += '<div class="px-3 py-2 bg-warning bg-opacity-10 border-bottom">';
+                            html += '<small class="fw-bold text-warning">';
+                            html += '<i class="fas fa-clock me-1"></i>';
+                            html += bookRes.urgentCount + ' كتاب ينتهي خلال أسبوع</small></div>';
+                        }
+
+                        (bookRes.alerts || []).slice(0, 5).forEach(function (a) {
+                            html += '<a href="/Books/Details/' + a.bookId + '" ';
+                            html += 'class="d-block text-decoration-none text-dark border-bottom notification-item p-3">';
+                            html += '<div class="d-flex gap-3">';
+                            html += '<div class="' + a.badgeClass + ' text-white rounded-circle d-flex align-items-center justify-content-center" ';
+                            html += 'style="width:40px;height:40px;flex-shrink:0">';
+                            html += '<i class="fas ' + a.categoryIcon + '"></i></div>';
+                            html += '<div class="flex-grow-1">';
+                            html += '<div class="d-flex justify-content-between">';
+                            html += '<strong class="small">' + a.bookName + '</strong>';
+                            html += '<small class="text-muted">' + a.internalNumber + '</small>';
+                            html += '</div>';
+                            html += '<div class="small text-muted mt-1">';
+                            html += '<i class="fas fa-building me-1"></i>' + a.issuingAuthority + '</div>';
+                            html += '<div class="mt-1">';
+                            html += '<span class="badge ' + a.badgeClass + '">' + a.alertMessage + '</span>';
+                            html += '</div>';
+                            html += '</div></div></a>';
+                        });
+                    }
+
+                    // ═══ زر عرض الكل ═══
+                    if (totalCount > 10) {
+                        html += '<div class="p-2 text-center border-top">';
+                        html += '<a href="/Invoices/AlertsPage" class="btn btn-sm btn-outline-primary me-1">تنبيهات الفواتير</a>';
+                        html += '<a href="/Books/AlertsPage" class="btn btn-sm btn-outline-info">تنبيهات الكتب</a>';
+                        html += '</div>';
+                    }
+
+                    listEl.innerHTML = html;
+                } else {
+                    badgeEl.classList.add('d-none');
+                    listEl.innerHTML = `
+                        <div class="p-4 text-center text-muted">
+                            <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                            <p class="mb-0">لا توجد تنبيهات جديدة</p>
+                        </div>
+                    `;
+                }
+            });
+    }
+
+    // تحميل عند بدء الصفحة
+    document.addEventListener('DOMContentLoaded', function () {
+        if (typeof loadNotifications === 'function') {
+            loadNotifications();
+            setInterval(loadNotifications, 60000);
+        }
+    });
+    
+    // Hover effect
+    document.addEventListener('mouseover', function (e) {
+        var item = e.target.closest('.notification-item');
+        if (item) item.style.background = '#f8f9fc';
+    });
+    
+    document.addEventListener('mouseout', function (e) {
+        var item = e.target.closest('.notification-item');
+        if (item) item.style.background = 'white';
+    });
+    // // تحميل عند بدء الصفحة
+    // document.addEventListener('DOMContentLoaded', function () {
+    //     loadNotifications();
+    //     // إعادة التحميل كل دقيقة
+    //     setInterval(loadNotifications, 60000);
+    // });
+
+    // // Hover effect
+    // document.addEventListener('mouseenter', function (e) {
+    //     if (e.target.classList && e.target.classList.contains('notification-item')) {
+    //         e.target.style.background = '#f8f9fc';
+    //     }
+    // }, true);
+
+    // document.addEventListener('mouseleave', function (e) {
+    //     if (e.target.classList && e.target.classList.contains('notification-item')) {
+    //         e.target.style.background = 'white';
+    //     }
+    // }, true);
+</script>
+            <!-- Notifications -->
+            @* <div class="dropdown">
+                <button class="nav-icon-btn position-relative" data-bs-toggle="dropdown">
+                    <i class="fas fa-bell"></i>
+                    <span class="notif-dot">4</span>
+                </button>
+                <div class="dropdown-menu dropdown-menu-start notif-menu">
+                    <div class="notif-header">
+                        <span>الإشعارات</span>
+                        <a href="#" class="text-primary small">مشاهدة الكل</a>
+                    </div>
+                    <div class="notif-item unread">
+                        <div class="notif-icon danger"><i class="fas fa-exclamation-triangle"></i></div>
+                        <div class="notif-body">
+                            <p>المولد #3 يحتاج صيانة عاجلة</p>
+                            <small>منذ 5 دقائق</small>
+                        </div>
+                    </div>
+                    <div class="notif-item unread">
+                        <div class="notif-icon warning"><i class="fas fa-gas-pump"></i></div>
+                        <div class="notif-body">
+                            <p>مستوى الوقود منخفض - المولد #7</p>
+                            <small>منذ 15 دقيقة</small>
+                        </div>
+                    </div>
+                    <div class="notif-item">
+                        <div class="notif-icon success"><i class="fas fa-user-plus"></i></div>
+                        <div class="notif-body">
+                            <p>تم إضافة مشترك جديد</p>
+                            <small>منذ ساعة</small>
+                        </div>
+                    </div>
+                    <div class="notif-item">
+                        <div class="notif-icon info"><i class="fas fa-file-invoice-dollar"></i></div>
+                        <div class="notif-body">
+                            <p>تم استلام دفعة مالية</p>
+                            <small>منذ ساعتين</small>
+                        </div>
+                    </div>
+                </div>
+            </div> *@
+
+            <!-- User -->
+            <div class="dropdown">
+                <button class="user-btn" data-bs-toggle="dropdown">
+                    <div class="user-avatar-nav">
+                        @(user?.FullName?.Substring(0, 1) ?? "م")
+                    </div>
+                    <div class="user-info-nav d-none d-md-block">
+                        <span class="un">@(user?.FullName ?? "المستخدم")</span>
+                        <span class="us">متاح</span>
+                    </div>
+                    <i class="fas fa-chevron-down ms-1 d-none d-md-inline small"></i>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-start user-drop">
+                    <li>
+                        <div class="user-drop-header">
+                            <div class="udh-avatar">@(user?.FullName?.Substring(0, 1) ?? "م")</div>
+                            <div>
+                                <div class="fw-600">@(user?.FullName ?? "المستخدم")</div>
+                                <small class="text-muted">@(user?.Email ?? "")</small>
+                            </div>
+                        </div>
+                    </li>
+                    <li><hr class="dropdown-divider my-1"></li>
+                    <li><a class="dropdown-item" href="#"><i class="fas fa-user me-2 text-primary"></i>الملف الشخصي</a></li>
+                    <li><a class="dropdown-item" href="@Url.Action("Index", "Settings")"><i class="fas fa-cog me-2 text-secondary"></i>الإعدادات</a></li>
+                    <li><hr class="dropdown-divider my-1"></li>
+                    <li>
+                        <form asp-action="Logout" asp-controller="Account" method="post">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="dropdown-item text-danger">
+                                <i class="fas fa-sign-out-alt me-2"></i>تسجيل الخروج
+                            </button>
+                        </form>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Language -->
+@*             <div class="dropdown">
+                <button class="nav-icon-btn lang-btn" data-bs-toggle="dropdown">
+                    <span>🇸🇦</span>
+                    <span class="d-none d-md-inline ms-1 small">عربي</span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-start">
+                    <li><a class="dropdown-item active" href="#">🇸🇦 العربية</a></li>
+                    <li><a class="dropdown-item" href="#">🇺🇸 English</a></li>
+                </ul>
+            </div>
+ *@
+        </div>
+    </div>
+</nav>

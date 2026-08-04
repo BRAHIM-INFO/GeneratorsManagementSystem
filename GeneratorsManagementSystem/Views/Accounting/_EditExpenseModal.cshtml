@@ -1,0 +1,100 @@
+﻿@model GeneratorsManagementSystem.Models.Accounting.Expense
+@{
+    var generators = ViewBag.Generators as List<GeneratorsManagementSystem.Models.Generator>;
+}
+
+<form id="expenseForm" asp-action="EditExpense" method="post">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="Id" />
+    <input type="hidden" asp-for="ExpenseNumber" />
+    <input type="hidden" asp-for="CreatedAt" />
+    <input type="hidden" asp-for="CreatedBy" />
+
+    <div class="modal-header text-white py-3"
+         style="background:linear-gradient(135deg,#5A67D8,#7886E0)">
+        <div class="d-flex align-items-center gap-3 flex-grow-1">
+            <div class="bg-white bg-opacity-25 rounded-circle p-2 d-flex align-items-center justify-content-center"
+                 style="width:50px;height:50px">
+                <i class="fas fa-edit fa-lg"></i>
+            </div>
+            <div>
+                <h5 class="modal-title fw-800 mb-0">تعديل المصروف</h5>
+                <small class="opacity-75 font-monospace">@Model.ExpenseNumber</small>
+            </div>
+        </div>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+    </div>
+
+    <div class="modal-body p-4">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label fw-bold">الفئة</label>
+                <select asp-for="Category" class="form-select">
+                    @foreach (var cat in Enum.GetValues<GeneratorsManagementSystem.Models.Accounting.ExpenseCategory>())
+                    {
+                        <option value="@((int)cat)" selected="@(Model.Category == cat)">
+                            @cat.ToString()
+                        </option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">المولد المرتبط</label>
+                <select asp-for="GeneratorId" class="form-select">
+                    <option value="">-- عام --</option>
+                    @foreach (var g in generators ?? new())
+                    {
+                        <option value="@g.Id" selected="@(Model.GeneratorId == g.Id)">
+                            @g.GeneratorNumber - @g.Name
+                        </option>
+                    }
+                </select>
+            </div>
+            <div class="col-12">
+                <label class="form-label fw-bold">البيان</label>
+                <input asp-for="Description" class="form-control" />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-bold">المبلغ</label>
+                <div class="input-group input-group-lg">
+                    <input asp-for="Amount" type="number" step="100" class="form-control text-center fw-bold" style="direction:ltr" />
+                    <span class="input-group-text bg-primary text-white">د.ع</span>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-bold">تاريخ المصروف</label>
+                <input asp-for="ExpenseDate" type="date" class="form-control form-control-lg" />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">طريقة الدفع</label>
+                <select asp-for="PaymentMethod" class="form-select">
+                    <option value="1">نقدي</option>
+                    <option value="2">تحويل بنكي</option>
+                    <option value="3">بطاقة</option>
+                    <option value="4">محفظة إلكترونية</option>
+                    <option value="5">شيك</option>
+                    <option value="99">أخرى</option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">المرجع</label>
+                <input asp-for="Reference" class="form-control" />
+            </div>
+            <div class="col-12">
+                <label class="form-label">المستفيد</label>
+                <input asp-for="Beneficiary" class="form-control" />
+            </div>
+            <div class="col-12">
+                <label class="form-label">ملاحظات</label>
+                <textarea asp-for="Notes" class="form-control" rows="2"></textarea>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-footer bg-light">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">إلغاء</button>
+        <button type="submit" class="btn btn-primary btn-lg px-5">
+            <i class="fas fa-save me-2"></i>حفظ التغييرات
+        </button>
+    </div>
+</form>

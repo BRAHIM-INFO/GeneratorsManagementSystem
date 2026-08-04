@@ -1,0 +1,236 @@
+﻿@model GeneratorsManagementSystem.Models.ViewModels.Settings.UsersStatsViewModel
+@{
+    ViewData["Title"] = "إدارة المستخدمين";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/settings.css" />
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css" />
+}
+
+<div class="settings-page">
+    <div class="page-header d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="page-title">
+                <i class="fas fa-users text-purple"></i>
+                إدارة المستخدمين
+            </h2>
+            <p class="page-subtitle text-muted mb-0">إضافة وتعديل مستخدمي النظام</p>
+        </div>
+        <div>
+            <a href="@Url.Action("Index")" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-right"></i> رجوع
+            </a>
+            <a href="@Url.Action("CreateUser")" class="btn btn-purple">
+                <i class="fas fa-user-plus"></i> إضافة مستخدم
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3 col-sm-6">
+            <div class="stat-card stat-primary">
+                <div class="stat-icon"><i class="fas fa-users"></i></div>
+                <div class="stat-content">
+                    <div class="stat-value">@Model.TotalUsers</div>
+                    <div class="stat-label">إجمالي المستخدمين</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="stat-card stat-success">
+                <div class="stat-icon"><i class="fas fa-user-check"></i></div>
+                <div class="stat-content">
+                    <div class="stat-value">@Model.ActiveUsers</div>
+                    <div class="stat-label">النشطون</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="stat-card stat-warning">
+                <div class="stat-icon"><i class="fas fa-user-times"></i></div>
+                <div class="stat-content">
+                    <div class="stat-value">@Model.InactiveUsers</div>
+                    <div class="stat-label">المعطلون</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="stat-card stat-info">
+                <div class="stat-icon"><i class="fas fa-circle"></i></div>
+                <div class="stat-content">
+                    <div class="stat-value">@Model.OnlineNow</div>
+                    <div class="stat-label">متصل الآن</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Users Table -->
+    <div class="settings-card">
+        <div class="settings-card-header bg-purple-gradient">
+            <h5><i class="fas fa-list"></i> قائمة المستخدمين</h5>
+        </div>
+        <div class="settings-card-body">
+            <div class="table-responsive">
+                <table class="table table-hover" id="usersTable">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>المستخدم</th>
+                            <th>البريد الإلكتروني</th>
+                            <th>الهاتف</th>
+                            <th>القسم</th>
+                            <th>الأدوار</th>
+                            <th>الحالة</th>
+                            <th>آخر تسجيل دخول</th>
+                            <th class="text-center">الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{
+                            int index = 1;
+                        }
+                        @foreach (var user in Model.Users)
+                        {
+                            <tr>
+                                <td>@(index++)</td>
+                                <td>
+                                    <div class="user-info-cell">
+                                        <div class="user-avatar-sm">
+                                            @if (!string.IsNullOrEmpty(user.ProfilePicture))
+                                            {
+                                                <img src="@user.ProfilePicture" alt="@user.FullName" />
+                                            }
+                                            else
+                                            {
+                                                <span>@(user.FullName.Length > 0 ? user.FullName[0].ToString().ToUpper() : "?")</span>
+                                            }
+                                        </div>
+                                        <div>
+                                            <div class="user-name">@user.FullName</div>
+                                            <small class="text-muted">@user.JobTitle</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td dir="ltr">@user.Email</td>
+                                <td dir="ltr">@(user.PhoneNumber ?? "—")</td>
+                                <td>@(user.Department ?? "—")</td>
+                                <td>
+                                    @foreach (var role in user.Roles)
+                                    {
+                                        <span class="badge bg-purple me-1">@role</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (user.IsActive)
+                                    {
+                                        <span class="badge bg-success">نشط</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">معطل</span>
+                                    }
+                                </td>
+                                <td>
+                                    @(user.LastLoginAt?.ToString("yyyy/MM/dd HH:mm") ?? "لم يسجل بعد")
+                                </td>
+                                <td class="text-center">
+                                    <div class="action-buttons">
+                                        <a href="@Url.Action("EditUser", new { id = user.Id })"
+                                           class="btn btn-sm btn-outline-primary" title="تعديل">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <button class="btn btn-sm btn-outline-@(user.IsActive ? "warning" : "success")"
+                                                onclick="toggleUserStatus('@user.Id', '@user.FullName')"
+                                                title="@(user.IsActive ? "تعطيل" : "تفعيل")">
+                                            <i class="fas fa-@(user.IsActive ? "ban" : "check")"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger"
+                                                onclick="deleteUser('@user.Id', '@user.FullName')"
+                                                title="حذف">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('#usersTable').DataTable({
+                language: {
+                    url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/ar.json'
+                },
+                order: [[0, 'asc']],
+                pageLength: 10
+            });
+        });
+
+        function deleteUser(id, name) {
+            Swal.fire({
+                title: 'تأكيد الحذف',
+                html: `هل أنت متأكد من حذف المستخدم <strong>${name}</strong>؟<br/><small>لا يمكن التراجع عن هذا الإجراء</small>`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'نعم، احذف',
+                cancelButtonText: 'إلغاء'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: '@Url.Action("DeleteUser")',
+                        type: 'POST',
+                        data: {
+                            id: id,
+                            __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                        },
+                        success: function (response) {
+                            if (response.success) {
+                                Swal.fire('تم الحذف!', response.message, 'success')
+                                    .then(() => location.reload());
+                            } else {
+                                Swal.fire('خطأ!', response.message, 'error');
+                            }
+                        }
+                    });
+                }
+            });
+        }
+
+        function toggleUserStatus(id, name) {
+            $.ajax({
+                url: '@Url.Action("ToggleUserStatus")',
+                type: 'POST',
+                data: {
+                    id: id,
+                    __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                },
+                success: function (response) {
+                    if (response.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: response.message,
+                            timer: 1500,
+                            showConfirmButton: false
+                        }).then(() => location.reload());
+                    } else {
+                        Swal.fire('خطأ!', response.message, 'error');
+                    }
+                }
+            });
+        }
+    </script>
+    @Html.AntiForgeryToken()
+}

@@ -1,0 +1,957 @@
+﻿@model GeneratorsManagementSystem.Models.Generator
+@{
+    ViewData["Title"]     = "مراقبة المولد";
+    ViewData["PageTitle"] = $"مراقبة - {Model.Name}";
+
+    var statusColor = Model.Status switch {
+        GeneratorStatus.Active      => "#48BB78",
+        GeneratorStatus.Stopped     => "#718096",
+        GeneratorStatus.Maintenance => "#F6AD55",
+        GeneratorStatus.Fault       => "#FC8181",
+        _                           => "#63B3ED"
+    };
+    var statusLabel = Model.Status switch {
+        GeneratorStatus.Active      => "يعمل",
+        GeneratorStatus.Stopped     => "متوقف",
+        GeneratorStatus.Maintenance => "صيانة",
+        GeneratorStatus.Fault       => "عطل",
+        _                           => "احتياط"
+    };
+    var loadPct = (double)Model.LoadPercentage;
+    var fuelPct = (double)(Model.FuelLevelPercentage ?? 0);
+}
+
+@section Styles {
+<style>
+    .monitor-hero {
+        background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+        border-radius: 16px;
+        padding: 24px;
+        color: white;
+        margin-bottom: 20px;
+        position: relative;
+        overflow: hidden;
+    }
+    .monitor-hero::before {
+        content: '';
+        position: absolute;
+        top: -50%; right: -10%;
+        width: 300px; height: 300px;
+        border-radius: 50%;
+        background: rgba(90,103,216,0.15);
+    }
+
+    /* ─── Gauge Cards ─── */
+    .gauge-card {
+        background: white;
+        border-radius: 14px;
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow);
+        padding: 20px;
+        text-align: center;
+        transition: var(--transition);
+    }
+    .gauge-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+    }
+    .gauge-title {
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: var(--text-muted);
+        margin-bottom: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .gauge-value {
+        font-size: 2rem;
+        font-weight: 800;
+        line-height: 1;
+        margin: 8px 0 4px;
+    }
+    .gauge-unit {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+    }
+
+    /* ─── Metric Grid ─── */
+    .metric-grid {
+        display: grid;
+        grid-template-columns: repeat(2,1fr);
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+    .metric-box {
+        background: white;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow);
+        padding: 16px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .metric-box-icon {
+        width: 42px; height: 42px;
+        border-radius: 10px;
+        display: flex; align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        flex-shrink: 0;
+    }
+    .metric-box-val {
+        font-size: 1.2rem;
+        font-weight: 800;
+        line-height: 1;
+    }
+    .metric-box-lbl {
+        font-size: 0.72rem;
+        color: var(--text-muted);
+        margin-top: 3px;
+    }
+
+    /* ─── Info Table ─── */
+    .info-row {
+        display: flex;
+        padding: 10px 0;
+        border-bottom: 1px solid var(--border);
+        font-size: 0.875rem;
+        align-items: center;
+    }
+    .info-row:last-child { border-bottom: none; }
+    .info-label {
+        width: 150px;
+        flex-shrink: 0;
+        color: var(--text-muted);
+        font-weight: 600;
+        font-size: 0.82rem;
+    }
+    .info-value { flex: 1; font-weight: 500; }
+
+    /* ─── Log Table ─── */
+    .log-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 10px 0;
+        border-bottom: 1px solid var(--border);
+        font-size: 0.82rem;
+    }
+    .log-item:last-child { border-bottom: none; }
+    .log-dot {
+        width: 8px; height: 8px;
+        border-radius: 50%;
+        flex-shrink: 0;
+        margin-top: 5px;
+    }
+    .log-time {
+        color: var(--text-muted);
+        font-size: 0.75rem;
+        white-space: nowrap;
+        min-width: 130px;
+    }
+
+    /* ─── Status Pill ─── */
+    .status-pill-lg {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 16px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        background: rgba(255,255,255,0.15);
+        border: 1px solid rgba(255,255,255,0.3);
+        color: white;
+    }
+    .status-blink {
+        width: 8px; height: 8px;
+        border-radius: 50%;
+        background: white;
+        animation: blink 1s infinite;
+    }
+    @@keyframes blink {
+        0%,100% { opacity: 1; }
+        50%      { opacity: 0.2; }
+    }
+
+    /* ─── Live Badge ─── */
+    .live-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 0.72rem;
+        color: #48BB78;
+        background: rgba(72,187,120,0.1);
+        padding: 3px 10px;
+        border-radius: 10px;
+        font-weight: 700;
+    }
+    .live-dot-sm {
+        width: 6px; height: 6px;
+        border-radius: 50%;
+        background: #48BB78;
+        animation: blink 1s infinite;
+    }
+
+    /* Sections */
+    .detail-section {
+        background: white;
+        border-radius: 14px;
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+        margin-bottom: 16px;
+    }
+    .detail-section-header {
+        padding: 12px 18px;
+        font-weight: 700;
+        font-size: 0.875rem;
+        color: white;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .detail-section-body { padding: 16px 18px; }
+</style>
+}
+
+<!-- ═══ HEADER ═══ -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="fw-800 mb-1">
+            <i class="fas fa-chart-line text-primary me-2"></i>
+            مراقبة المولد
+            <span class="live-indicator me-2">
+                <span class="live-dot-sm"></span>مباشر
+            </span>
+        </h4>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item">
+                    <a href="@Url.Action("Index","Generators")">المولدات</a>
+                </li>
+                <li class="breadcrumb-item active">@Model.Name</li>
+            </ol>
+        </nav>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+        <a href="@Url.Action("Edit","Generators",new{id=Model.Id})"
+           class="btn btn-primary">
+            <i class="fas fa-edit me-2"></i>تعديل
+        </a>
+        <button class="btn btn-outline-danger btn-delete-gen"
+                data-id="@Model.Id" data-name="@Model.Name">
+            <i class="fas fa-trash me-2"></i>حذف
+        </button>
+        <a href="@Url.Action("Index","Generators")"
+           class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-right me-2"></i>رجوع
+        </a>
+    </div>
+</div>
+
+<!-- ═══ HERO MONITOR ═══ -->
+<div class="monitor-hero">
+    <div class="row align-items-center">
+        <div class="col-md-6">
+            <div class="d-flex align-items-center gap-3 mb-3">
+                <div style="width:52px;height:52px;border-radius:14px;
+                            background:rgba(255,255,255,0.15);
+                            border:2px solid rgba(255,255,255,0.3);
+                            display:flex;align-items:center;
+                            justify-content:center;font-size:1.4rem">
+                    <i class="fas fa-bolt" style="color:@statusColor"></i>
+                </div>
+                <div>
+                    <h4 class="mb-1 text-white fw-800">@Model.Name</h4>
+                    <code style="color:rgba(255,255,255,0.6);font-size:0.85rem">
+                        @Model.GeneratorNumber
+                    </code>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2 flex-wrap">
+                <span class="status-pill-lg">
+                    <span class="status-blink"
+                          style="background:@statusColor"></span>
+                    @statusLabel
+                </span>
+                @if (!string.IsNullOrEmpty(Model.Area))
+                {
+                    <span style="background:rgba(255,255,255,0.1);
+                                 border:1px solid rgba(255,255,255,0.2);
+                                 color:rgba(255,255,255,0.8);
+                                 padding:4px 12px;border-radius:20px;
+                                 font-size:0.8rem">
+                        <i class="fas fa-map-marker-alt me-1"></i>
+                        @Model.Area
+                    </span>
+                }
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="row g-2 mt-3 mt-md-0">
+                <div class="col-4 text-center">
+                    <div style="font-size:1.5rem;font-weight:800;color:white"
+                         id="heroLoad">
+                        @(Model.CurrentLoad?.ToString("0.0") ?? "—")
+                    </div>
+                    <div style="font-size:0.72rem;
+                                color:rgba(255,255,255,0.6)">
+                        حمل حالي (A)
+                    </div>
+                </div>
+                <div class="col-4 text-center">
+                    <div style="font-size:1.5rem;font-weight:800;
+                                color:white" id="heroTemp">
+                        @(Model.Temperature?.ToString("0") ?? "—")°
+                    </div>
+                    <div style="font-size:0.72rem;
+                                color:rgba(255,255,255,0.6)">
+                        الحرارة (°C)
+                    </div>
+                </div>
+                <div class="col-4 text-center">
+                    <div style="font-size:1.5rem;font-weight:800;
+                                color:white" id="heroFuel">
+                        @(Model.FuelLevelPercentage?.ToString("0") ?? "—")%
+                    </div>
+                    <div style="font-size:0.72rem;
+                                color:rgba(255,255,255,0.6)">
+                        الوقود
+                    </div>
+                </div>
+            </div>
+
+            <!-- Load Progress -->
+            <div class="mt-3">
+                <div class="d-flex justify-content-between
+                            mb-1" style="font-size:0.75rem;
+                                         color:rgba(255,255,255,0.6)">
+                    <span>نسبة التحميل</span>
+                    <span id="heroLoadPct">@Model.LoadPercentage%</span>
+                </div>
+                <div style="height:6px;border-radius:6px;
+                            background:rgba(255,255,255,0.15)">
+                    <div id="heroLoadBar"
+                         style="height:100%;border-radius:6px;
+                                width:@Model.LoadPercentage%;
+                                background:@(loadPct>=90?"#FC8181":loadPct>=70?"#F6AD55":"#48BB78");
+                                transition:width 0.8s ease">
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-2 text-end">
+                <small style="color:rgba(255,255,255,0.4)"
+                       id="heroLastUpdate">
+                    <i class="fas fa-sync fa-xs me-1"></i>
+                    آخر تحديث:
+                    @(Model.LastDataUpdate?.ToString("HH:mm:ss") ?? "لا يوجد")
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+
+    <!-- ═══ LEFT: Charts & Logs ═══ -->
+    <div class="col-lg-8">
+
+        <!-- ─── Gauge Row ─── -->
+        <div class="row g-3 mb-3">
+
+            <!-- Load Gauge -->
+            <div class="col-md-3 col-6">
+                <div class="gauge-card">
+                    <div class="gauge-title">
+                        <i class="fas fa-bolt me-1"
+                           style="color:#5A67D8"></i>الحمل
+                    </div>
+                    <div id="gaugeLoad"></div>
+                    <div class="gauge-value" id="loadVal"
+                         style="color:#5A67D8">
+                        @(Model.CurrentLoad?.ToString("0.0") ?? "0")
+                    </div>
+                    <div class="gauge-unit">أمبير</div>
+                </div>
+            </div>
+
+            <!-- Temp Gauge -->
+            <div class="col-md-3 col-6">
+                <div class="gauge-card">
+                    <div class="gauge-title">
+                        <i class="fas fa-thermometer-half me-1"
+                           style="color:#FC8181"></i>الحرارة
+                    </div>
+                    <div id="gaugeTemp"></div>
+                    <div class="gauge-value" id="tempVal"
+                         style="color:#FC8181">
+                        @(Model.Temperature?.ToString("0") ?? "0")
+                    </div>
+                    <div class="gauge-unit">°C</div>
+                </div>
+            </div>
+
+            <!-- Oil Gauge -->
+            <div class="col-md-3 col-6">
+                <div class="gauge-card">
+                    <div class="gauge-title">
+                        <i class="fas fa-oil-can me-1"
+                           style="color:#F6AD55"></i>ضغط الزيت
+                    </div>
+                    <div id="gaugeOil"></div>
+                    <div class="gauge-value" id="oilVal"
+                         style="color:#F6AD55">
+                        @(Model.OilPressure?.ToString("0.0") ?? "0")
+                    </div>
+                    <div class="gauge-unit">bar</div>
+                </div>
+            </div>
+
+            <!-- Fuel Gauge -->
+            <div class="col-md-3 col-6">
+                <div class="gauge-card">
+                    <div class="gauge-title">
+                        <i class="fas fa-gas-pump me-1"
+                           style="color:#48BB78"></i>الوقود
+                    </div>
+                    <div id="gaugeFuel"></div>
+                    <div class="gauge-value" id="fuelVal"
+                         style="color:#48BB78">
+                        @(Model.FuelLevelPercentage?.ToString("0") ?? "0")
+                    </div>
+                    <div class="gauge-unit">%</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ─── Real-time Chart ─── -->
+        <div class="detail-section">
+            <div class="detail-section-header"
+                 style="background:linear-gradient(135deg,#5A67D8,#7886E0)">
+                <i class="fas fa-chart-area"></i>
+                مخطط المراقبة المباشرة
+                <span class="live-indicator me-auto ms-2">
+                    <span class="live-dot-sm"></span>مباشر
+                </span>
+            </div>
+            <div class="detail-section-body">
+                <div id="realtimeChart" style="min-height:250px"></div>
+            </div>
+        </div>
+
+        <!-- ─── Logs ─── -->
+        <div class="detail-section">
+            <div class="detail-section-header"
+                 style="background:linear-gradient(135deg,#718096,#A0AEC0)">
+                <i class="fas fa-history"></i>
+                سجل الأحداث
+                <button class="btn btn-sm ms-auto"
+                        style="background:rgba(255,255,255,0.2);
+                               color:white;border:none"
+                        onclick="loadLogs()">
+                    <i class="fas fa-sync"></i>
+                </button>
+            </div>
+            <div class="detail-section-body p-0">
+                <div id="logsContainer" style="max-height:300px;overflow-y:auto;padding:16px">
+                    <div class="text-center text-muted py-3">
+                        <i class="fas fa-spinner fa-spin me-2"></i>
+                        جار تحميل السجلات...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ RIGHT: Info & Actions ═══ -->
+    <div class="col-lg-4">
+
+        <!-- ─── Quick Stats ─── -->
+        <div class="metric-grid">
+            <div class="metric-box">
+                <div class="metric-box-icon"
+                     style="background:rgba(90,103,216,0.1)">
+                    <i class="fas fa-users" style="color:#5A67D8"></i>
+                </div>
+                <div>
+                    <div class="metric-box-val">
+                        @Model.ActiveSubscribersCount
+                    </div>
+                    <div class="metric-box-lbl">مشترك نشط</div>
+                </div>
+            </div>
+            <div class="metric-box">
+                <div class="metric-box-icon"
+                     style="background:rgba(72,187,120,0.1)">
+                    <i class="fas fa-clock" style="color:#38A169"></i>
+                </div>
+                <div>
+                    <div class="metric-box-val">
+                        @Model.TodayRunningHours.ToString("0.0")
+                    </div>
+                    <div class="metric-box-lbl">ساعات اليوم</div>
+                </div>
+            </div>
+            <div class="metric-box">
+                <div class="metric-box-icon"
+                     style="background:rgba(246,173,85,0.1)">
+                    <i class="fas fa-history" style="color:#D69E2E"></i>
+                </div>
+                <div>
+                    <div class="metric-box-val">
+                        @Model.TotalRunningHours.ToString("N0")
+                    </div>
+                    <div class="metric-box-lbl">إجمالي الساعات</div>
+                </div>
+            </div>
+            <div class="metric-box">
+                <div class="metric-box-icon"
+                     style="background:rgba(252,129,129,0.1)">
+                    <i class="fas fa-bolt" style="color:#E53E3E"></i>
+                </div>
+                <div>
+                    <div class="metric-box-val">@Model.UsedAmpere A</div>
+                    <div class="metric-box-lbl">أمبير مستخدم</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ─── بيانات المولد ─── -->
+        <div class="detail-section">
+            <div class="detail-section-header"
+                 style="background:linear-gradient(135deg,#5A67D8,#7886E0)">
+                <i class="fas fa-info-circle"></i>
+                بيانات المولد
+            </div>
+            <div class="detail-section-body">
+                <div class="info-row">
+                    <span class="info-label">الماركة</span>
+                    <span class="info-value">@(Model.Brand ?? "—")</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">الموديل</span>
+                    <span class="info-value">@(Model.ModelNumber ?? "—")</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">القدرة</span>
+                    <span class="info-value">
+                        @(Model.PowerKVA.HasValue
+                            ? Model.PowerKVA + " KVA"
+                            : "—")
+                    </span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">الحد الأقصى</span>
+                    <span class="info-value">
+                        @(Model.MaxAmpere.HasValue
+                            ? Model.MaxAmpere + " A"
+                            : "—")
+                    </span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">نوع الوقود</span>
+                    <span class="info-value">
+                        @(Model.FuelType switch {
+                            FuelType.Diesel   => "ديزل",
+                            FuelType.Gasoline => "بنزين",
+                            FuelType.Gas      => "غاز",
+                            _                 => "ثنائي الوقود"
+                        })
+                    </span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">سعة الخزان</span>
+                    <span class="info-value">
+                        @(Model.FuelTankCapacity.HasValue
+                            ? Model.FuelTankCapacity + " لتر"
+                            : "—")
+                    </span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">الموقع</span>
+                    <span class="info-value">@(Model.Area ?? "—")</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">آخر صيانة</span>
+                    <span class="info-value">
+                        @(Model.LastMaintenanceDate?.ToString("yyyy/MM/dd") ?? "—")
+                    </span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">صيانة قادمة</span>
+                    <span class="info-value"
+                          style="color:@(Model.NeedsMaintenanceSoon?"#E53E3E":"inherit")">
+                        @(Model.NextMaintenanceDate?.ToString("yyyy/MM/dd") ?? "—")
+                        @if (Model.NeedsMaintenanceSoon)
+                        {
+                            <i class="fas fa-exclamation-triangle ms-1 text-danger"></i>
+                        }
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ─── الإجراءات ─── -->
+        <div class="detail-section">
+            <div class="detail-section-header"
+                 style="background:linear-gradient(135deg,#805AD5,#9F7AEA)">
+                <i class="fas fa-cog"></i>
+                إجراءات سريعة
+            </div>
+            <div class="detail-section-body">
+                <div class="d-grid gap-2">
+
+                    @if (Model.Status != GeneratorStatus.Active)
+                    {
+                        <button class="btn btn-success btn-action"
+                                data-id="@Model.Id" data-status="1"
+                                data-label="تشغيل">
+                            <i class="fas fa-play-circle me-2"></i>
+                            تشغيل المولد
+                        </button>
+                    }
+                    @if (Model.Status != GeneratorStatus.Stopped)
+                    {
+                        <button class="btn btn-outline-secondary btn-action"
+                                data-id="@Model.Id" data-status="2"
+                                data-label="إيقاف"
+                                data-needs-reason="true">
+                            <i class="fas fa-stop-circle me-2"></i>
+                            إيقاف المولد
+                        </button>
+                    }
+                    @if (Model.Status != GeneratorStatus.Maintenance)
+                    {
+                        <button class="btn btn-outline-warning btn-action"
+                                data-id="@Model.Id" data-status="3"
+                                data-label="صيانة">
+                            <i class="fas fa-tools me-2"></i>
+                            وضع الصيانة
+                        </button>
+                    }
+
+                    <hr class="my-1">
+
+                    <a href="@Url.Action("Edit","Generators",new{id=Model.Id})"
+                       class="btn btn-outline-primary">
+                        <i class="fas fa-edit me-2"></i>تعديل البيانات
+                    </a>
+
+                    <button class="btn btn-outline-danger btn-delete-gen"
+                            data-id="@Model.Id" data-name="@Model.Name">
+                        <i class="fas fa-trash me-2"></i>حذف المولد
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<form id="deleteForm" method="post" style="display:none">
+    @Html.AntiForgeryToken()
+</form>
+
+@section Scripts {
+<script src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr@8.0.0/dist/browser/signalr.min.js"></script>
+<script>
+const GEN_ID = @Model.Id;
+
+// ─── Realtime Chart Data ───
+const chartData = {
+    times:  [],
+    load:   [],
+    temp:   [],
+    fuel:   []
+};
+
+let realtimeChart = null;
+
+document.addEventListener('DOMContentLoaded', function () {
+
+    // ═══ Radial Gauges ═══
+    function makeGauge(id, value, max, color) {
+        return new ApexCharts(document.querySelector(`#${id}`), {
+            chart: {
+                type: 'radialBar',
+                height: 100,
+                sparkline: { enabled: true }
+            },
+            series: [Math.min((value / max) * 100, 100)],
+            colors: [color],
+            plotOptions: {
+                radialBar: {
+                    hollow: { size: '55%' },
+                    dataLabels: { show: false },
+                    track: { background: '#f0f0f0' }
+                }
+            }
+        });
+    }
+
+    makeGauge('gaugeLoad',
+        @(Model.CurrentLoad ?? 0),
+        @(Model.MaxAmpere ?? 100),
+        '#5A67D8').render();
+
+    makeGauge('gaugeTemp',
+        @(Model.Temperature ?? 0),
+        120, '#FC8181').render();
+
+    makeGauge('gaugeOil',
+        @(Model.OilPressure ?? 0),
+        6, '#F6AD55').render();
+
+    makeGauge('gaugeFuel',
+        @(Model.FuelLevelPercentage ?? 0),
+        100, '#48BB78').render();
+
+    // ═══ Realtime Line Chart ═══
+    realtimeChart = new ApexCharts(
+        document.querySelector('#realtimeChart'), {
+        chart: {
+            type:    'line',
+            height:  250,
+            animations: {
+                enabled: true,
+                easing:  'linear',
+                dynamicAnimation: { speed: 1000 }
+            },
+            toolbar: { show: false },
+            zoom:    { enabled: false },
+            fontFamily: 'Cairo, sans-serif'
+        },
+        series: [
+            { name: 'الحمل (A)',      data: [] },
+            { name: 'الحرارة (°C)',   data: [] },
+            { name: 'الوقود (%)',     data: [] }
+        ],
+        colors: ['#5A67D8', '#FC8181', '#48BB78'],
+        stroke: { curve: 'smooth', width: [2,2,2] },
+        markers: { size: 0 },
+        xaxis: {
+            type: 'category',
+            labels: {
+                style: { fontFamily: 'Cairo, sans-serif', fontSize: '10px' }
+            }
+        },
+        yaxis: {
+            labels: {
+                style: { fontFamily: 'Cairo, sans-serif' }
+            }
+        },
+        legend: {
+            position:   'top',
+            fontFamily: 'Cairo, sans-serif'
+        },
+        grid: { borderColor: '#f1f1f1' },
+        tooltip: {
+            shared:    true,
+            intersect: false
+        }
+    });
+    realtimeChart.render();
+
+    // ═══ SignalR ═══
+    const connection = new signalR.HubConnectionBuilder()
+        .withUrl("/generatorsHub")
+        .withAutomaticReconnect()
+        .build();
+
+    connection.start().then(function () {
+        connection.invoke("JoinGeneratorGroup", GEN_ID.toString());
+    }).catch(console.error);
+
+    // استقبال البيانات المباشرة
+    connection.on("RealtimeUpdate", function (data) {
+        updateDashboard(data);
+    });
+
+    connection.on("StatusChanged", function (data) {
+        GMS.toast('info', `تم تغيير الحالة: ${data.Status}`);
+        setTimeout(() => location.reload(), 1500);
+    });
+
+    // ═══ Auto Refresh ═══
+    function fetchAndUpdate() {
+        fetch(`/Generators/GetRealtimeData?id=${GEN_ID}`)
+            .then(r => r.json())
+            .then(data => updateDashboard(data))
+            .catch(console.error);
+    }
+
+    fetchAndUpdate();
+    setInterval(fetchAndUpdate, 15000);
+
+    // ═══ Update UI ═══
+    function updateDashboard(data) {
+        const now = new Date().toLocaleTimeString('ar', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+        // Hero values
+        if (data.currentLoad   !== undefined)
+            document.getElementById('heroLoad').textContent =
+                parseFloat(data.currentLoad).toFixed(1);
+        if (data.temperature   !== undefined)
+            document.getElementById('heroTemp').textContent =
+                Math.round(data.temperature) + '°';
+        if (data.fuelLevelPct  !== undefined)
+            document.getElementById('heroFuel').textContent =
+                Math.round(data.fuelLevelPct) + '%';
+        if (data.loadPercentage !== undefined) {
+            document.getElementById('heroLoadPct').textContent =
+                data.loadPercentage + '%';
+            document.getElementById('heroLoadBar').style.width =
+                data.loadPercentage + '%';
+        }
+        if (data.lastUpdate)
+            document.getElementById('heroLastUpdate').innerHTML =
+                `<i class="fas fa-sync fa-xs me-1"></i>آخر تحديث: ${data.lastUpdate}`;
+
+        // Gauge values
+        const load = parseFloat(data.currentLoad  || 0);
+        const temp = parseFloat(data.temperature  || 0);
+        const fuel = parseFloat(data.fuelLevelPct || 0);
+
+        const loadEl = document.getElementById('loadVal');
+        const tempEl = document.getElementById('tempVal');
+        const fuelEl = document.getElementById('fuelVal');
+        if (loadEl) loadEl.textContent = load.toFixed(1);
+        if (tempEl) tempEl.textContent = Math.round(temp);
+        if (fuelEl) fuelEl.textContent = Math.round(fuel);
+
+        // Realtime Chart update
+        if (chartData.times.length > 20) {
+            chartData.times.shift();
+            chartData.load.shift();
+            chartData.temp.shift();
+            chartData.fuel.shift();
+        }
+        chartData.times.push(now);
+        chartData.load.push(load.toFixed(1));
+        chartData.temp.push(Math.round(temp));
+        chartData.fuel.push(Math.round(fuel));
+
+        realtimeChart.updateSeries([
+            { data: chartData.load },
+            { data: chartData.temp },
+            { data: chartData.fuel }
+        ]);
+        realtimeChart.updateOptions({
+            xaxis: { categories: chartData.times }
+        }, false, false);
+    }
+
+    // ═══ Load Logs ═══
+    window.loadLogs = function () {
+        const container = document.getElementById('logsContainer');
+        container.innerHTML =
+            '<div class="text-center py-3"><i class="fas fa-spinner fa-spin me-2"></i>جار التحميل...</div>';
+
+        fetch(`/Generators/GetLogs?id=${GEN_ID}&count=20`)
+            .then(r => r.json())
+            .then(function (logs) {
+                if (!logs.length) {
+                    container.innerHTML =
+                        '<div class="text-center text-muted py-3">لا توجد سجلات</div>';
+                    return;
+                }
+                container.innerHTML = logs.map(l => `
+                    <div class="log-item">
+                        <div class="log-dot" style="background:${l.typeColor}"></div>
+                        <div class="log-time">${l.time}</div>
+                        <div class="flex-grow-1">
+                            <span class="badge me-1"
+                                  style="background:${l.typeColor}">
+                                ${l.typeLabel}
+                            </span>
+                            ${l.notes || ''}
+                            ${l.currentLoad
+                                ? `<small class="text-muted ms-1">الحمل: ${l.currentLoad}A</small>`
+                                : ''}
+                        </div>
+                    </div>
+                `).join('');
+            })
+            .catch(function () {
+                container.innerHTML =
+                    '<div class="text-center text-danger py-3">فشل في تحميل السجلات</div>';
+            });
+    };
+
+    loadLogs();
+
+    // ═══ Status Actions ═══
+    document.querySelectorAll('.btn-action').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            const id    = this.dataset.id;
+            const status= this.dataset.status;
+            const label = this.dataset.label;
+            const needs = this.dataset.needsReason;
+
+            if (needs) {
+                Swal.fire({
+                    title: label + ' المولد',
+                    input: 'textarea',
+                    inputLabel: 'سبب الإيقاف (اختياري)',
+                    inputPlaceholder: 'اكتب السبب...',
+                    showCancelButton: true,
+                    confirmButtonText: label,
+                    cancelButtonText: 'إلغاء',
+                    confirmButtonColor: '#5A67D8',
+                    customClass: { popup: 'swal2-rtl' }
+                }).then(r => {
+                    if (r.isConfirmed)
+                        doAction(id, status, r.value);
+                });
+            } else {
+                doAction(id, status, '');
+            }
+        });
+    });
+
+    function doAction(id, status, reason) {
+        GMS.post('/Generators/ChangeStatus', {
+            id, status, reason
+        }).then(function (data) {
+            if (data.success) {
+                GMS.toast('success', data.message);
+                setTimeout(() => location.reload(), 1200);
+            } else {
+                GMS.toast('error', data.message);
+            }
+        });
+    }
+
+    // ═══ Delete ═══
+    document.querySelectorAll('.btn-delete-gen').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            const id   = this.dataset.id;
+            const name = this.dataset.name;
+            Swal.fire({
+                title: 'حذف المولد',
+                html: `هل تريد حذف المولد <strong>${name}</strong>؟<br>
+                       <small class="text-danger">
+                           سيتم إلغاء ربط جميع المشتركين
+                       </small>`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'نعم، احذف',
+                cancelButtonText: 'إلغاء',
+                confirmButtonColor: '#E53E3E',
+                customClass: { popup: 'swal2-rtl' }
+            }).then(r => {
+                if (r.isConfirmed) {
+                    const form = document.getElementById('deleteForm');
+                    form.action = `/Generators/Delete/${id}`;
+                    form.submit();
+                }
+            });
+        });
+    });
+});
+</script>
+}

@@ -1,0 +1,174 @@
+﻿@model GeneratorsManagementSystem.Models.Fuel.FuelAllocation
+
+<form id="fuelForm" asp-action="CreateAllocation" method="post">
+    @Html.AntiForgeryToken()
+
+    <div class="modal-header text-white py-3"
+         style="background:linear-gradient(135deg,#48BB78,#38A169)">
+        <div class="d-flex align-items-center gap-3 flex-grow-1">
+            <div class="bg-white bg-opacity-25 rounded-circle p-2 d-flex align-items-center justify-content-center"
+                 style="width:50px;height:50px">
+                <i class="fas fa-plus-circle fa-lg"></i>
+            </div>
+            <div>
+                <h5 class="modal-title fw-800 mb-0">تسجيل حصة وقود جديدة</h5>
+                <small class="opacity-75 font-monospace">@Model.AllocationNumber</small>
+            </div>
+        </div>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+    </div>
+
+    <div class="modal-body p-4">
+        <div class="text-center mb-4">
+            <div class="d-inline-block px-4 py-2 rounded-pill"
+                 style="background:#F0FFF4;border:2px dashed #48BB78">
+                <small class="text-muted d-block">رقم الحصة (يتولد تلقائياً)</small>
+                <strong class="text-success fs-5 font-monospace">@Model.AllocationNumber</strong>
+            </div>
+        </div>
+
+        <div class="row g-3">
+            <!-- نوع الوقود -->
+            <div class="col-md-6">
+                <label class="form-label fw-bold">
+                    نوع الوقود <span class="text-danger">*</span>
+                </label>
+                <select asp-for="FuelKind" class="form-select form-select-lg">
+                    <option value="1">🔴 ديزل</option>
+                    <option value="2">⛽ بنزين</option>
+                    <option value="3">🔥 غاز</option>
+                    <option value="4">🛢️ زيت أسود</option>
+                </select>
+            </div>
+
+            <!-- المصدر -->
+            <div class="col-md-6">
+                <label class="form-label fw-bold">
+                    المصدر <span class="text-danger">*</span>
+                </label>
+                <select asp-for="Source" class="form-select form-select-lg">
+                    <option value="1">🏛️ حصة الدولة</option>
+                    <option value="2">🛒 شراء من السوق</option>
+                    <option value="3">🎁 تبرع</option>
+                    <option value="99">📌 أخرى</option>
+                </select>
+            </div>
+
+            <!-- الكمية -->
+            <div class="col-md-6">
+                <label class="form-label fw-bold">
+                    الكمية <span class="text-danger">*</span>
+                </label>
+                <div class="input-group input-group-lg">
+                    <input asp-for="Quantity" type="number" step="any" min="0.01"
+                           class="form-control text-center fw-bold text-success"
+                           style="direction:ltr;font-size:1.3rem" placeholder="0" />
+                    <span class="input-group-text bg-success text-white">لتر</span>
+                </div>
+            </div>
+
+            <!-- سعر اللتر -->
+            <div class="col-md-6">
+                <label class="form-label">
+                    سعر اللتر
+                    <small class="text-muted">(0 = مجاني)</small>
+                </label>
+                <div class="input-group input-group-lg">
+                    <input asp-for="PricePerLiter" type="number" step="any" min="0"
+                           class="form-control text-center" style="direction:ltr" />
+                    <span class="input-group-text">د.ع</span>
+                </div>
+            </div>
+
+            <!-- التكلفة المحسوبة -->
+            <div class="col-12">
+                <div class="alert alert-success py-3 mb-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <strong>
+                            <i class="fas fa-calculator me-2"></i>
+                            التكلفة الإجمالية:
+                        </strong>
+                        <strong id="totalCostDisplay" class="fs-4 text-success" style="direction:ltr;">0 د.ع</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- تاريخ الاستلام -->
+            <div class="col-md-6">
+                <label class="form-label fw-bold">
+                    تاريخ الاستلام <span class="text-danger">*</span>
+                </label>
+                <input asp-for="AllocationDate" type="date" class="form-control form-control-lg" />
+            </div>
+
+            <!-- المستلم -->
+            <div class="col-md-6">
+                <label class="form-label">المستلم</label>
+                <input asp-for="ReceivedBy" class="form-control form-control-lg" placeholder="اسم المستلم" />
+            </div>
+
+            <!-- الشهر -->
+            <div class="col-md-6">
+                <label class="form-label">
+                    الشهر المستحق عنه
+                    <small class="text-muted">(اختياري)</small>
+                </label>
+                <select asp-for="AllocationMonth" class="form-select">
+                    <option value="">-- اختر الشهر --</option>
+                    <option value="1">يناير</option>
+                    <option value="2">فبراير</option>
+                    <option value="3">مارس</option>
+                    <option value="4">أبريل</option>
+                    <option value="5">مايو</option>
+                    <option value="6">يونيو</option>
+                    <option value="7">يوليو</option>
+                    <option value="8">أغسطس</option>
+                    <option value="9">سبتمبر</option>
+                    <option value="10">أكتوبر</option>
+                    <option value="11">نوفمبر</option>
+                    <option value="12">ديسمبر</option>
+                </select>
+            </div>
+
+            <!-- السنة -->
+            <div class="col-md-6">
+                <label class="form-label">
+                    السنة المستحقة
+                    <small class="text-muted">(اختياري)</small>
+                </label>
+                <input asp-for="AllocationYear" type="number" min="2000" max="2100"
+                       class="form-control en-numbers" placeholder="2026" />
+            </div>
+
+            <!-- المورد -->
+            <div class="col-md-6">
+                <label class="form-label">المورد / الجهة</label>
+                <input asp-for="Supplier" class="form-control"
+                       placeholder="مثال: وزارة النفط" />
+            </div>
+
+            <!-- رقم المرجع -->
+            <div class="col-md-6">
+                <label class="form-label">رقم الإذن / المرجع</label>
+                <input asp-for="ReferenceNumber" class="form-control"
+                       placeholder="اختياري" />
+            </div>
+
+            <!-- ملاحظات -->
+            <div class="col-12">
+                <label class="form-label">ملاحظات</label>
+                <textarea asp-for="Notes" class="form-control" rows="2"
+                          placeholder="أي ملاحظات..."></textarea>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-footer bg-light">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+            <i class="fas fa-times me-2"></i>إلغاء
+        </button>
+        <button type="submit" class="btn btn-success btn-lg px-5">
+            <i class="fas fa-save me-2"></i>حفظ الحصة
+        </button>
+    </div>
+</form>

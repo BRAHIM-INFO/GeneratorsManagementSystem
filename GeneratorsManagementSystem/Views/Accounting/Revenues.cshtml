@@ -1,0 +1,233 @@
+﻿@model List<GeneratorsManagementSystem.Models.Payment>
+@{
+    ViewData["Title"] = "الإيرادات";
+    var startDate = ViewBag.StartDate as DateTime?;
+    var endDate = ViewBag.EndDate as DateTime?;
+    var totalAmount = (decimal)(ViewBag.TotalAmount ?? 0);
+}
+
+@section Styles {
+    <style>
+        .stat-mini {
+            border: none;
+            border-radius: 12px;
+            transition: all 0.3s;
+        }
+
+            .stat-mini:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+            }
+
+        .amount-cell {
+            font-weight: 800;
+            direction: ltr;
+            display: inline-block;
+        }
+
+        .en-numbers {
+            direction: ltr;
+            display: inline-block;
+            font-feature-settings: "tnum";
+        }
+
+        .filter-bar {
+            background: linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%);
+            border: none;
+            border-radius: 15px;
+            padding: 20px;
+        }
+    </style>
+}
+
+<!-- HEADER -->
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <div>
+        <h4 class="fw-800 mb-1">
+            <i class="fas fa-arrow-up text-success me-2"></i>
+            الإيرادات
+        </h4>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0 small">
+                <li class="breadcrumb-item"><a href="@Url.Action("Index", "Dashboard")"><i class="fas fa-home"></i></a></li>
+                <li class="breadcrumb-item"><a href="@Url.Action("Index")">المحاسبة</a></li>
+                <li class="breadcrumb-item active">الإيرادات</li>
+            </ol>
+        </nav>
+    </div>
+    <a href="@Url.Action("Index")" class="btn btn-outline-primary">
+        <i class="fas fa-arrow-right me-2"></i>لوحة المحاسبة
+    </a>
+</div>
+
+<!-- Info Alert -->
+<div class="alert alert-info shadow-sm mb-4 d-flex align-items-center gap-2">
+    <i class="fas fa-info-circle fa-lg"></i>
+    <div>
+        <strong>ملاحظة:</strong>
+        الإيرادات تُسجّل تلقائياً من مدفوعات الفواتير. لإضافة دفعة جديدة، اذهب إلى
+        <a href="@Url.Action("Index", "Invoices")" class="alert-link">صفحة الفواتير</a>.
+    </div>
+</div>
+
+<!-- Filter -->
+<div class="filter-bar shadow-sm mb-4">
+    <form method="get" action="@Url.Action("Revenues")" class="row g-3 align-items-end">
+        <div class="col-md-4">
+            <label class="form-label fw-bold small">من تاريخ</label>
+            <input type="date" name="startDate" value="@(startDate?.ToString("yyyy-MM-dd"))" class="form-control" />
+        </div>
+        <div class="col-md-4">
+            <label class="form-label fw-bold small">إلى تاريخ</label>
+            <input type="date" name="endDate" value="@(endDate?.ToString("yyyy-MM-dd"))" class="form-control" />
+        </div>
+        <div class="col-md-4">
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-success flex-grow-1">
+                    <i class="fas fa-filter me-1"></i>تطبيق
+                </button>
+                <a href="@Url.Action("Revenues")" class="btn btn-outline-secondary">
+                    <i class="fas fa-times"></i>
+                </a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Stats -->
+<div class="row g-3 mb-4">
+    <div class="col-md-6">
+        <div class="card stat-mini shadow-sm bg-success bg-opacity-10">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="bg-success text-white rounded-3 d-flex align-items-center justify-content-center"
+                     style="width:70px;height:70px">
+                    <i class="fas fa-money-bill-wave fa-2x"></i>
+                </div>
+                <div>
+                    <small class="text-muted d-block">إجمالي الإيرادات</small>
+                    <h2 class="fw-900 mb-0 text-success amount-cell en-numbers">
+                        @totalAmount.ToString("N0")
+                    </h2>
+                    <small class="text-muted">دينار عراقي</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card stat-mini shadow-sm bg-primary bg-opacity-10">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="bg-primary text-white rounded-3 d-flex align-items-center justify-content-center"
+                     style="width:70px;height:70px">
+                    <i class="fas fa-hand-holding-usd fa-2x"></i>
+                </div>
+                <div>
+                    <small class="text-muted d-block">عدد الدفعات</small>
+                    <h2 class="fw-900 mb-0 text-primary en-numbers">@Model.Count</h2>
+                    <small class="text-muted">دفعة مستلمة</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Table -->
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white py-3">
+        <h6 class="mb-0 fw-bold">
+            <i class="fas fa-list me-2 text-success"></i>
+            سجل الإيرادات
+            <span class="badge bg-success ms-2 en-numbers">@Model.Count</span>
+        </h6>
+    </div>
+    <div class="card-body p-3">
+        <table id="revenuesTable" class="table table-hover align-middle" style="width:100%">
+            <thead class="table-light">
+                <tr>
+                    <th>الإيصال</th>
+                    <th>التاريخ</th>
+                    <th>المشترك</th>
+                    <th>الفاتورة</th>
+                    <th>المولد</th>
+                    <th>المبلغ</th>
+                    <th>طريقة الدفع</th>
+                    <th>المُستلم</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var pay in Model)
+                {
+                    <tr>
+                        <td>
+                            <span class="badge bg-light text-success font-monospace en-numbers">
+                                @pay.ReceiptNumber
+                            </span>
+                        </td>
+                        <td>
+                            <small class="en-numbers">
+                                @pay.PaymentDate.ToString("yyyy/MM/dd")
+                            </small>
+                        </td>
+                        <td>
+                            <strong>@pay.Subscriber?.FullName</strong>
+                            <br>
+                            <small class="text-muted font-monospace en-numbers">
+                                @pay.Subscriber?.SubscriberNumber
+                            </small>
+                        </td>
+                        <td>
+                            @if (pay.Invoice != null)
+                            {
+                                <a href="@Url.Action("Details", "Invoices", new { id = pay.InvoiceId })"
+                                   class="badge bg-primary bg-opacity-25 text-primary text-decoration-none">
+                                    <i class="fas fa-file-invoice me-1"></i>
+                                    <span class="en-numbers">@pay.Invoice.InvoiceNumber</span>
+                                </a>
+                            }
+                        </td>
+                        <td>
+                            @if (pay.Invoice?.Subscription?.Generator != null)
+                            {
+                                <span class="badge bg-warning bg-opacity-25 text-warning">
+                                    <i class="fas fa-bolt me-1"></i>
+                                    <span class="en-numbers">@pay.Invoice.Subscription.Generator.GeneratorNumber</span>
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">—</span>
+                            }
+                        </td>
+                        <td>
+                            <strong class="text-success amount-cell en-numbers">
+                                @pay.Amount.ToString("N0")
+                            </strong>
+                            <small class="text-muted">د.ع</small>
+                        </td>
+                        <td>
+                            <span class="badge bg-info bg-opacity-25 text-info">
+                                <i class="fas @pay.PaymentMethod me-1"></i>
+                                @pay.PaymentMethodText
+                            </span>
+                        </td>
+                        <td>
+                            <small>@(pay.ReceivedBy ?? pay.CreatedBy ?? "—")</small>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('#revenuesTable').DataTable({
+                language: { url: "//cdn.datatables.net/plug-ins/1.13.7/i18n/ar.json" },
+                order: [[1, 'desc']],
+                pageLength: 25,
+                responsive: true
+            });
+        });
+    </script>
+}

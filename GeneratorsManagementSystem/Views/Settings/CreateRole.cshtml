@@ -1,0 +1,191 @@
+﻿@model GeneratorsManagementSystem.Models.ViewModels.Settings.RoleFormViewModel
+@{
+    ViewData["Title"] = "إضافة دور جديد";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/settings.css" />
+    <link rel="stylesheet" href="~/css/roles.css" />
+}
+
+<div class="settings-page">
+    <div class="page-header d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="page-title">
+                <i class="fas fa-plus-circle text-purple"></i>
+                إضافة دور جديد
+            </h2>
+            <p class="page-subtitle text-muted mb-0">أنشئ دور مخصص وحدد صلاحياته</p>
+        </div>
+        <a href="@Url.Action("Roles")" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-right"></i> رجوع
+        </a>
+    </div>
+
+    <form asp-action="CreateRole" method="post" id="roleForm">
+        @Html.AntiForgeryToken()
+
+        <!-- Basic Info Card -->
+        <div class="role-form-card mb-4">
+            <div class="role-form-header">
+                <div class="header-icon"><i class="fas fa-info-circle"></i></div>
+                <div>
+                    <h5>بيانات الدور</h5>
+                    <p>معلومات الدور الأساسية</p>
+                </div>
+            </div>
+            <div class="role-form-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label asp-for="Name" class="form-label">
+                            اسم الدور <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-tag"></i></span>
+                            <input asp-for="Name" class="form-control" dir="ltr" placeholder="Example: Accountant" />
+                        </div>
+                        <span asp-validation-for="Name" class="text-danger"></span>
+                        <small class="form-hint">
+                            <i class="fas fa-info-circle"></i>
+                            أحرف إنجليزية وأرقام فقط، بدون مسافات
+                        </small>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="DisplayName" class="form-label">الاسم المعروض (بالعربية)</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-language"></i></span>
+                            <input asp-for="DisplayName" class="form-control" placeholder="مثال: محاسب" />
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <label asp-for="Description" class="form-label">وصف الدور</label>
+                        <textarea asp-for="Description" class="form-control" rows="2"
+                                  placeholder="اكتب وصفاً موجزاً لمسؤوليات هذا الدور..."></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Permissions Section -->
+        <div class="permissions-section">
+            <div class="permissions-header-new">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="header-icon-lg"><i class="fas fa-key"></i></div>
+                    <div>
+                        <h4>الصلاحيات</h4>
+                        <p>حدد الصلاحيات المسموحة لهذا الدور</p>
+                    </div>
+                </div>
+                <div class="permissions-actions">
+                    <button type="button" class="btn-select-all" onclick="selectAllPermissions()">
+                        <i class="fas fa-check-double"></i> تحديد الكل
+                    </button>
+                    <button type="button" class="btn-deselect-all" onclick="deselectAllPermissions()">
+                        <i class="fas fa-times-circle"></i> إلغاء الكل
+                    </button>
+                </div>
+            </div>
+
+            <!-- Permissions Counter -->
+            <div class="permissions-counter mb-3">
+                <i class="fas fa-info-circle"></i>
+                تم تحديد <strong id="selectedCount">0</strong> من <strong>@Model.AvailablePermissions.Sum(g => g.Permissions.Count)</strong> صلاحية
+            </div>
+
+            <!-- Groups Grid -->
+            <div class="row g-3">
+                @foreach (var group in Model.AvailablePermissions)
+                {
+                    <div class="col-md-6 col-xl-4">
+                        <div class="perm-group-card">
+                            <div class="perm-group-head perm-bg-@group.Color">
+                                <div class="perm-group-title">
+                                    <i class="fas @group.Icon"></i>
+                                    <span>@group.GroupName</span>
+                                </div>
+                                <div class="perm-group-toggle">
+                                    <label class="switch">
+                                        <input type="checkbox" class="group-toggle"
+                                               data-group="@group.GroupKey"
+                                               onchange="toggleGroup('@group.GroupKey', this.checked)" />
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="perm-group-content">
+                                @foreach (var permission in group.Permissions)
+                                {
+                                    var permId = "perm_" + permission.Key.Replace(".", "_");
+                                    <div class="perm-item">
+                                        <input type="checkbox"
+                                               name="SelectedPermissions"
+                                               value="@permission.Key"
+                                               id="@permId"
+                                               class="perm-checkbox permission-check"
+                                               data-group="@group.GroupKey" />
+                                        <label for="@permId" class="perm-item-label">
+                                            <div class="perm-check-visual">
+                                                <i class="fas fa-check"></i>
+                                            </div>
+                                            <div class="perm-info">
+                                                <div class="perm-name">@permission.Name</div>
+                                                <div class="perm-desc">@permission.Description</div>
+                                            </div>
+                                        </label>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Actions Bar -->
+        <div class="settings-actions mt-4">
+            <button type="submit" class="btn btn-purple btn-lg">
+                <i class="fas fa-save"></i> حفظ الدور
+            </button>
+            <a href="@Url.Action("Roles")" class="btn btn-outline-secondary btn-lg">
+                إلغاء <i class="fas fa-times"></i>
+            </a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        function updateSelectedCount() {
+            var count = $('.permission-check:checked').length;
+            $('#selectedCount').text(count);
+        }
+
+        function selectAllPermissions() {
+            $('.permission-check, .group-toggle').prop('checked', true);
+            updateSelectedCount();
+        }
+
+        function deselectAllPermissions() {
+            $('.permission-check, .group-toggle').prop('checked', false);
+            updateSelectedCount();
+        }
+
+        function toggleGroup(groupKey, checked) {
+            $('.permission-check[data-group="' + groupKey + '"]').prop('checked', checked);
+            updateSelectedCount();
+        }
+
+        $('.permission-check').on('change', function () {
+            var groupKey = $(this).data('group');
+            var total = $('.permission-check[data-group="' + groupKey + '"]').length;
+            var checked = $('.permission-check[data-group="' + groupKey + '"]:checked').length;
+            $('.group-toggle[data-group="' + groupKey + '"]').prop('checked', total === checked);
+            updateSelectedCount();
+        });
+
+        $(document).ready(function() {
+            updateSelectedCount();
+        });
+    </script>
+}

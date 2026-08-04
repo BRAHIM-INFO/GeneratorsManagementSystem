@@ -1,0 +1,321 @@
+﻿@model GeneratorsManagementSystem.Services.ProfitLossReport
+@{
+    ViewData["Title"] = "الأرباح والخسائر";
+    var startDate = ViewBag.StartDate as DateTime? ?? DateTime.Today;
+    var endDate = ViewBag.EndDate as DateTime? ?? DateTime.Today;
+}
+
+@section Styles {
+    <style>
+        .report-header {
+            background: linear-gradient(135deg, #5A67D8, #7886E0);
+            color: white;
+            border-radius: 20px;
+            padding: 30px;
+        }
+
+        .summary-card {
+            border: none;
+            border-radius: 16px;
+            padding: 25px;
+            transition: all 0.3s;
+        }
+
+            .summary-card:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            }
+
+        .amount-huge {
+            font-size: 2.5rem;
+            font-weight: 900;
+            direction: ltr;
+            display: block;
+            line-height: 1;
+        }
+
+        .en-numbers {
+            direction: ltr;
+            display: inline-block;
+            font-feature-settings: "tnum";
+        }
+
+        .breakdown-item {
+            padding: 12px;
+            border-radius: 10px;
+            background: #f8f9fc;
+            margin-bottom: 8px;
+        }
+
+            .breakdown-item:hover {
+                background: #EBF4FF;
+            }
+
+        @@media print {
+            .no-print {
+                display: none !important;
+            }
+
+            body {
+                background: white !important;
+            }
+        }
+    </style>
+}
+
+<!-- HEADER -->
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3 no-print">
+    <div>
+        <h4 class="fw-800 mb-1">
+            <i class="fas fa-chart-line text-primary me-2"></i>
+            تقرير الأرباح والخسائر
+        </h4>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0 small">
+                <li class="breadcrumb-item"><a href="@Url.Action("Index", "Dashboard")"><i class="fas fa-home"></i></a></li>
+                <li class="breadcrumb-item"><a href="@Url.Action("Index")">المحاسبة</a></li>
+                <li class="breadcrumb-item active">الأرباح والخسائر</li>
+            </ol>
+        </nav>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="@Url.Action("Index")" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-right me-2"></i>رجوع
+        </a>
+        <button class="btn btn-primary" onclick="window.print()">
+            <i class="fas fa-print me-2"></i>طباعة
+        </button>
+    </div>
+</div>
+
+<!-- Filter -->
+<div class="card border-0 shadow-sm mb-4 no-print">
+    <div class="card-body">
+        <form method="get" action="@Url.Action("ProfitLoss")" class="row g-3 align-items-end">
+            <div class="col-md-5">
+                <label class="form-label fw-bold small">من تاريخ</label>
+                <input type="date" name="startDate" value="@startDate.ToString("yyyy-MM-dd")"
+                       class="form-control" required />
+            </div>
+            <div class="col-md-5">
+                <label class="form-label fw-bold small">إلى تاريخ</label>
+                <input type="date" name="endDate" value="@endDate.ToString("yyyy-MM-dd")"
+                       class="form-control" required />
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-search me-1"></i>عرض
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Report Header -->
+<div class="report-header shadow mb-4">
+    <div class="row align-items-center">
+        <div class="col-md-8">
+            <h3 class="fw-900 mb-2">
+                <i class="fas fa-file-invoice-dollar me-2"></i>
+                تقرير الأرباح والخسائر
+            </h3>
+            <p class="mb-1 opacity-75">
+                <i class="fas fa-calendar-alt me-2"></i>
+                الفترة من
+                <strong class="en-numbers">@Model.StartDate.ToString("yyyy/MM/dd")</strong>
+                إلى
+                <strong class="en-numbers">@Model.EndDate.ToString("yyyy/MM/dd")</strong>
+            </p>
+            <small class="opacity-75">
+                <i class="fas fa-clock me-1"></i>
+                تم إنشاؤه في <span class="en-numbers">@DateTime.Now.ToString("yyyy/MM/dd HH:mm")</span>
+            </small>
+        </div>
+        <div class="col-md-4 text-center">
+            <div class="bg-white bg-opacity-25 rounded-3 p-3">
+                <small class="d-block opacity-75">صافي الربح/الخسارة</small>
+                <div class="amount-huge">@Model.NetProfit.ToString("N0")</div>
+                <small class="opacity-75">د.ع</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="summary-card bg-success bg-opacity-10 text-center">
+            <div class="bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                 style="width:70px;height:70px">
+                <i class="fas fa-arrow-up fa-2x"></i>
+            </div>
+            <h6 class="text-muted mb-2">إجمالي الإيرادات</h6>
+            <div class="amount-huge text-success en-numbers">
+                @Model.TotalRevenue.ToString("N0")
+            </div>
+            <small class="text-muted">دينار عراقي</small>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="summary-card bg-danger bg-opacity-10 text-center">
+            <div class="bg-danger text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                 style="width:70px;height:70px">
+                <i class="fas fa-arrow-down fa-2x"></i>
+            </div>
+            <h6 class="text-muted mb-2">إجمالي المصاريف</h6>
+            <div class="amount-huge text-danger en-numbers">
+                @Model.TotalExpenses.ToString("N0")
+            </div>
+            <small class="text-muted">دينار عراقي</small>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="summary-card bg-@(Model.NetProfit >= 0 ? "primary" : "warning") bg-opacity-10 text-center">
+            <div class="bg-@(Model.NetProfit >= 0 ? "primary" : "warning") text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
+                 style="width:70px;height:70px">
+                <i class="fas @(Model.NetProfit >= 0 ? "fa-trophy" : "fa-exclamation-triangle") fa-2x"></i>
+            </div>
+            <h6 class="text-muted mb-2">
+                @(Model.NetProfit >= 0 ? "صافي الربح" : "الخسارة")
+            </h6>
+            <div class="amount-huge text-@(Model.NetProfit >= 0 ? "primary" : "warning") en-numbers">
+                @Model.NetProfit.ToString("N0")
+            </div>
+            <small class="text-muted">
+                هامش الربح: <strong class="en-numbers">@Model.ProfitMargin.ToString("F2")%</strong>
+            </small>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <!-- Revenue Breakdown -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white py-3">
+                <h6 class="mb-0 fw-bold">
+                    <i class="fas fa-chart-pie text-success me-2"></i>
+                    توزيع الإيرادات حسب المولد
+                </h6>
+            </div>
+            <div class="card-body">
+                @if (Model.RevenueByGenerator?.Any() == true)
+                {
+                    @foreach (var item in Model.RevenueByGenerator.OrderByDescending(x => x.Value))
+                    {
+                        var pct = Model.TotalRevenue > 0
+                        ? (double)(item.Value / Model.TotalRevenue * 100) : 0;
+                        <div class="breakdown-item">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="fas fa-bolt text-warning"></i>
+                                    <strong>@item.Key</strong>
+                                </div>
+                                <div class="text-end">
+                                    <strong class="text-success en-numbers">
+                                        @item.Value.ToString("N0") د.ع
+                                    </strong>
+                                    <br>
+                                    <small class="text-muted en-numbers">@pct.ToString("F1")%</small>
+                                </div>
+                            </div>
+                            <div class="progress" style="height: 6px;">
+                                <div class="progress-bar bg-success"
+                                     style="width: @pct.ToString("F1")%"></div>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="text-center py-4">
+                        <i class="fas fa-inbox fa-2x text-muted mb-2"></i>
+                        <p class="text-muted mb-0">لا توجد إيرادات في هذه الفترة</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Expenses Breakdown -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white py-3">
+                <h6 class="mb-0 fw-bold">
+                    <i class="fas fa-chart-pie text-danger me-2"></i>
+                    توزيع المصاريف حسب الفئة
+                </h6>
+            </div>
+            <div class="card-body">
+                @if (Model.ExpensesByCategory?.Any() == true)
+                {
+                    @foreach (var item in Model.ExpensesByCategory.OrderByDescending(x => x.Value))
+                    {
+                        var pct = Model.TotalExpenses > 0
+                        ? (double)(item.Value / Model.TotalExpenses * 100) : 0;
+                        <div class="breakdown-item">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="fas fa-tag text-danger"></i>
+                                    <strong>@item.Key</strong>
+                                </div>
+                                <div class="text-end">
+                                    <strong class="text-danger en-numbers">
+                                        @item.Value.ToString("N0") د.ع
+                                    </strong>
+                                    <br>
+                                    <small class="text-muted en-numbers">@pct.ToString("F1")%</small>
+                                </div>
+                            </div>
+                            <div class="progress" style="height: 6px;">
+                                <div class="progress-bar bg-danger"
+                                     style="width: @pct.ToString("F1")%"></div>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="text-center py-4">
+                        <i class="fas fa-inbox fa-2x text-muted mb-2"></i>
+                        <p class="text-muted mb-0">لا توجد مصاريف في هذه الفترة</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Summary Formula -->
+<div class="card border-0 shadow-sm mt-4">
+    <div class="card-body">
+        <h6 class="fw-bold mb-3">
+            <i class="fas fa-calculator text-primary me-2"></i>
+            المعادلة الحسابية
+        </h6>
+        <div class="d-flex justify-content-around align-items-center flex-wrap gap-3 text-center">
+            <div>
+                <small class="text-muted d-block">الإيرادات</small>
+                <strong class="text-success fs-4 en-numbers">
+                    @Model.TotalRevenue.ToString("N0")
+                </strong>
+            </div>
+            <div class="fs-1 text-muted">−</div>
+            <div>
+                <small class="text-muted d-block">المصاريف</small>
+                <strong class="text-danger fs-4 en-numbers">
+                    @Model.TotalExpenses.ToString("N0")
+                </strong>
+            </div>
+            <div class="fs-1 text-muted">=</div>
+            <div>
+                <small class="text-muted d-block">
+                    @(Model.NetProfit >= 0 ? "الربح" : "الخسارة")
+                </small>
+                <strong class="fs-3 en-numbers @(Model.NetProfit >= 0 ? "text-primary" : "text-warning")">
+                    @Model.NetProfit.ToString("N0")
+                </strong>
+            </div>
+        </div>
+    </div>
+</div>

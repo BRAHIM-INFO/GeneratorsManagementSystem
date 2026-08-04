@@ -1,0 +1,160 @@
+﻿<div class="theme-customizer" id="themeCustomizer">
+    <div class="customizer-header">
+        <button class="customizer-close" id="closeCustomizer">
+            <i class="fas fa-times"></i>
+        </button>
+        <h5 class="customizer-title">THEME CUSTOMIZER</h5>
+        <p class="customizer-subtitle">Customize & Preview in Real Time</p>
+    </div>
+
+    <div class="customizer-body" id="customizerBody">
+
+        <!-- Layout Options -->
+        <div class="customizer-section">
+            <div class="customizer-section-title">
+                <span>Layout Options</span>
+                <i class="fas fa-th-large"></i>
+            </div>
+            <div class="layout-options">
+                <label class="layout-option">
+                    <input type="radio" name="layoutMode" value="transparent" id="layoutTransparent">
+                    <span class="layout-label">Transparent</span>
+                </label>
+                <label class="layout-option">
+                    <input type="radio" name="layoutMode" value="dark" id="layoutDark">
+                    <span class="layout-label">Dark</span>
+                </label>
+                <label class="layout-option">
+                    <input type="radio" name="layoutMode" value="light" id="layoutLight" checked>
+                    <span class="layout-label">Light</span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Navbar Type -->
+        <div class="customizer-section">
+            <div class="customizer-section-title">
+                <span>Navbar Type</span>
+                <i class="fas fa-ellipsis-h"></i>
+            </div>
+            <div class="navbar-type-options">
+                <label class="layout-option">
+                    <input type="radio" name="navbarType" value="fixed" id="navbarFixed" checked>
+                    <span class="layout-label">Fixed</span>
+                </label>
+                <label class="layout-option">
+                    <input type="radio" name="navbarType" value="static" id="navbarStatic">
+                    <span class="layout-label">Static</span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Sidebar Color Options -->
+        <div class="customizer-section">
+            <div class="customizer-section-title">
+                <span>Sidebar Color Options</span>
+                <i class="fas fa-palette"></i>
+            </div>
+            <div class="color-options" id="sidebarColorOptions">
+                <!-- Row 1 -->
+                <button class="color-swatch active" data-color="gradient-purple" style="background: linear-gradient(135deg, #7367F0, #9E95F5)" title="بنفسجي"></button>
+                <button class="color-swatch" data-color="gradient-red" style="background: linear-gradient(135deg, #EA5455, #F08182)" title="أحمر"></button>
+                <button class="color-swatch" data-color="gradient-blue-purple" style="background: linear-gradient(135deg, #4481EB, #7367F0)" title="أزرق بنفسجي"></button>
+                <button class="color-swatch" data-color="gradient-orange" style="background: linear-gradient(135deg, #FF9F43, #FFBE76)" title="برتقالي"></button>
+                <button class="color-swatch" data-color="gradient-pink" style="background: linear-gradient(135deg, #EA5455, #7367F0)" title="وردي"></button>
+                <button class="color-swatch" data-color="gradient-teal" style="background: linear-gradient(135deg, #44B589, #7367F0)" title="زيتي"></button>
+                <button class="color-swatch" data-color="gradient-green" style="background: linear-gradient(135deg, #28C76F, #48DA89)" title="أخضر"></button>
+                <!-- Row 2 -->
+                <button class="color-swatch" data-color="solid-red" style="background: #EA5455" title="أحمر صلب"></button>
+                <button class="color-swatch" data-color="solid-blue" style="background: #4481EB" title="أزرق صلب"></button>
+                <button class="color-swatch" data-color="solid-orange" style="background: #FF9F43" title="برتقالي صلب"></button>
+                <button class="color-swatch" data-color="solid-green" style="background: #28C76F" title="أخضر صلب"></button>
+                <button class="color-swatch" data-color="solid-purple" style="background: #7367F0" title="بنفسجي صلب"></button>
+                <button class="color-swatch" data-color="solid-white" style="background: #FFFFFF; border: 1px solid #ddd" title="أبيض"></button>
+                <button class="color-swatch" data-color="solid-dark" style="background: #10163A" title="داكن"></button>
+            </div>
+        </div>
+
+        <!-- Sidebar Background Image -->
+        <div class="customizer-section">
+            <div class="customizer-section-title">
+                <span>Sidebar Bg Image</span>
+                <i class="far fa-image"></i>
+            </div>
+            <div class="sidebar-bg-images" id="sidebarBgImages">
+                <button class="bg-image-swatch" data-image="bg1.jpg">
+                    <img src="~/images/sidebar-bg/bg1.jpg" alt="خلفية 1">
+                </button>
+                <button class="bg-image-swatch" data-image="bg2.jpg">
+                    <img src="~/images/sidebar-bg/bg2.jpg" alt="خلفية 2">
+                </button>
+                <button class="bg-image-swatch" data-image="bg3.jpg">
+                    <img src="~/images/sidebar-bg/bg3.jpg" alt="خلفية 3">
+                </button>
+                <button class="bg-image-swatch" data-image="bg4.jpg">
+                    <img src="~/images/sidebar-bg/bg4.jpg" alt="خلفية 4">
+                </button>
+                <button class="bg-image-swatch" data-image="bg5.jpg">
+                    <img src="~/images/sidebar-bg/bg5.jpg" alt="خلفية 5">
+                </button>
+                <button class="bg-image-swatch active" data-image="bg6.jpg">
+                    <img src="~/images/sidebar-bg/bg6.jpg" alt="خلفية 6">
+                </button>
+            </div>
+
+            <!-- Toggle BG Image -->
+            <div class="customizer-toggle-row mt-2">
+                <span>Sidebar Bg Image</span>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="sidebarBgImageToggle">
+                </div>
+            </div>
+
+            <!-- Compact Menu -->
+            <div class="customizer-toggle-row">
+                <span>Compact Menu</span>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="compactMenuToggle">
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Width -->
+        <div class="customizer-section">
+            <div class="customizer-section-title">
+                <span>Sidebar Width</span>
+            </div>
+            <div class="sidebar-width-options">
+                <button class="width-btn" data-width="large">Large</button>
+                <button class="width-btn active" data-width="medium">Medium</button>
+                <button class="width-btn" data-width="small">Small</button>
+            </div>
+        </div>
+
+        <!-- Background Color -->
+        <div class="customizer-section">
+            <div class="customizer-section-title">
+                <span>Background Color</span>
+            </div>
+            <div class="bg-color-options" id="bgColorOptions">
+                <button class="color-swatch active" data-bg="#F8F8F8" style="background: #F8F8F8; border: 1px solid #ddd" title="فاتح"></button>
+                <button class="color-swatch" data-bg="#EEF2FF" style="background: #EEF2FF" title="أزرق فاتح"></button>
+                <button class="color-swatch" data-bg="#F0FFF4" style="background: #F0FFF4" title="أخضر فاتح"></button>
+                <button class="color-swatch" data-bg="#FFF5F5" style="background: #FFF5F5" title="وردي فاتح"></button>
+                <button class="color-swatch" data-bg="#FFFBEB" style="background: #FFFBEB" title="أصفر فاتح"></button>
+                <button class="color-swatch" data-bg="#F5F3FF" style="background: #F5F3FF" title="بنفسجي فاتح"></button>
+                <button class="color-swatch" data-bg="#1A1A2E" style="background: #1A1A2E" title="داكن"></button>
+                <button class="color-swatch" data-bg="#10163A" style="background: #10163A" title="أزرق داكن"></button>
+                <button class="color-swatch" data-bg="#161D31" style="background: #161D31" title="رمادي داكن"></button>
+            </div>
+        </div>
+
+        <!-- Reset Button -->
+        <div class="customizer-section">
+            <button class="btn btn-outline-secondary w-100" id="resetTheme">
+                <i class="fas fa-undo me-2"></i>إعادة التعيين
+            </button>
+        </div>
+
+    </div>
+</div>

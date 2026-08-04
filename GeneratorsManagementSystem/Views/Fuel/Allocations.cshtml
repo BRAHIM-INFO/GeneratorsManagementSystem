@@ -1,0 +1,384 @@
+﻿@model List<GeneratorsManagementSystem.Models.Fuel.FuelAllocation>
+@{
+    ViewData["Title"] = "حصص الوقود";
+    var startDate = ViewBag.StartDate as DateTime?;
+    var endDate = ViewBag.EndDate as DateTime?;
+}
+
+@section Styles {
+    <style>
+        .en-numbers {
+            direction: ltr;
+            display: inline-block;
+            font-feature-settings: "tnum";
+        }
+
+        .allocation-badge {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .fuel-type-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .filter-bar {
+            background: linear-gradient(135deg, #F0FFF4 0%, #C6F6D5 100%);
+            border-radius: 15px;
+            padding: 20px;
+        }
+
+        .btn-action-sm {
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+        }
+    </style>
+}
+
+<!-- HEADER -->
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <div>
+        <h4 class="fw-800 mb-1">
+            <i class="fas fa-warehouse text-success me-2"></i>
+            حصص الوقود
+        </h4>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0 small">
+                <li class="breadcrumb-item"><a href="@Url.Action("Index", "Dashboard")"><i class="fas fa-home"></i></a></li>
+                <li class="breadcrumb-item"><a href="@Url.Action("Index")">الوقود</a></li>
+                <li class="breadcrumb-item active">الحصص</li>
+            </ol>
+        </nav>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="@Url.Action("Index")" class="btn btn-outline-primary">
+            <i class="fas fa-arrow-right me-2"></i>لوحة الوقود
+        </a>
+        <button class="btn btn-success" id="btnAddAllocation">
+            <i class="fas fa-plus me-2"></i>حصة جديدة
+        </button>
+    </div>
+</div>
+
+<!-- Filter -->
+<div class="filter-bar shadow-sm mb-4">
+    <form method="get" action="@Url.Action("Allocations")" class="row g-3 align-items-end">
+        <div class="col-md-4">
+            <label class="form-label fw-bold small">من تاريخ</label>
+            <input type="date" name="startDate" value="@(startDate?.ToString("yyyy-MM-dd"))" class="form-control" />
+        </div>
+        <div class="col-md-4">
+            <label class="form-label fw-bold small">إلى تاريخ</label>
+            <input type="date" name="endDate" value="@(endDate?.ToString("yyyy-MM-dd"))" class="form-control" />
+        </div>
+        <div class="col-md-4">
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-success flex-grow-1">
+                    <i class="fas fa-filter me-1"></i>تطبيق
+                </button>
+                <a href="@Url.Action("Allocations")" class="btn btn-outline-secondary">
+                    <i class="fas fa-times"></i>
+                </a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Stats -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm text-center p-3">
+            <small class="text-muted">عدد الحصص</small>
+            <h3 class="fw-900 text-primary mb-0 en-numbers">@Model.Count</h3>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm text-center p-3 bg-success bg-opacity-10">
+            <small class="text-muted">إجمالي المستلم</small>
+            <h4 class="fw-900 text-success mb-0 en-numbers">
+                @Model.Sum(a => a.Quantity).ToString("N0")
+            </h4>
+            <small class="text-muted">لتر</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm text-center p-3 bg-danger bg-opacity-10">
+            <small class="text-muted">إجمالي المستهلك</small>
+            <h4 class="fw-900 text-danger mb-0 en-numbers">
+                @Model.Sum(a => a.ConsumedQuantity).ToString("N0")
+            </h4>
+            <small class="text-muted">لتر</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm text-center p-3 bg-warning bg-opacity-10">
+            <small class="text-muted">التكلفة الإجمالية</small>
+            <h4 class="fw-900 text-warning mb-0 en-numbers">
+                @Model.Sum(a => a.TotalCost).ToString("N0")
+            </h4>
+            <small class="text-muted">د.ع</small>
+        </div>
+    </div>
+</div>
+
+<!-- Table -->
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white py-3">
+        <h6 class="mb-0 fw-bold">
+            <i class="fas fa-list me-2 text-success"></i>
+            قائمة الحصص
+            <span class="badge bg-success ms-2 en-numbers">@Model.Count</span>
+        </h6>
+    </div>
+    <div class="card-body p-3">
+        <table id="allocationsTable" class="table table-hover align-middle" style="width:100%">
+            <thead class="table-light">
+                <tr>
+                    <th>الرقم</th>
+                    <th>التاريخ</th>
+                    <th>النوع</th>
+                    <th>المصدر</th>
+                    <th>الكمية</th>
+                    <th>المستهلك</th>
+                    <th>المتبقي</th>
+                    <th>التكلفة</th>
+                    <th>المورد</th>
+                    <th class="text-center">إجراءات</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var alloc in Model)
+                {
+                    <tr>
+                        <td>
+                            <span class="badge bg-light text-success font-monospace en-numbers">
+                                @alloc.AllocationNumber
+                            </span>
+                        </td>
+                        <td>
+                            <small class="en-numbers">
+                                @alloc.AllocationDate.ToString("yyyy/MM/dd")
+                            </small>
+                            @if (!string.IsNullOrEmpty(alloc.AllocationPeriod) && alloc.AllocationPeriod != "—")
+                            {
+                                <br>
+                                <small class="text-muted">@alloc.AllocationPeriod</small>
+                            }
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="fuel-type-icon" style="background: @alloc.FuelKindColor;">
+                                    <i class="fas @alloc.FuelKindIcon"></i>
+                                </div>
+                                <strong>@alloc.FuelKindText</strong>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="allocation-badge @alloc.SourceBadgeClass text-white">
+                                @alloc.SourceText
+                            </span>
+                        </td>
+                        <td>
+                            <strong class="text-primary en-numbers">
+                                @alloc.Quantity.ToString("N0")
+                            </strong>
+                            <small class="text-muted">لتر</small>
+                        </td>
+                        <td>
+                            <strong class="text-danger en-numbers">
+                                @alloc.ConsumedQuantity.ToString("N0")
+                            </strong>
+                            <small class="text-muted">لتر</small>
+                            <div class="progress mt-1" style="height: 4px;">
+                                <div class="progress-bar bg-danger"
+                                     style="width: @alloc.ConsumptionPercentage.ToString("F1")%"></div>
+                            </div>
+                            <small class="text-muted en-numbers">@alloc.ConsumptionPercentage.ToString("F1")%</small>
+                        </td>
+                        <td>
+                            <strong class="@(alloc.RemainingQuantity > 0 ? "text-success" : "text-danger") en-numbers">
+                                @alloc.RemainingQuantity.ToString("N0")
+                            </strong>
+                            <small class="text-muted">لتر</small>
+                        </td>
+                        <td>
+                            @if (alloc.TotalCost > 0)
+                            {
+                                <strong class="en-numbers">@alloc.TotalCost.ToString("N0")</strong>
+                                <small class="text-muted">د.ع</small>
+                            }
+                            else
+                            {
+                                <span class="badge bg-success">مجاني</span>
+                            }
+                        </td>
+                        <td>
+                            <small>@(alloc.Supplier ?? "—")</small>
+                            @if (!string.IsNullOrEmpty(alloc.ReferenceNumber))
+                            {
+                                <br>
+                                <small class="text-muted en-numbers">@alloc.ReferenceNumber</small>
+                            }
+                        </td>
+                        <td class="text-center">
+                            <div class="btn-group">
+                                <button class="btn btn-outline-primary btn-action-sm btn-edit"
+                                        data-id="@alloc.Id" title="تعديل">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-outline-danger btn-action-sm btn-delete"
+                                        data-id="@alloc.Id"
+                                        data-number="@alloc.AllocationNumber"
+                                        title="حذف">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="allocationModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg" id="modalContent"></div>
+    </div>
+</div>
+
+<form id="antiForgeryForm">@Html.AntiForgeryToken()</form>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $('#allocationsTable').DataTable({
+                language: { url: "//cdn.datatables.net/plug-ins/1.13.7/i18n/ar.json" },
+                order: [[1, 'desc']],
+                pageLength: 25,
+                responsive: true
+            });
+
+            var token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+            document.getElementById('btnAddAllocation').addEventListener('click', function() {
+                loadModal('@Url.Action("CreateAllocation")');
+            });
+
+            $(document).on('click', '.btn-edit', function() {
+                loadModal('@Url.Action("EditAllocation")/' + $(this).data('id'));
+            });
+
+            function loadModal(url) {
+                document.getElementById('modalContent').innerHTML = `
+                            <div class="modal-body text-center py-5">
+                                <div class="spinner-border text-primary"></div>
+                                <p class="mt-3">جارِ التحميل...</p>
+                            </div>`;
+                var modal = new bootstrap.Modal(document.getElementById('allocationModal'));
+                modal.show();
+
+                fetch(url)
+                    .then(r => r.text())
+                    .then(html => {
+                        document.getElementById('modalContent').innerHTML = html;
+                        initForm();
+                    });
+            }
+
+            function initForm() {
+                var form = document.getElementById('fuelForm');
+                if (!form) return;
+
+                // حساب التكلفة تلقائياً
+                var quantityInput = form.querySelector('[name="Quantity"]');
+                var priceInput = form.querySelector('[name="PricePerLiter"]');
+                var totalDisplay = form.querySelector('#totalCostDisplay');
+
+                function updateTotal() {
+                    var q = parseFloat(quantityInput?.value) || 0;
+                    var p = parseFloat(priceInput?.value) || 0;
+                    var total = q * p;
+                    if (totalDisplay) {
+                        totalDisplay.textContent = total.toLocaleString('en-US') + ' د.ع';
+                    }
+                }
+
+                quantityInput?.addEventListener('input', updateTotal);
+                priceInput?.addEventListener('input', updateTotal);
+                updateTotal();
+
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    var btn = form.querySelector('[type="submit"]');
+                    var original = btn.innerHTML;
+                    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>جارِ الحفظ...';
+                    btn.disabled = true;
+
+                    fetch(form.getAttribute('action'), {
+                        method: 'POST', body: new FormData(form)
+                    })
+                        .then(r => r.json())
+                        .then(res => {
+                            if (res.success) {
+                                bootstrap.Modal.getInstance(document.getElementById('allocationModal')).hide();
+                                Swal.fire({
+                                    icon: 'success', title: 'تم', text: res.message,
+                                    timer: 2000, customClass: { popup: 'swal2-rtl' }
+                                }).then(() => location.reload());
+                            } else {
+                                var errHtml = res.errors?.length ? '<ul class="text-start mt-2">' + res.errors.map(e => `<li>${e}</li>`).join('') + '</ul>' : '';
+                                Swal.fire({
+                                    icon: 'error', title: 'فشل', html: res.message + errHtml,
+                                    customClass: { popup: 'swal2-rtl' }
+                                });
+                                btn.innerHTML = original;
+                                btn.disabled = false;
+                            }
+                        });
+                });
+            }
+
+            $(document).on('click', '.btn-delete', function() {
+                var id = $(this).data('id');
+                var num = $(this).data('number');
+
+                Swal.fire({
+                    icon: 'warning', title: 'تأكيد الحذف',
+                    html: `هل تريد حذف الحصة <strong>${num}</strong>؟`,
+                    showCancelButton: true,
+                    confirmButtonText: 'حذف', cancelButtonText: 'إلغاء',
+                    confirmButtonColor: '#dc3545',
+                    customClass: { popup: 'swal2-rtl' }
+                }).then(res => {
+                    if (res.isConfirmed) {
+                        $.post('@Url.Action("DeleteAllocation")', {
+                            id: id, __RequestVerificationToken: token
+                        }, function(r) {
+                            Swal.fire({
+                                icon: r.success ? 'success' : 'error',
+                                title: r.success ? 'تم' : 'فشل',
+                                text: r.message, timer: 1500,
+                                customClass: { popup: 'swal2-rtl' }
+                            }).then(() => r.success && location.reload());
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+}

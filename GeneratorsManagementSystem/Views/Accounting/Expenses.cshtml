@@ -1,0 +1,423 @@
+﻿@model List<GeneratorsManagementSystem.Models.Accounting.Expense>
+@{
+    ViewData["Title"] = "إدارة المصاريف";
+    var stats = ViewBag.Stats as List<GeneratorsManagementSystem.Services.CategoryExpenseStats>;
+    var startDate = ViewBag.StartDate as DateTime?;
+    var endDate = ViewBag.EndDate as DateTime?;
+    var totalAmount = (decimal)(ViewBag.TotalAmount ?? 0);
+}
+
+@section Styles {
+    <style>
+        .stat-mini {
+            border: none;
+            border-radius: 12px;
+            transition: all 0.3s;
+        }
+
+            .stat-mini:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+            }
+
+        .category-badge {
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .amount-cell {
+            font-family: 'Cairo';
+            font-weight: 800;
+            direction: ltr;
+            display: inline-block;
+        }
+
+        .en-numbers {
+            direction: ltr;
+            display: inline-block;
+            font-feature-settings: "tnum";
+        }
+
+        .btn-action-sm {
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+        }
+
+        .filter-bar {
+            background: linear-gradient(135deg, #f8f9fc 0%, #ebf4ff 100%);
+            border: none;
+            border-radius: 15px;
+            padding: 20px;
+        }
+    </style>
+}
+
+<!-- HEADER -->
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <div>
+        <h4 class="fw-800 mb-1">
+            <i class="fas fa-arrow-down text-danger me-2"></i>
+            إدارة المصاريف
+        </h4>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0 small">
+                <li class="breadcrumb-item"><a href="@Url.Action("Index", "Dashboard")"><i class="fas fa-home"></i></a></li>
+                <li class="breadcrumb-item"><a href="@Url.Action("Index")">المحاسبة</a></li>
+                <li class="breadcrumb-item active">المصاريف</li>
+            </ol>
+        </nav>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="@Url.Action("Index")" class="btn btn-outline-primary">
+            <i class="fas fa-arrow-right me-2"></i>لوحة المحاسبة
+        </a>
+        <button class="btn btn-danger" id="btnAddExpense">
+            <i class="fas fa-plus me-2"></i>مصروف جديد
+        </button>
+    </div>
+</div>
+
+<!-- Filter -->
+<div class="filter-bar shadow-sm mb-4">
+    <form method="get" action="@Url.Action("Expenses")" class="row g-3 align-items-end">
+        <div class="col-md-4">
+            <label class="form-label fw-bold small">من تاريخ</label>
+            <input type="date" name="startDate" value="@(startDate?.ToString("yyyy-MM-dd"))" class="form-control" />
+        </div>
+        <div class="col-md-4">
+            <label class="form-label fw-bold small">إلى تاريخ</label>
+            <input type="date" name="endDate" value="@(endDate?.ToString("yyyy-MM-dd"))" class="form-control" />
+        </div>
+        <div class="col-md-4">
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary flex-grow-1">
+                    <i class="fas fa-filter me-1"></i>تطبيق
+                </button>
+                <a href="@Url.Action("Expenses")" class="btn btn-outline-secondary">
+                    <i class="fas fa-times"></i>
+                </a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Stats -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card stat-mini shadow-sm bg-danger bg-opacity-10">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="bg-danger text-white rounded-3 d-flex align-items-center justify-content-center"
+                     style="width:60px;height:60px">
+                    <i class="fas fa-money-bill-wave fa-lg"></i>
+                </div>
+                <div>
+                    <small class="text-muted d-block">إجمالي المصاريف</small>
+                    <h3 class="fw-900 mb-0 text-danger amount-cell en-numbers">
+                        @totalAmount.ToString("N0")
+                    </h3>
+                    <small class="text-muted">د.ع</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stat-mini shadow-sm bg-primary bg-opacity-10">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="bg-primary text-white rounded-3 d-flex align-items-center justify-content-center"
+                     style="width:60px;height:60px">
+                    <i class="fas fa-list fa-lg"></i>
+                </div>
+                <div>
+                    <small class="text-muted d-block">عدد المصاريف</small>
+                    <h3 class="fw-900 mb-0 text-primary en-numbers">@Model.Count</h3>
+                    <small class="text-muted">عملية</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stat-mini shadow-sm bg-warning bg-opacity-10">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="bg-warning text-white rounded-3 d-flex align-items-center justify-content-center"
+                     style="width:60px;height:60px">
+                    <i class="fas fa-tags fa-lg"></i>
+                </div>
+                <div>
+                    <small class="text-muted d-block">عدد الفئات</small>
+                    <h3 class="fw-900 mb-0 text-warning en-numbers">@(stats?.Count ?? 0)</h3>
+                    <small class="text-muted">فئة</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Categories Summary -->
+@if (stats?.Any() == true)
+{
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white py-3">
+            <h6 class="mb-0 fw-bold">
+                <i class="fas fa-chart-pie text-danger me-2"></i>ملخص حسب الفئة
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="row g-2">
+                @foreach (var cat in stats)
+                {
+                    <div class="col-lg-3 col-md-4 col-sm-6">
+                        <div class="p-3 rounded-3" style="background: @cat.CategoryColor 15;">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <div class="rounded-2 p-2 d-flex align-items-center justify-content-center"
+                                     style="background: @cat.CategoryColor; color: white; width: 36px; height: 36px;">
+                                    <i class="fas @cat.CategoryIcon"></i>
+                                </div>
+                                <strong class="small">@cat.CategoryText</strong>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="fw-bold en-numbers" style="color: @cat.CategoryColor">
+                                    @cat.Amount.ToString("N0") د.ع
+                                </span>
+                                <span class="badge en-numbers" style="background: @cat.CategoryColor">
+                                    @cat.Count
+                                </span>
+                            </div>
+                            <div class="progress mt-2" style="height: 4px;">
+                                <div class="progress-bar" style="width: @cat.Percentage.ToString("F1")%; background: @cat.CategoryColor;"></div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Table -->
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white py-3">
+        <h6 class="mb-0 fw-bold">
+            <i class="fas fa-list me-2 text-danger"></i>
+            قائمة المصاريف
+            <span class="badge bg-danger ms-2 en-numbers">@Model.Count</span>
+        </h6>
+    </div>
+    <div class="card-body p-3">
+        <table id="expensesTable" class="table table-hover align-middle" style="width:100%">
+            <thead class="table-light">
+                <tr>
+                    <th>الرقم</th>
+                    <th>التاريخ</th>
+                    <th>الفئة</th>
+                    <th>البيان</th>
+                    <th>المولد</th>
+                    <th>المبلغ</th>
+                    <th>طريقة الدفع</th>
+                    <th>المستفيد</th>
+                    <th class="text-center">إجراءات</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var exp in Model)
+                {
+                    <tr>
+                        <td>
+                            <span class="badge bg-light text-danger font-monospace en-numbers">
+                                @exp.ExpenseNumber
+                            </span>
+                        </td>
+                        <td>
+                            <small class="en-numbers">
+                                @exp.ExpenseDate.ToString("yyyy/MM/dd")
+                            </small>
+                        </td>
+                        <td>
+                            <span class="category-badge" style="background: @exp.CategoryColor 20; color: @exp.CategoryColor">
+                                <i class="fas @exp.CategoryIcon"></i>
+                                @exp.CategoryText
+                            </span>
+                        </td>
+                        <td>
+                            <strong>@exp.Description</strong>
+                            @if (!string.IsNullOrEmpty(exp.Reference))
+                            {
+                                <br>
+                                <small class="text-muted">
+                                    <i class="fas fa-hashtag me-1"></i>@exp.Reference
+                                </small>
+                            }
+                        </td>
+                        <td>
+                            @if (exp.Generator != null)
+                            {
+                                <span class="badge bg-warning bg-opacity-25 text-warning">
+                                    <i class="fas fa-bolt me-1"></i>
+                                    <span class="en-numbers">@exp.Generator.GeneratorNumber</span>
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary bg-opacity-25 text-secondary">
+                                    <i class="fas fa-globe me-1"></i>عام
+                                </span>
+                            }
+                        </td>
+                        <td>
+                            <strong class="text-danger amount-cell en-numbers">
+                                @exp.Amount.ToString("N0")
+                            </strong>
+                            <small class="text-muted">د.ع</small>
+                        </td>
+                        <td>
+                            <span class="badge bg-info bg-opacity-25 text-info">
+                                @exp.PaymentMethodText
+                            </span>
+                        </td>
+                        <td>
+                            <small>@(exp.Beneficiary ?? "—")</small>
+                        </td>
+                        <td class="text-center">
+                            <div class="btn-group">
+                                <button class="btn btn-outline-primary btn-action-sm btn-edit"
+                                        data-id="@exp.Id" title="تعديل">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-outline-danger btn-action-sm btn-delete"
+                                        data-id="@exp.Id"
+                                        data-name="@exp.ExpenseNumber"
+                                        title="حذف">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="expenseModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg" id="modalContent"></div>
+    </div>
+</div>
+
+<form id="antiForgeryForm">@Html.AntiForgeryToken()</form>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('#expensesTable').DataTable({
+                language: { url: "//cdn.datatables.net/plug-ins/1.13.7/i18n/ar.json" },
+                order: [[1, 'desc']],
+                pageLength: 25,
+                responsive: true
+            });
+
+            var token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+            // إضافة
+            document.getElementById('btnAddExpense').addEventListener('click', function () {
+                loadModal('@Url.Action("CreateExpense")');
+            });
+
+            // تعديل
+            $(document).on('click', '.btn-edit', function () {
+                loadModal('@Url.Action("EditExpense")/' + $(this).data('id'));
+            });
+
+            function loadModal(url) {
+                document.getElementById('modalContent').innerHTML = `
+                    <div class="modal-body text-center py-5">
+                        <div class="spinner-border text-primary"></div>
+                        <p class="mt-3">جارِ التحميل...</p>
+                    </div>`;
+                var modal = new bootstrap.Modal(document.getElementById('expenseModal'));
+                modal.show();
+
+                fetch(url)
+                    .then(r => r.text())
+                    .then(html => {
+                        document.getElementById('modalContent').innerHTML = html;
+                        initForm();
+                    });
+            }
+
+            function initForm() {
+                var form = document.getElementById('expenseForm');
+                if (!form) return;
+
+                form.addEventListener('submit', function (e) {
+                    e.preventDefault();
+                    var btn = form.querySelector('[type="submit"]');
+                    var original = btn.innerHTML;
+                    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>جارِ الحفظ...';
+                    btn.disabled = true;
+
+                    fetch(form.getAttribute('action'), {
+                        method: 'POST',
+                        body: new FormData(form)
+                    })
+                        .then(r => r.json())
+                        .then(res => {
+                            if (res.success) {
+                                bootstrap.Modal.getInstance(document.getElementById('expenseModal')).hide();
+                                Swal.fire({
+                                    icon: 'success', title: 'تم', text: res.message,
+                                    timer: 2000, customClass: { popup: 'swal2-rtl' }
+                                }).then(() => location.reload());
+                            } else {
+                                var errHtml = res.errors?.length ? '<ul class="text-start mt-2">' + res.errors.map(e => `<li>${e}</li>`).join('') + '</ul>' : '';
+                                Swal.fire({
+                                    icon: 'error', title: 'فشل', html: res.message + errHtml,
+                                    customClass: { popup: 'swal2-rtl' }
+                                });
+                                btn.innerHTML = original;
+                                btn.disabled = false;
+                            }
+                        });
+                });
+            }
+
+            // حذف
+            $(document).on('click', '.btn-delete', function () {
+                var id = $(this).data('id');
+                var name = $(this).data('name');
+
+                Swal.fire({
+                    icon: 'warning', title: 'تأكيد الحذف',
+                    html: `هل تريد حذف المصروف <strong>${name}</strong>؟`,
+                    showCancelButton: true,
+                    confirmButtonText: 'حذف', cancelButtonText: 'إلغاء',
+                    confirmButtonColor: '#dc3545',
+                    customClass: { popup: 'swal2-rtl' }
+                }).then(res => {
+                    if (res.isConfirmed) {
+                        $.post('@Url.Action("DeleteExpense")', {
+                            id: id, __RequestVerificationToken: token
+                        }, function (r) {
+                            Swal.fire({
+                                icon: r.success ? 'success' : 'error',
+                                title: r.success ? 'تم' : 'فشل',
+                                text: r.message, timer: 1500,
+                                customClass: { popup: 'swal2-rtl' }
+                            }).then(() => r.success && location.reload());
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+}

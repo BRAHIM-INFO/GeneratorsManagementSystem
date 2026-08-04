@@ -1,0 +1,651 @@
+﻿@model GeneratorsManagementSystem.Models.GeneratorBook
+@{
+    ViewData["Title"] = $"تفاصيل الكتاب - {Model.BookName}";
+}
+
+@section Styles {
+    <style>
+        .book-header-card {
+            background: linear-gradient(135deg, @Model.CategoryColor 0%, @Model.CategoryColor 100%);
+            border-radius: 20px;
+            color: white;
+            overflow: hidden;
+            position: relative;
+        }
+
+            .book-header-card::before {
+                content: '';
+                position: absolute;
+                top: -50px;
+                left: -50px;
+                width: 200px;
+                height: 200px;
+                background: rgba(255,255,255,0.1);
+                border-radius: 50%;
+            }
+
+        .book-icon-huge {
+            width: 100px;
+            height: 100px;
+            background: rgba(255,255,255,0.25);
+            border-radius: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+        }
+
+        .info-box {
+            padding: 20px;
+            border-radius: 12px;
+            background: #f8f9fc;
+            border-right: 4px solid #5A67D8;
+            transition: all 0.2s;
+        }
+
+            .info-box:hover {
+                transform: translateX(-3px);
+                background: #EBF4FF;
+            }
+
+            .info-box.success {
+                border-color: #48BB78;
+                background: #F0FFF4;
+            }
+
+            .info-box.warning {
+                border-color: #F6AD55;
+                background: #FFFAF0;
+            }
+
+            .info-box.danger {
+                border-color: #FC8181;
+                background: #FFF5F5;
+            }
+
+            .info-box.info {
+                border-color: #4299E1;
+                background: #EBF8FF;
+            }
+
+        .amount-display {
+            font-size: 2rem;
+            font-weight: 900;
+            direction: ltr;
+            display: inline-block;
+        }
+
+        .en-numbers {
+            direction: ltr;
+            display: inline-block;
+            font-feature-settings: "tnum";
+        }
+
+        .attachment-viewer {
+            border: 3px dashed #5A67D8;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            background: #EBF4FF;
+            transition: all 0.3s;
+        }
+
+            .attachment-viewer:hover {
+                background: #D6E4FF;
+                transform: scale(1.02);
+            }
+
+        .action-btn {
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 700;
+            transition: all 0.2s;
+        }
+
+        .timeline-item {
+            padding: 15px;
+            border-radius: 10px;
+            background: #f8f9fc;
+            border-right: 3px solid #5A67D8;
+            margin-bottom: 10px;
+        }
+
+        @@media print {
+            .no-print {
+                display: none !important;
+            }
+
+            body {
+                background: white !important;
+            }
+        }
+    </style>
+}
+
+<!-- HEADER -->
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3 no-print">
+    <div>
+        <h4 class="fw-800 mb-1">
+            <i class="fas fa-book text-primary me-2"></i>
+            تفاصيل الكتاب
+        </h4>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0 small">
+                <li class="breadcrumb-item">
+                    <a href="@Url.Action("Index", "Dashboard")"><i class="fas fa-home"></i></a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a href="@Url.Action("Index")">كتب المولدة</a>
+                </li>
+                <li class="breadcrumb-item active">@Model.InternalNumber</li>
+            </ol>
+        </nav>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+        <a href="@Url.Action("Index")" class="btn btn-outline-secondary action-btn">
+            <i class="fas fa-arrow-right me-2"></i>رجوع
+        </a>
+        <button class="btn btn-primary action-btn" onclick="window.print()">
+            <i class="fas fa-print me-2"></i>طباعة
+        </button>
+        <button class="btn btn-success action-btn btn-edit"
+                data-id="@Model.Id">
+            <i class="fas fa-edit me-2"></i>تعديل
+        </button>
+        @if (Model.HasExpiry && !Model.IsArchived)
+        {
+            <button class="btn btn-info action-btn btn-renew"
+                    data-id="@Model.Id">
+                <i class="fas fa-sync me-2"></i>تجديد
+            </button>
+        }
+    </div>
+</div>
+
+<!-- HEADER CARD -->
+<div class="book-header-card shadow mb-4 p-4">
+    <div class="row align-items-center position-relative">
+        <div class="col-md-8">
+            <div class="d-flex align-items-center gap-3 mb-3">
+                <div class="book-icon-huge">
+                    <i class="fas @Model.CategoryIcon"></i>
+                </div>
+                <div>
+                    <h2 class="fw-900 mb-2">@Model.BookName</h2>
+                    <div class="d-flex flex-wrap gap-2">
+                        <span class="badge bg-white text-dark py-2 px-3 fw-bold">
+                            <i class="fas fa-tag me-1"></i>
+                            @Model.CategoryText
+                        </span>
+                        <span class="badge bg-white bg-opacity-25 py-2 px-3">
+                            <i class="fas fa-hashtag me-1"></i>
+                            <span class="font-monospace en-numbers">@Model.InternalNumber</span>
+                        </span>
+                        <span class="badge @Model.StatusBadgeClass py-2 px-3">
+                            <i class="fas @Model.StatusIcon me-1"></i>
+                            @Model.StatusText
+                        </span>
+                        @if (Model.IsArchived)
+                        {
+                            <span class="badge bg-secondary py-2 px-3">
+                                <i class="fas fa-archive me-1"></i>
+                                مؤرشف
+                            </span>
+                        }
+                        @if (Model.IsRenewed)
+                        {
+                            <span class="badge bg-info py-2 px-3">
+                                <i class="fas fa-sync me-1"></i>
+                                مُجدَّد
+                            </span>
+                        }
+                    </div>
+                </div>
+            </div>
+            <div class="opacity-75">
+                <i class="fas fa-building me-2"></i>
+                <strong>@Model.IssuingAuthority</strong>
+                <span class="mx-2">|</span>
+                <i class="fas fa-file-alt me-1"></i>
+                رقم الكتاب: <strong class="font-monospace en-numbers">@Model.BookNumber</strong>
+            </div>
+        </div>
+        <div class="col-md-4 text-center">
+            @if (Model.HasExpiry && Model.ExpiryDate.HasValue)
+            {
+                <div class="bg-white bg-opacity-25 rounded-3 p-3">
+                    <small class="d-block opacity-75">تاريخ الانتهاء</small>
+                    <div class="fs-3 fw-900 en-numbers">@Model.ExpiryDate.Value.ToString("yyyy/MM/dd")</div>
+                    <small class="d-block mt-2">
+                        <i class="fas @Model.StatusIcon me-1"></i>
+                        <strong>@Model.ExpiryMessage</strong>
+                    </small>
+                </div>
+            }
+            else
+            {
+                <div class="bg-white bg-opacity-25 rounded-3 p-3">
+                    <i class="fas fa-infinity fa-3x mb-2"></i>
+                    <div class="fw-bold">بدون تاريخ انتهاء</div>
+                    <small>كتاب دائم</small>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- CONTENT -->
+<div class="row g-4">
+
+    <!-- الجانب الأيمن -->
+    <div class="col-lg-8">
+
+        <!-- البيانات الأساسية -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white py-3">
+                <h6 class="mb-0 fw-bold">
+                    <i class="fas fa-info-circle text-primary me-2"></i>
+                    البيانات الأساسية
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="info-box">
+                            <small class="text-muted d-block">
+                                <i class="fas fa-hashtag me-1"></i>الرقم الداخلي
+                            </small>
+                            <strong class="font-monospace en-numbers">@Model.InternalNumber</strong>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="info-box">
+                            <small class="text-muted d-block">
+                                <i class="fas fa-file-alt me-1"></i>رقم الكتاب الرسمي
+                            </small>
+                            <strong class="font-monospace en-numbers">@Model.BookNumber</strong>
+                        </div>
+                    </div>
+                   @*  <div class="col-md-6">
+                        <div class="info-box">
+                            <small class="text-muted d-block">
+                                <i class="fas fa-tag me-1"></i>التصنيف
+                            </small>
+                            <strong>
+                                <i class="fas @Model.CategoryIcon me-1" style="color: @Model.CategoryColor;"></i>
+                                @Model.CategoryText
+                            </strong>
+                        </div>
+                    </div> *@
+                    <div class="col-md-6">
+                        <div class="info-box">
+                            <small class="text-muted d-block">
+                                <i class="fas fa-building me-1"></i>الجهة المصدرة
+                            </small>
+                            <strong>@Model.IssuingAuthority</strong>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="info-box">
+                            <small class="text-muted d-block">
+                                <i class="fas fa-file me-1"></i>اسم الكتاب
+                            </small>
+                            <strong class="fs-5">@Model.BookName</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- المرفق -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white py-3">
+                <h6 class="mb-0 fw-bold">
+                    <i class="fas fa-paperclip text-primary me-2"></i>
+                    المرفق
+                </h6>
+            </div>
+            <div class="card-body">
+                @if (Model.HasAttachment)
+                {
+                    <div class="attachment-viewer">
+                        <i class="fas @Model.AttachmentIcon fa-4x mb-3"
+                           style="color: @(Model.AttachmentType?.Contains("pdf") == true ? "#dc3545" : "#5A67D8");"></i>
+                        <h5 class="fw-bold mb-2">@Model.AttachmentName</h5>
+                        <p class="text-muted mb-3">
+                            <span class="badge bg-secondary">
+                                <i class="fas fa-file me-1"></i>
+                                @(Model.AttachmentType?.Split('/').Last().ToUpper() ?? "ملف")
+                            </span>
+                            <span class="badge bg-info">
+                                <i class="fas fa-weight me-1"></i>
+                                <span class="en-numbers">@Model.AttachmentSizeText</span>
+                            </span>
+                        </p>
+                        <div class="d-flex justify-content-center gap-2 flex-wrap">
+                            <a href="@Url.Action("ViewAttachment", new { id = Model.Id })"
+                               target="_blank" class="btn btn-info action-btn">
+                                <i class="fas fa-eye me-2"></i>عرض في المتصفح
+                            </a>
+                            <a href="@Url.Action("DownloadAttachment", new { id = Model.Id })"
+                               class="btn btn-primary action-btn">
+                                <i class="fas fa-download me-2"></i>تحميل
+                            </a>
+                        </div>
+                    </div>
+
+                    @if (Model.AttachmentType?.Contains("image") == true)
+                    {
+                        <div class="mt-3 text-center">
+                            <img src="@Url.Action("ViewAttachment", new { id = Model.Id })"
+                                 alt="@Model.AttachmentName"
+                                 class="img-fluid rounded shadow"
+                                 style="max-height: 500px; cursor: zoom-in;"
+                                 onclick="window.open(this.src, '_blank')" />
+                        </div>
+                    }
+                    else if (Model.AttachmentType?.Contains("pdf") == true)
+                    {
+                        <div class="mt-3">
+                            <embed src="@Url.Action("ViewAttachment", new { id = Model.Id })"
+                                   type="application/pdf"
+                                   width="100%"
+                                   height="600px"
+                                   class="rounded shadow" />
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="text-center py-5 text-muted">
+                        <i class="fas fa-file-slash fa-4x mb-3"></i>
+                        <p class="mb-0">لا يوجد مرفق لهذا الكتاب</p>
+                        <small>يمكنك إضافة مرفق من زر "تعديل"</small>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- الملاحظات -->
+        @if (!string.IsNullOrEmpty(Model.Notes))
+        {
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white py-3">
+                    <h6 class="mb-0 fw-bold">
+                        <i class="fas fa-sticky-note text-warning me-2"></i>
+                        الملاحظات
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning mb-0">
+                        <i class="fas fa-comment me-2"></i>
+                        @Model.Notes
+                    </div>
+                </div>
+            </div>
+        }
+
+        <!-- الكتاب القديم (إن كان مجدداً) -->
+        @if (Model.RenewedFromBook != null)
+        {
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white py-3">
+                    <h6 class="mb-0 fw-bold">
+                        <i class="fas fa-history text-info me-2"></i>
+                        هذا الكتاب مُجدَّد من
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <a href="@Url.Action("Details", new { id = Model.RenewedFromBook.Id })"
+                       class="d-block text-decoration-none">
+                        <div class="alert alert-info mb-0">
+                            <div class="d-flex align-items-center gap-3">
+                                <i class="fas fa-book fa-2x"></i>
+                                <div class="flex-grow-1">
+                                    <strong class="d-block">@Model.RenewedFromBook.BookName</strong>
+                                    <small>
+                                        <span class="font-monospace en-numbers">@Model.RenewedFromBook.InternalNumber</span>
+                                        |
+                                        تاريخ: <span class="en-numbers">@Model.RenewedFromBook.BookDate.ToString("yyyy/MM/dd")</span>
+                                    </small>
+                                </div>
+                                <i class="fas fa-arrow-left"></i>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- الجانب الأيسر -->
+    <div class="col-lg-4">
+
+        <!-- التواريخ -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white py-3">
+                <h6 class="mb-0 fw-bold">
+                    <i class="fas fa-calendar-alt text-success me-2"></i>
+                    التواريخ
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="timeline-item">
+                    <small class="text-muted d-block">
+                        <i class="fas fa-file-alt me-1"></i>تاريخ الكتاب
+                    </small>
+                    <strong class="en-numbers fs-6">@Model.BookDate.ToString("yyyy/MM/dd")</strong>
+                    <br>
+                    <small class="text-muted">
+                        @Model.BookDate.ToString("dddd, MMMM d, yyyy",
+                        new System.Globalization.CultureInfo("ar-SA"))
+                    </small>
+                </div>
+
+                @if (Model.HasExpiry && Model.ExpiryDate.HasValue)
+                {
+                    <div class="timeline-item" style="border-color: @Model.StatusColor;">
+                        <small class="text-muted d-block">
+                            <i class="fas fa-calendar-times me-1"></i>تاريخ الانتهاء
+                        </small>
+                        <strong class="en-numbers fs-6" style="color: @Model.StatusColor;">
+                            @Model.ExpiryDate.Value.ToString("yyyy/MM/dd")
+                        </strong>
+                        <br>
+                        <span class="badge mt-1" style="background: @Model.StatusColor; color: white;">
+                            <i class="fas @Model.StatusIcon me-1"></i>
+                            @Model.ExpiryMessage
+                        </span>
+                    </div>
+                }
+                else
+                {
+                    <div class="timeline-item info">
+                        <small class="text-muted d-block">
+                            <i class="fas fa-infinity me-1"></i>الصلاحية
+                        </small>
+                        <strong>بدون تاريخ انتهاء</strong>
+                        <br>
+                        <small class="text-muted">كتاب دائم لا يحتاج تجديد</small>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- المبلغ المالي -->
+        @if (Model.Amount.HasValue && Model.Amount.Value > 0)
+        {
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white py-3">
+                    <h6 class="mb-0 fw-bold">
+                        <i class="fas fa-money-bill-wave text-success me-2"></i>
+                        المبلغ المالي
+                    </h6>
+                </div>
+                <div class="card-body text-center">
+                    <div class="info-box success">
+                        <small class="text-muted d-block">إجمالي المبلغ</small>
+                        <div class="amount-display text-success">
+                            @Model.Amount.Value.ToString("N0")
+                        </div>
+                        <small class="text-muted">دينار عراقي</small>
+                    </div>
+                    @if (Model.ExpenseId.HasValue)
+                    {
+                        <div class="alert alert-success mt-3 mb-0 py-2 small">
+                            <i class="fas fa-check-circle me-1"></i>
+                            <strong>تم تسجيله في المحاسبة</strong>
+                            <br>
+                            <a href="/Accounting/Expenses" class="text-decoration-none">
+                                <i class="fas fa-external-link-alt me-1"></i>
+                                عرض في المصاريف
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+
+        <!-- معلومات النظام -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white py-3">
+                <h6 class="mb-0 fw-bold">
+                    <i class="fas fa-info text-secondary me-2"></i>
+                    معلومات النظام
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-2">
+                    <small class="text-muted d-block">
+                        <i class="fas fa-calendar-plus me-1"></i>تاريخ الإنشاء
+                    </small>
+                    <strong class="en-numbers small">
+                        @Model.CreatedAt.ToString("yyyy/MM/dd HH:mm")
+                    </strong>
+                </div>
+                @if (!string.IsNullOrEmpty(Model.CreatedBy))
+                {
+                    <div class="mb-2">
+                        <small class="text-muted d-block">
+                            <i class="fas fa-user me-1"></i>أنشأه
+                        </small>
+                        <strong>@Model.CreatedBy</strong>
+                    </div>
+                }
+                @if (Model.UpdatedAt.HasValue)
+                {
+                    <hr>
+                    <div class="mb-2">
+                        <small class="text-muted d-block">
+                            <i class="fas fa-edit me-1"></i>آخر تحديث
+                        </small>
+                        <strong class="en-numbers small">
+                            @Model.UpdatedAt.Value.ToString("yyyy/MM/dd HH:mm")
+                        </strong>
+                    </div>
+                    @if (!string.IsNullOrEmpty(Model.UpdatedBy))
+                    {
+                        <div>
+                            <small class="text-muted d-block">
+                                <i class="fas fa-user-edit me-1"></i>حدّثه
+                            </small>
+                            <strong>@Model.UpdatedBy</strong>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal fade" id="bookModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg" id="modalContent"></div>
+    </div>
+</div>
+
+<form id="antiForgeryForm">@Html.AntiForgeryToken()</form>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // تعديل
+            $('.btn-edit').on('click', function() {
+                loadModal('@Url.Action("Edit")/' + $(this).data('id'));
+            });
+
+            // تجديد
+            $('.btn-renew').on('click', function() {
+                loadModal('@Url.Action("Renew")/' + $(this).data('id'));
+            });
+
+            function loadModal(url) {
+                document.getElementById('modalContent').innerHTML = `
+                            <div class="modal-body text-center py-5">
+                                <div class="spinner-border text-primary" style="width:3rem;height:3rem"></div>
+                                <p class="mt-3 fw-bold">جارِ التحميل...</p>
+                            </div>`;
+                var modal = new bootstrap.Modal(document.getElementById('bookModal'));
+                modal.show();
+
+                fetch(url)
+                    .then(r => r.text())
+                    .then(html => {
+                        document.getElementById('modalContent').innerHTML = html;
+                        initForm();
+                    });
+            }
+
+            function initForm() {
+                var form = document.getElementById('bookForm');
+                if (!form) return;
+
+                // Toggle expiry date
+                var hasExpiryCheckbox = form.querySelector('[name="HasExpiry"]');
+                var expiryDateContainer = form.querySelector('#expiryDateContainer');
+
+                if (hasExpiryCheckbox && expiryDateContainer) {
+                    hasExpiryCheckbox.addEventListener('change', function() {
+                        expiryDateContainer.style.display = this.checked ? 'block' : 'none';
+                    });
+                    expiryDateContainer.style.display = hasExpiryCheckbox.checked ? 'block' : 'none';
+                }
+
+                // Submit
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    var btn = form.querySelector('[type="submit"]');
+                    var original = btn.innerHTML;
+                    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>جارِ الحفظ...';
+                    btn.disabled = true;
+
+                    fetch(form.getAttribute('action'), {
+                        method: 'POST',
+                        body: new FormData(form)
+                    })
+                        .then(r => r.json())
+                        .then(res => {
+                            if (res.success) {
+                                bootstrap.Modal.getInstance(document.getElementById('bookModal')).hide();
+                                Swal.fire({
+                                    icon: 'success', title: '✅ تم', text: res.message,
+                                    timer: 2000, customClass: { popup: 'swal2-rtl' }
+                                }).then(() => location.reload());
+                            } else {
+                                var errHtml = res.errors?.length
+                                    ? '<ul class="text-start mt-2">' + res.errors.map(e => `<li>${e}</li>`).join('') + '</ul>'
+                                    : '';
+                                Swal.fire({
+                                    icon: 'error', title: 'فشل', html: res.message + errHtml,
+                                    customClass: { popup: 'swal2-rtl' }
+                                });
+                                btn.innerHTML = original;
+                                btn.disabled = false;
+                            }
+                        });
+                });
+            }
+        });
+    </script>
+}

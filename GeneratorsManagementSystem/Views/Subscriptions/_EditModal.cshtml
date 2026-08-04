@@ -1,0 +1,206 @@
+﻿@model GeneratorsManagementSystem.Models.Subscription
+@{
+    var subscribers = ViewBag.Subscribers as List<GeneratorsManagementSystem.Models.Subscriber>;
+    var generators = ViewBag.Generators as List<GeneratorsManagementSystem.Models.Generator>;
+}
+
+<form id="subscriptionForm" asp-action="Edit" method="post">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="Id" />
+    <input type="hidden" asp-for="ContractNumber" />
+    <input type="hidden" asp-for="SubscriberId" />
+    <input type="hidden" asp-for="GeneratorId" />
+    <input type="hidden" asp-for="Status" />
+    <input type="hidden" asp-for="CreatedAt" />
+    <input type="hidden" asp-for="CreatedBy" />
+
+    <div class="modal-header text-white py-3"
+         style="background:linear-gradient(135deg,#38A169,#48BB78)">
+        <div class="d-flex align-items-center gap-3 flex-grow-1">
+            <div class="bg-white bg-opacity-25 rounded-circle p-2 d-flex align-items-center justify-content-center"
+                 style="width:50px;height:50px">
+                <i class="fas fa-edit fa-lg"></i>
+            </div>
+            <div>
+                <h5 class="modal-title fw-800 mb-0">تعديل العقد</h5>
+                <small class="opacity-75 font-monospace">@Model.ContractNumber</small>
+            </div>
+        </div>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+    </div>
+
+    <div class="modal-body p-4" style="max-height:70vh;overflow-y:auto">
+
+        <!-- المشترك والمولد (للعرض فقط) -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-6">
+                <div class="alert alert-info mb-0">
+                    <small class="text-muted d-block">المشترك</small>
+                    <strong>@Model.Subscriber?.FullName</strong>
+                    <br />
+                    <small class="font-monospace">@Model.Subscriber?.SubscriberNumber</small>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="alert alert-warning mb-0">
+                    <small class="text-muted d-block">المولد</small>
+                    <strong>@Model.Generator?.Name</strong>
+                    <br />
+                    <small class="font-monospace">@Model.Generator?.GeneratorNumber</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- بيانات الاشتراك -->
+        <div class="mb-4">
+            <div class="d-flex align-items-center gap-2 py-2 px-3 rounded-top text-white fw-bold"
+                 style="background:linear-gradient(135deg,#D69E2E,#F6AD55)">
+                <i class="fas fa-bolt"></i>
+                <span>البيانات المالية</span>
+            </div>
+            <div class="p-3 border border-top-0 rounded-bottom bg-white">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">نوع الاشتراك</label>
+                        <select asp-for="SubscriptionType" class="form-select">
+                            <option value="1">شهري</option>
+                            <option value="2">ربع سنوي</option>
+                            <option value="3">نصف سنوي</option>
+                            <option value="4">سنوي</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">يوم الاستحقاق</label>
+                        <input asp-for="DueDay" type="number" min="1" max="28" class="form-control" />
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">عدد الأمبير</label>
+                        <div class="input-group">
+                            <input asp-for="Ampere" type="number" step="0.5" min="0" class="form-control" />
+                            <span class="input-group-text">A</span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">سعر الأمبير</label>
+                        <div class="input-group">
+                            <input asp-for="PricePerAmpere" type="number" step="1000" class="form-control" />
+                            <span class="input-group-text">د.ع</span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">رسوم ثابتة</label>
+                        <div class="input-group">
+                            <input asp-for="FixedFee" type="number" min="0" class="form-control" />
+                            <span class="input-group-text">د.ع</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">رسوم التركيب</label>
+                        <div class="input-group">
+                            <input asp-for="InstallationFee" type="number" min="0" class="form-control" />
+                            <span class="input-group-text">د.ع</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">الخصم الشهري</label>
+                        <div class="input-group">
+                            <input asp-for="MonthlyDiscount" type="number" min="0" class="form-control" />
+                            <span class="input-group-text">د.ع</span>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="monthly-amount-box">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="text-muted small mb-1">
+                                        <i class="fas fa-calculator me-2"></i>
+                                        المبلغ الشهري المحسوب
+                                    </div>
+                                    <div class="small text-muted" id="calculationFormula">
+                                        (الأمبير × سعر الأمبير) + الرسوم الثابتة - الخصم
+                                    </div>
+                                </div>
+                                <div class="text-end">
+                                    <div id="calculatedAmount"
+                                         class="calculated-amount"
+                                         style="direction:ltr;">
+                                        0
+                                    </div>
+                                    <div class="text-muted fw-bold">د.ع / شهرياً</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- الكابينة -->
+        <div class="mb-4">
+            <div class="d-flex align-items-center gap-2 py-2 px-3 rounded-top text-white fw-bold"
+                 style="background:linear-gradient(135deg,#805AD5,#B794F4)">
+                <i class="fas fa-cog"></i>
+                <span>الكابينة</span>
+            </div>
+            <div class="p-3 border border-top-0 rounded-bottom bg-white">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">رقم الكابينة</label>
+                        <input asp-for="CabinetNumber" class="form-control" />
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">رقم الدورة</label>
+                        <input asp-for="CircuitNumber" class="form-control" />
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">رقم العداد</label>
+                        <input asp-for="MeterNumber" class="form-control" />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- التواريخ -->
+        <div class="mb-4">
+            <div class="d-flex align-items-center gap-2 py-2 px-3 rounded-top text-white fw-bold"
+                 style="background:linear-gradient(135deg,#38A169,#48BB78)">
+                <i class="fas fa-calendar-alt"></i>
+                <span>التواريخ</span>
+            </div>
+            <div class="p-3 border border-top-0 rounded-bottom bg-white">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">تاريخ البداية</label>
+                        <input asp-for="StartDate" type="date" class="form-control" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">تاريخ الانتهاء</label>
+                        <input asp-for="EndDate" type="date" class="form-control" />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ملاحظات -->
+        <div>
+            <div class="d-flex align-items-center gap-2 py-2 px-3 rounded-top text-white fw-bold"
+                 style="background:linear-gradient(135deg,#718096,#A0AEC0)">
+                <i class="fas fa-sticky-note"></i>
+                <span>ملاحظات</span>
+            </div>
+            <div class="p-3 border border-top-0 rounded-bottom bg-white">
+                <textarea asp-for="Notes" class="form-control" rows="3"></textarea>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="modal-footer bg-light">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+            <i class="fas fa-times me-2"></i>إلغاء
+        </button>
+        <button type="submit" class="btn btn-success btn-lg px-5">
+            <i class="fas fa-save me-2"></i>حفظ التغييرات
+        </button>
+    </div>
+</form>

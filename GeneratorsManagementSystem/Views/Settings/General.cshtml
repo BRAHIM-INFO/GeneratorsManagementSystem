@@ -1,0 +1,317 @@
+﻿@model GeneratorsManagementSystem.Models.ViewModels.Settings.GeneralSettingsViewModel
+@{
+    ViewData["Title"] = "الإعدادات العامة";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/settings.css" />
+}
+
+<div class="settings-page">
+    <!-- Page Header -->
+    <div class="page-header d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="page-title">
+                <i class="fas fa-cog text-purple"></i>
+                الإعدادات العامة
+            </h2>
+            <p class="page-subtitle text-muted mb-0">إدارة الإعدادات الأساسية للنظام</p>
+        </div>
+        <a href="@Url.Action("Index")" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-right"></i> رجوع
+        </a>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-triangle"></i> @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <form asp-action="General" method="post" id="generalSettingsForm">
+        @Html.AntiForgeryToken()
+
+        <!-- Tabs -->
+        <ul class="nav nav-tabs settings-tabs mb-4" id="settingsTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#system-info" type="button">
+                    <i class="fas fa-info-circle"></i> معلومات النظام
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#currency" type="button">
+                    <i class="fas fa-money-bill"></i> العملة والتنسيقات
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#localization" type="button">
+                    <i class="fas fa-globe"></i> اللغة والمنطقة الزمنية
+                </button>
+            </li>
+          @*   <li class="nav-item" role="presentation">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#session" type="button">
+                    <i class="fas fa-clock"></i> الجلسة والأمان
+                </button>
+            </li> *@
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#display" type="button">
+                    <i class="fas fa-desktop"></i> عرض البيانات
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content">
+            <!-- Tab 1: معلومات النظام -->
+            <div class="tab-pane fade show active" id="system-info">
+                <div class="settings-card">
+                    <div class="settings-card-header bg-primary-gradient">
+                        <h5><i class="fas fa-info-circle"></i> معلومات النظام الأساسية</h5>
+                    </div>
+                    <div class="settings-card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label asp-for="SystemName" class="form-label"></label>
+                                <input asp-for="SystemName" class="form-control" />
+                                <span asp-validation-for="SystemName" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-3">
+                                <label asp-for="SystemShortName" class="form-label"></label>
+                                <input asp-for="SystemShortName" class="form-control" />
+                            </div>
+                            <div class="col-md-3">
+                                <label asp-for="Version" class="form-label"></label>
+                                <input asp-for="Version" class="form-control" />
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="SupportEmail" class="form-label"></label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                                    <input asp-for="SupportEmail" class="form-control" placeholder="support@example.com" />
+                                </div>
+                                <span asp-validation-for="SupportEmail" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="SupportPhone" class="form-label"></label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-phone"></i></span>
+                                    <input asp-for="SupportPhone" class="form-control" placeholder="+218 XX XXX XXXX" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 2: العملة والتنسيقات -->
+            <div class="tab-pane fade" id="currency">
+                <div class="settings-card">
+                    <div class="settings-card-header bg-success-gradient">
+                        <h5><i class="fas fa-money-bill"></i> العملة وتنسيق الأرقام</h5>
+                    </div>
+                    <div class="settings-card-body">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label asp-for="Currency" class="form-label"></label>
+                                <select asp-for="Currency" class="form-select">
+                                    <option value="LYD">دينار ليبي (LYD)</option>
+                                    <option value="USD">دولار أمريكي (USD)</option>
+                                    <option value="EUR">يورو (EUR)</option>
+                                    <option value="SAR">ريال سعودي (SAR)</option>
+                                    <option value="AED">درهم إماراتي (AED)</option>
+                                    <option value="EGP">جنيه مصري (EGP)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="CurrencySymbol" class="form-label"></label>
+                                <input asp-for="CurrencySymbol" class="form-control" />
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="CurrencyPosition" class="form-label"></label>
+                                <select asp-for="CurrencyPosition" class="form-select">
+                                    <option value="before">قبل الرقم ($100)</option>
+                                    <option value="after">بعد الرقم (100 د.ل)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="DecimalPlaces" class="form-label"></label>
+                                <input asp-for="DecimalPlaces" type="number" class="form-control" min="0" max="4" />
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="ThousandSeparator" class="form-label"></label>
+                                <select asp-for="ThousandSeparator" class="form-select">
+                                    <option value=",">فاصلة (1,000)</option>
+                                    <option value=".">نقطة (1.000)</option>
+                                    <option value=" ">مسافة (1 000)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label asp-for="DecimalSeparator" class="form-label"></label>
+                                <select asp-for="DecimalSeparator" class="form-select">
+                                    <option value=".">نقطة (100.50)</option>
+                                    <option value=",">فاصلة (100,50)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="preview-box mt-4">
+                            <label class="form-label">معاينة:</label>
+                            <div class="preview-value" id="currencyPreview">1,234.56 د.ل</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 3: اللغة والمنطقة الزمنية -->
+            <div class="tab-pane fade" id="localization">
+                <div class="settings-card">
+                    <div class="settings-card-header bg-info-gradient">
+                        <h5><i class="fas fa-globe"></i> اللغة والمنطقة الزمنية</h5>
+                    </div>
+                    <div class="settings-card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label asp-for="DefaultLanguage" class="form-label"></label>
+                                <select asp-for="DefaultLanguage" class="form-select">
+                                    <option value="ar">العربية</option>
+                                    <option value="en">English</option>
+                                    <option value="fr">Français</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="TextDirection" class="form-label"></label>
+                                <select asp-for="TextDirection" class="form-select">
+                                    <option value="rtl">من اليمين لليسار (RTL)</option>
+                                    <option value="ltr">من اليسار لليمين (LTR)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="TimeZone" class="form-label"></label>
+                                <select asp-for="TimeZone" class="form-select">
+                                    <option value="Africa/Tripoli">طرابلس (GMT+2)</option>
+                                    <option value="Asia/Riyadh">الرياض (GMT+3)</option>
+                                    <option value="Asia/Dubai">دبي (GMT+4)</option>
+                                    <option value="Africa/Cairo">القاهرة (GMT+2)</option>
+                                    <option value="UTC">UTC (GMT+0)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Calendar" class="form-label"></label>
+                                <select asp-for="Calendar" class="form-select">
+                                    <option value="gregorian">ميلادي</option>
+                                    <option value="hijri">هجري</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="DateFormat" class="form-label"></label>
+                                <select asp-for="DateFormat" class="form-select">
+                                    <option value="yyyy/MM/dd">2026/07/22</option>
+                                    <option value="dd/MM/yyyy">22/07/2026</option>
+                                    <option value="MM/dd/yyyy">07/22/2026</option>
+                                    <option value="dd-MM-yyyy">22-07-2026</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="TimeFormat" class="form-label"></label>
+                                <select asp-for="TimeFormat" class="form-select">
+                                    <option value="HH:mm">24 ساعة (14:30)</option>
+                                    <option value="hh:mm tt">12 ساعة (02:30 PM)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 4: الجلسة والأمان -->
+            <div class="tab-pane fade" id="session">
+                <div class="settings-card">
+                    <div class="settings-card-header bg-warning-gradient">
+                        <h5><i class="fas fa-shield-alt"></i> إعدادات الجلسة والأمان</h5>
+                    </div>
+                    <div class="settings-card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label asp-for="SessionTimeout" class="form-label"></label>
+                                <div class="input-group">
+                                    <input asp-for="SessionTimeout" type="number" class="form-control" min="5" max="1440" />
+                                    <span class="input-group-text">دقيقة</span>
+                                </div>
+                                <small class="text-muted">من 5 دقائق إلى 24 ساعة</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="MinPasswordLength" class="form-label"></label>
+                                <input asp-for="MinPasswordLength" type="number" class="form-control" min="4" max="20" />
+                            </div>
+                            <div class="col-12">
+                                <div class="form-check form-switch">
+                                    <input asp-for="AutoLogout" class="form-check-input" />
+                                    <label asp-for="AutoLogout" class="form-check-label"></label>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-check form-switch">
+                                    <input asp-for="AllowSelfRegistration" class="form-check-input" />
+                                    <label asp-for="AllowSelfRegistration" class="form-check-label"></label>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-check form-switch">
+                                    <input asp-for="AutoActivateAccounts" class="form-check-input" />
+                                    <label asp-for="AutoActivateAccounts" class="form-check-label"></label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 5: عرض البيانات -->
+            <div class="tab-pane fade" id="display">
+                <div class="settings-card">
+                    <div class="settings-card-header bg-purple-gradient">
+                        <h5><i class="fas fa-desktop"></i> إعدادات العرض</h5>
+                    </div>
+                    <div class="settings-card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label asp-for="PageSize" class="form-label"></label>
+                                <select asp-for="PageSize" class="form-select">
+                                    <option value="10">10 عناصر</option>
+                                    <option value="15">15 عنصر</option>
+                                    <option value="25">25 عنصر</option>
+                                    <option value="50">50 عنصر</option>
+                                    <option value="100">100 عنصر</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Save Buttons -->
+        <div class="settings-actions mt-4">
+            <button type="submit" class="btn btn-purple btn-lg">
+                <i class="fas fa-save"></i> حفظ الإعدادات
+            </button>
+            <a href="@Url.Action("Index")" class="btn btn-outline-secondary btn-lg">
+                <i class="fas fa-times"></i> إلغاء
+            </a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/settings.js"></script>
+}

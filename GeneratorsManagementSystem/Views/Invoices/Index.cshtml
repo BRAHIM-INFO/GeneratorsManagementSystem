@@ -1,0 +1,243 @@
+﻿@model List<GeneratorsManagementSystem.Models.Invoice>
+@{
+    ViewData["Title"] = "الفواتير";
+    var stats = ViewBag.Stats as GeneratorsManagementSystem.Services.InvoiceStats;
+    var filter = ViewBag.CurrentFilter as string ?? "all";
+}
+
+<!-- HEADER -->
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <div>
+        <h4 class="fw-800 mb-1">
+            <i class="fas fa-file-invoice text-primary me-2"></i>
+            إدارة الفواتير
+        </h4>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0 small">
+                <li class="breadcrumb-item">
+                    <a href="@Url.Action("Index", "Dashboard")"><i class="fas fa-home"></i></a>
+                </li>
+                <li class="breadcrumb-item active">الفواتير</li>
+            </ol>
+        </nav>
+    </div>
+    <div class="d-flex gap-2">
+        <button class="btn btn-warning" id="btnGenerateMonthly">
+            <i class="fas fa-magic me-2"></i>توليد فواتير الشهر
+        </button>
+        <a href="@Url.Action("AlertsPage")" class="btn btn-outline-danger">
+            <i class="fas fa-bell me-2"></i>التنبيهات
+        </a>
+    </div>
+</div>
+
+<!-- FILTERS -->
+<div class="row g-3 mb-4">
+    <div class="col-lg-3 col-md-6">
+        <a href="?filter=all" class="text-decoration-none">
+            <div class="card border-0 shadow-sm h-100 @(filter == "all" ? "border-primary border-2" : "")">
+                <div class="card-body">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="rounded-3 p-3" style="background:#EBF4FF">
+                            <i class="fas fa-list fa-lg text-primary"></i>
+                        </div>
+                        <div>
+                            <small class="text-muted">جميع الفواتير</small>
+                            <h4 class="fw-900 mb-0 en-numbers">@stats?.Total</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <a href="?filter=unpaid" class="text-decoration-none">
+            <div class="card border-0 shadow-sm h-100 @(filter == "unpaid" ? "border-warning border-2" : "")">
+                <div class="card-body">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="rounded-3 p-3" style="background:#FFFAF0">
+                            <i class="fas fa-clock fa-lg text-warning"></i>
+                        </div>
+                        <div>
+                            <small class="text-muted">غير مدفوعة</small>
+                            <h4 class="fw-900 mb-0 text-warning en-numbers">
+                                @(stats?.Unpaid + stats?.PartiallyPaid ?? 0)
+                            </h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <a href="?filter=overdue" class="text-decoration-none">
+            <div class="card border-0 shadow-sm h-100 @(filter == "overdue" ? "border-danger border-2" : "")">
+                <div class="card-body">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="rounded-3 p-3" style="background:#FFF5F5">
+                            <i class="fas fa-exclamation-triangle fa-lg text-danger"></i>
+                        </div>
+                        <div>
+                            <small class="text-muted">متأخرة</small>
+                            <h4 class="fw-900 mb-0 text-danger en-numbers">@stats?.Overdue</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="rounded-3 p-3" style="background:#F0FFF4">
+                        <i class="fas fa-dollar-sign fa-lg text-success"></i>
+                    </div>
+                    <div>
+                        <small class="text-muted">إجمالي الديون</small>
+                        <h4 class="fw-900 mb-0 text-danger en-numbers">
+                            @stats?.TotalOutstanding.ToString("N0")
+                            <small class="fs-6">د.ع</small>
+                        </h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- TABLE -->
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white py-3">
+        <h6 class="mb-0 fw-bold">
+            <i class="fas fa-list me-2 text-primary"></i>
+            قائمة الفواتير
+            <span class="badge bg-primary ms-2 en-numbers">@Model.Count</span>
+        </h6>
+    </div>
+    <div class="card-body p-3">
+        <table id="invoicesTable" class="table table-hover align-middle" style="width:100%">
+            <thead class="table-light">
+                <tr>
+                    <th>رقم الفاتورة</th>
+                    <th>المشترك</th>
+                    <th>الفترة</th>
+                    <th>تاريخ الاستحقاق</th>
+                    <th>المبلغ</th>
+                    <th>المدفوع</th>
+                    <th>المتبقي</th>
+                    <th>الحالة</th>
+                    <th class="text-center">الإجراءات</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var inv in Model)
+                {
+                    <tr>
+                        <td>
+                            <span class="badge bg-light text-primary font-monospace en-numbers">
+                                @inv.InvoiceNumber
+                            </span>
+                        </td>
+                        <td>
+                            <strong>@inv.Subscriber?.FullName</strong>
+                            <br>
+                            <small class="text-muted font-monospace en-numbers">
+                                @inv.Subscriber?.SubscriberNumber
+                            </small>
+                        </td>
+                        <td>
+                            <small class="en-numbers">
+                                @inv.PeriodStart.ToString("yyyy/MM/dd")
+                                <br>→
+                                @inv.PeriodEnd.ToString("yyyy/MM/dd")
+                            </small>
+                        </td>
+                        <td>
+                            <span class="en-numbers @(inv.IsOverdue ? "text-danger fw-bold" : "")">
+                                @inv.DueDate.ToString("yyyy/MM/dd")
+                            </span>
+                            @if (inv.IsOverdue)
+                            {
+                                <br>
+                                <small class="badge bg-danger">
+                                    متأخرة @inv.DueDate يوم //.DaysOverdue يوم
+                                </small>
+                            }
+                        </td>
+                        <td>
+                            <strong class="en-numbers">@inv.TotalAmount.ToString("N0")</strong>
+                            <small class="text-muted">د.ع</small>
+                        </td>
+                        <td>
+                            <span class="text-success en-numbers">
+                                @inv.PaidAmount.ToString("N0")
+                            </span>
+                        </td>
+                        <td>
+                            <strong class="en-numbers @(inv.RemainingAmount > 0 ? "text-danger" : "text-success")">
+                                @inv.RemainingAmount.ToString("N0")
+                            </strong>
+                        </td>
+                        <td>
+                            <span class="badge @inv.StatusBadgeClass">@inv.StatusText</span>
+                        </td>
+                        <td class="text-center">
+                            <div class="btn-group">
+                                <a href="@Url.Action("Details", new { id = inv.Id })"
+                                   class="btn btn-sm btn-outline-primary" title="تفاصيل">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="@Url.Action("Print", new { id = inv.Id })"
+                                   target="_blank"
+                                   class="btn btn-sm btn-outline-info" title="طباعة">
+                                    <i class="fas fa-print"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<form id="antiForgeryForm">@Html.AntiForgeryToken()</form>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('#invoicesTable').DataTable({
+                language: { url: "//cdn.datatables.net/plug-ins/1.13.7/i18n/ar.json" },
+                order: [[3, 'asc']],
+                pageLength: 25
+            });
+
+            $('#btnGenerateMonthly').on('click', function () {
+                Swal.fire({
+                    icon: 'question',
+                    title: 'توليد فواتير الشهر',
+                    text: 'سيتم توليد فواتير للاشتراكات المستحقة اليوم',
+                    showCancelButton: true,
+                    confirmButtonText: 'توليد',
+                    cancelButtonText: 'إلغاء',
+                    confirmButtonColor: '#D69E2E',
+                    customClass: { popup: 'swal2-rtl' }
+                }).then(res => {
+                    if (res.isConfirmed) {
+                        $.post('@Url.Action("GenerateMonthly")', {
+                            __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                        }, function (r) {
+                            Swal.fire({
+                                icon: r.success ? 'success' : 'error',
+                                title: r.success ? 'تم' : 'فشل',
+                                text: r.message,
+                                customClass: { popup: 'swal2-rtl' }
+                            }).then(() => r.success && location.reload());
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+}

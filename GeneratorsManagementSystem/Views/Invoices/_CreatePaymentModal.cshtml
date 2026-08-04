@@ -1,0 +1,204 @@
+﻿@model GeneratorsManagementSystem.Models.Payment
+@{
+    var invoice = ViewBag.Invoice as GeneratorsManagementSystem.Models.Invoice;
+}
+
+<form id="paymentForm" asp-action="CreatePayment" method="post">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="InvoiceId" />
+    <input type="hidden" asp-for="SubscriberId" />
+
+    <div class="modal-header text-white py-3"
+         style="background:linear-gradient(135deg,#48BB78,#38A169)">
+        <div class="d-flex align-items-center gap-3 flex-grow-1">
+            <div class="bg-white bg-opacity-25 rounded-circle p-2 d-flex align-items-center justify-content-center"
+                 style="width:50px;height:50px">
+                <i class="fas fa-money-bill-wave fa-lg"></i>
+            </div>
+            <div>
+                <h5 class="modal-title fw-800 mb-0">تسجيل دفعة جديدة</h5>
+                <small class="opacity-75 font-monospace">@Model.ReceiptNumber</small>
+            </div>
+        </div>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+    </div>
+
+    <div class="modal-body p-4">
+        <!-- Invoice Info -->
+        <div class="card bg-light border-0 mb-4">
+            <div class="card-body p-3">
+                <div class="row g-2">
+                    <div class="col-md-6">
+                        <small class="text-muted d-block">المشترك</small>
+                        <strong>@invoice?.Subscriber?.FullName</strong>
+                    </div>
+                    <div class="col-md-6">
+                        <small class="text-muted d-block">رقم الفاتورة</small>
+                        <strong class="font-monospace" style="direction:ltr;display:inline-block">
+                            @invoice?.InvoiceNumber
+                        </strong>
+                    </div>
+                    <div class="col-md-4">
+                        <small class="text-muted d-block">المبلغ الإجمالي</small>
+                        <strong class="text-primary" style="direction:ltr;display:inline-block">
+                            @invoice?.TotalAmount.ToString("N0") د.ع
+                        </strong>
+                    </div>
+                    <div class="col-md-4">
+                        <small class="text-muted d-block">المدفوع سابقاً</small>
+                        <strong class="text-success" style="direction:ltr;display:inline-block">
+                            @invoice?.PaidAmount.ToString("N0") د.ع
+                        </strong>
+                    </div>
+                    <div class="col-md-4">
+                        <small class="text-muted d-block">المتبقي</small>
+                        <strong class="text-danger fs-5" style="direction:ltr;display:inline-block">
+                            @invoice?.RemainingAmount.ToString("N0") د.ع
+                        </strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center mb-4">
+            <div class="d-inline-block px-4 py-2 rounded-pill"
+                 style="background:#F0FFF4;border:2px dashed #48BB78">
+                <small class="text-muted d-block">رقم الإيصال (يتولد تلقائياً)</small>
+                <strong class="text-success fs-5 font-monospace">@Model.ReceiptNumber</strong>
+            </div>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label fw-bold">
+                    المبلغ <span class="text-danger">*</span>
+                </label>
+                <div class="input-group input-group-lg">
+                    <input asp-for="Amount" type="number" step="any" min="0.01"
+                           max="@invoice?.RemainingAmount"
+                           class="form-control text-center fw-bold text-success"
+                           style="direction:ltr;font-size:1.3rem"
+                           placeholder="أدخل المبلغ" />
+                    <span class="input-group-text bg-success text-white">د.ع</span>
+                </div>
+                <small class="text-muted">
+                    الحد الأقصى: <strong style="direction:ltr;display:inline-block">
+                    @invoice?.RemainingAmount.ToString("N0") د.ع
+                </strong>
+            </small>
+            <div class="mt-2 d-flex gap-2">
+                <button type="button" class="btn btn-sm btn-outline-success flex-grow-1 btn-quick-amount"
+                        data-amount="@invoice?.RemainingAmount">
+                    دفع الكل
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-primary flex-grow-1 btn-quick-amount"
+                        data-amount="@((invoice?.RemainingAmount ?? 0) / 2)">
+                    نصف المبلغ
+                </button>
+            </div>
+            <!-- أزرار مبالغ سريعة -->
+            <div class="mt-2 d-flex gap-1 flex-wrap">
+                <button type="button" class="btn btn-sm btn-outline-secondary btn-quick-amount"
+                        data-amount="10000">
+                    10,000
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-secondary btn-quick-amount"
+                        data-amount="25000">
+                    25,000
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-secondary btn-quick-amount"
+                        data-amount="50000">
+                    50,000
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-secondary btn-quick-amount"
+                        data-amount="100000">
+                    100,000
+                </button>
+            </div>
+        </div>
+            @* <div class="col-md-6">
+                <label class="form-label fw-bold">
+                    المبلغ <span class="text-danger">*</span>
+                </label>
+                <div class="input-group input-group-lg">
+                    <input asp-for="Amount" type="number" step="any" min="0.01"
+                           max="@invoice?.RemainingAmount"
+                           class="form-control text-center fw-bold text-success"
+                           style="direction:ltr;font-size:1.3rem"
+                           placeholder="أدخل المبلغ" />
+                    <span class="input-group-text bg-success text-white">د.ع</span>
+                </div>
+                <small class="text-muted">
+                    الحد الأقصى: <strong style="direction:ltr;display:inline-block">
+                        @invoice?.RemainingAmount.ToString("N0") د.ع
+                    </strong>
+                </small>
+                <div class="mt-2 d-flex gap-2">
+                    <button type="button" class="btn btn-sm btn-outline-success flex-grow-1 btn-quick-amount"
+                            data-amount="@invoice?.RemainingAmount">
+                        دفع الكل
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-primary flex-grow-1 btn-quick-amount"
+                            data-amount="@((invoice?.RemainingAmount ?? 0) / 2)">
+                        نصف المبلغ
+                    </button>
+                </div>
+            </div> *@
+
+            <div class="col-md-6">
+                <label class="form-label fw-bold">
+                    طريقة الدفع <span class="text-danger">*</span>
+                </label>
+                <select asp-for="PaymentMethod" class="form-select form-select-lg">
+                    <option value="1">💵 نقدي</option>
+                    <option value="2">🏦 تحويل بنكي</option>
+                    <option value="3">💳 بطاقة</option>
+                    <option value="4">📱 محفظة إلكترونية</option>
+                    <option value="5">📄 شيك</option>
+                    <option value="99">📌 أخرى</option>
+                </select>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label fw-bold">
+                    تاريخ الدفع <span class="text-danger">*</span>
+                </label>
+                <input asp-for="PaymentDate" type="date" class="form-control form-control-lg" />
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">المرجع (رقم شيك/تحويل)</label>
+                <input asp-for="Reference" class="form-control" placeholder="اختياري" />
+            </div>
+
+            <div class="col-12">
+                <label class="form-label">المُستلم للدفعة</label>
+                <input asp-for="ReceivedBy" class="form-control" placeholder="اتركه فارغاً لاستخدام اسمك" />
+            </div>
+
+            <div class="col-12">
+                <label class="form-label">ملاحظات</label>
+                <textarea asp-for="Notes" class="form-control" rows="2"
+                          placeholder="أي ملاحظات حول الدفعة..."></textarea>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-footer bg-light">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+            <i class="fas fa-times me-2"></i>إلغاء
+        </button>
+        <button type="submit" class="btn btn-success btn-lg px-5">
+            <i class="fas fa-save me-2"></i>تسجيل الدفعة
+        </button>
+    </div>
+</form>
+
+<script>
+    document.querySelectorAll('.btn-quick-amount').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var amount = parseFloat(this.getAttribute('data-amount'));
+            document.querySelector('[name="Amount"]').value = amount.toFixed(0);
+        });
+    });
+</script>

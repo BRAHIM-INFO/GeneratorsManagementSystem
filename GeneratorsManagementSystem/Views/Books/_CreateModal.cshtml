@@ -1,0 +1,209 @@
+﻿@model GeneratorsManagementSystem.Models.GeneratorBook
+
+<form id="bookForm" asp-action="Create" method="post" enctype="multipart/form-data">
+    @Html.AntiForgeryToken()
+
+    <div class="modal-header text-white py-3"
+         style="background:linear-gradient(135deg,#5A67D8,#7886E0)">
+        <div class="d-flex align-items-center gap-3 flex-grow-1">
+            <div class="bg-white bg-opacity-25 rounded-circle p-2 d-flex align-items-center justify-content-center"
+                 style="width:50px;height:50px">
+                <i class="fas fa-book fa-lg"></i>
+            </div>
+            <div>
+                <h5 class="modal-title fw-800 mb-0">إضافة كتاب جديد</h5>
+                <small class="opacity-75 font-monospace">@Model.InternalNumber</small>
+            </div>
+        </div>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+    </div>
+
+    <div class="modal-body p-4" style="max-height: calc(100vh - 250px); overflow-y: auto;">
+        <!-- الرقم الداخلي -->
+        <div class="text-center mb-4">
+            <div class="d-inline-block px-4 py-2 rounded-pill"
+                 style="background:#EBF4FF;border:2px dashed #5A67D8">
+                <small class="text-muted d-block">الرقم الداخلي (يتولد تلقائياً)</small>
+                <strong class="text-primary fs-5 font-monospace">@Model.InternalNumber</strong>
+            </div>
+        </div>
+
+        <!-- ─── البيانات الأساسية ─── -->
+        <div class="mb-4">
+            <div class="d-flex align-items-center gap-2 py-2 px-3 rounded-top text-white fw-bold"
+                 style="background:linear-gradient(135deg,#5A67D8,#7886E0)">
+                <i class="fas fa-file-alt"></i>
+                <span>البيانات الأساسية</span>
+                <span class="ms-auto small opacity-75">* الحقول المطلوبة</span>
+            </div>
+            <div class="p-3 border border-top-0 rounded-bottom bg-white">
+                <div class="row g-3">
+                    <div class="col-md-8">
+                        <label class="form-label fw-bold">
+                            اسم الكتاب <span class="text-danger">*</span>
+                        </label>
+                        <input asp-for="BookName" class="form-control"
+                               placeholder="مثال: رخصة تشغيل مولد كهربائي"
+                               autofocus required />
+                    </div>
+
+                    @* <div class="col-md-4">
+                        <label class="form-label fw-bold">
+                            التصنيف <span class="text-danger">*</span>
+                        </label>
+                        <select asp-for="Category" class="form-select">
+                            <option value="1">🪪 رخصة</option>
+                            <option value="2">📜 شهادة</option>
+                            <option value="3">📝 عقد</option>
+                            <option value="4">🖋️ ترخيص</option>
+                            <option value="5">🛡️ تأمين</option>
+                            <option value="6">🧾 فاتورة رسمية</option>
+                            <option value="7">✉️ مراسلة</option>
+                            <option value="8">⚖️ قرار</option>
+                            <option value="99" selected>📁 أخرى</option>
+                        </select>
+                    </div> *@
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">
+                            الجهة المصدرة <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light">
+                                <i class="fas fa-building text-primary"></i>
+                            </span>
+                            <input asp-for="IssuingAuthority" class="form-control"
+                                   placeholder="مثال: وزارة الكهرباء" required />
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">
+                            العدد (رقم الكتاب الرسمي) <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light">
+                                <i class="fas fa-hashtag text-primary"></i>
+                            </span>
+                            <input asp-for="BookNumber" class="form-control"
+                                   placeholder="مثال: 12345/2026" required />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ─── التواريخ ─── -->
+        <div class="mb-4">
+            <div class="d-flex align-items-center gap-2 py-2 px-3 rounded-top text-white fw-bold"
+                 style="background:linear-gradient(135deg,#38A169,#48BB78)">
+                <i class="fas fa-calendar-alt"></i>
+                <span>التواريخ</span>
+            </div>
+            <div class="p-3 border border-top-0 rounded-bottom bg-white">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">
+                            تاريخ الكتاب <span class="text-danger">*</span>
+                        </label>
+                        <input asp-for="BookDate" type="date" class="form-control form-control-lg" required />
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">
+                            تاريخ الانتهاء
+                            <small class="text-muted">(اختياري - "ليس شرطاً")</small>
+                        </label>
+                        <div class="form-check form-switch fs-5 mb-2">
+                            <input class="form-check-input" type="checkbox" asp-for="HasExpiry" role="switch" />
+                            <label class="form-check-label fw-bold" asp-for="HasExpiry">
+                                يوجد تاريخ انتهاء
+                            </label>
+                        </div>
+                        <div id="expiryDateContainer" style="display: none;">
+                            <input asp-for="ExpiryDate" type="date" class="form-control form-control-lg" />
+                            <small class="text-warning">
+                                <i class="fas fa-bell me-1"></i>
+                                سيتم تنبيهك قبل الانتهاء بـ 30, 15, 7, 3, 1 يوم
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ─── المبلغ المالي ─── -->
+        <div class="mb-4">
+            <div class="d-flex align-items-center gap-2 py-2 px-3 rounded-top text-white fw-bold"
+                 style="background:linear-gradient(135deg,#DD6B20,#ED8936)">
+                <i class="fas fa-money-bill-wave"></i>
+                <span>المبلغ المالي</span>
+                <span class="ms-auto small opacity-75">اختياري</span>
+            </div>
+            <div class="p-3 border border-top-0 rounded-bottom bg-white">
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label">
+                            المبلغ
+                            <small class="text-muted">(اترك فارغاً إن لم يوجد)</small>
+                        </label>
+                        <div class="input-group input-group-lg">
+                            <input asp-for="Amount" type="number" step="any" min="0"
+                                   class="form-control text-center fw-bold"
+                                   style="direction:ltr" placeholder="0" />
+                            <span class="input-group-text bg-warning text-white">د.ع</span>
+                        </div>
+                        <div class="alert alert-info py-2 mt-2 mb-0 small">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>ملاحظة:</strong> عند إدخال مبلغ، سيتم إنشاء
+                            <strong>مصروف تلقائي</strong> في المحاسبة تحت فئة
+                            <strong>"مصاريف إدارية"</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ─── المرفق ─── -->
+        <div class="mb-4">
+            <div class="d-flex align-items-center gap-2 py-2 px-3 rounded-top text-white fw-bold"
+                 style="background:linear-gradient(135deg,#805AD5,#B794F4)">
+                <i class="fas fa-paperclip"></i>
+                <span>إرفاق الكتاب</span>
+                <span class="ms-auto small opacity-75">اختياري</span>
+            </div>
+            <div class="p-3 border border-top-0 rounded-bottom bg-white">
+                <label class="form-label">اختر ملف</label>
+                <input type="file" name="attachment" class="form-control form-control-lg"
+                       accept=".pdf,.jpg,.jpeg,.png" />
+                <small class="text-muted">
+                    <i class="fas fa-info-circle me-1"></i>
+                    الأنواع المسموحة: PDF, JPG, PNG - الحد الأقصى: <strong class="en-numbers">10 MB</strong>
+                </small>
+                <div id="filePreview"></div>
+            </div>
+        </div>
+
+        <!-- ─── الملاحظات ─── -->
+        <div class="mb-3">
+            <div class="d-flex align-items-center gap-2 py-2 px-3 rounded-top text-white fw-bold"
+                 style="background:linear-gradient(135deg,#718096,#A0AEC0)">
+                <i class="fas fa-sticky-note"></i>
+                <span>ملاحظات</span>
+            </div>
+            <div class="p-3 border border-top-0 rounded-bottom bg-white">
+                <textarea asp-for="Notes" class="form-control" rows="3"
+                          placeholder="أي ملاحظات إضافية حول الكتاب..."></textarea>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-footer bg-light">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+            <i class="fas fa-times me-2"></i>إلغاء
+        </button>
+        <button type="submit" class="btn btn-primary btn-lg px-5">
+            <i class="fas fa-save me-2"></i>حفظ الكتاب
+        </button>
+    </div>
+</form>

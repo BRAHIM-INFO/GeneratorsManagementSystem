@@ -1,0 +1,637 @@
+﻿@model List<GeneratorsManagementSystem.Models.Subscriber>
+@{
+    ViewData["Title"] = "إدارة المشتركين";
+    var stats = ViewBag.Stats as GeneratorsManagementSystem.Services.SubscriberStats;
+}
+
+@section Styles {
+    <style>
+        .stat-card {
+            border: none;
+            border-radius: 16px;
+            transition: all 0.3s;
+            overflow: hidden;
+        }
+
+            .stat-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            }
+
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .subscriber-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #5A67D8, #7886E0);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .table-modern thead th {
+            background: #f8f9fc;
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: #4a5568;
+            border-bottom: 2px solid #e2e8f0;
+            padding: 15px 12px;
+        }
+
+        .table-modern tbody tr {
+            transition: all 0.2s;
+        }
+
+            .table-modern tbody tr:hover {
+                background: #f8f9fc;
+            }
+
+        .btn-action {
+            width: 34px;
+            height: 34px;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+        }
+
+        /* ═══ Modal Scrolling ═══ */
+        #subscriberModal .modal-dialog {
+            max-height: 95vh;
+            margin: 20px auto;
+        }
+
+        #subscriberModal .modal-content {
+            max-height: calc(95vh - 40px);
+            display: flex;
+            flex-direction: column;
+        }
+
+        #subscriberModal .modal-header,
+        #subscriberModal .modal-footer {
+            flex-shrink: 0;
+        }
+
+        #subscriberModal .modal-body {
+            overflow-y: auto;
+            flex-grow: 1;
+        }
+
+            #subscriberModal .modal-body::-webkit-scrollbar {
+                width: 10px;
+            }
+
+            #subscriberModal .modal-body::-webkit-scrollbar-track {
+                background: #f8f9fc;
+                border-radius: 10px;
+            }
+
+            #subscriberModal .modal-body::-webkit-scrollbar-thumb {
+                background: linear-gradient(135deg, #5A67D8, #7886E0);
+                border-radius: 10px;
+            }
+        /* ═══ Modal Subscriber - Scroll ═══ */
+        #subscriberModal .modal-dialog {
+            max-width: 1200px;
+            max-height: 95vh;
+            margin: 20px auto;
+        }
+
+        #subscriberModal .modal-content {
+            max-height: calc(95vh - 40px);
+            display: flex;
+            flex-direction: column;
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        #subscriberModal .modal-header,
+        #subscriberModal .modal-footer {
+            flex-shrink: 0;
+        }
+
+        #subscriberModal .modal-body {
+            overflow-y: auto !important;
+            overflow-x: hidden;
+            flex-grow: 1;
+            max-height: calc(95vh - 200px);
+        }
+
+            /* Custom Scrollbar */
+            #subscriberModal .modal-body::-webkit-scrollbar {
+                width: 12px;
+            }
+
+            #subscriberModal .modal-body::-webkit-scrollbar-track {
+                background: #f8f9fc;
+                border-radius: 10px;
+            }
+
+            #subscriberModal .modal-body::-webkit-scrollbar-thumb {
+                background: linear-gradient(135deg, #5A67D8, #7886E0);
+                border-radius: 10px;
+                border: 2px solid #f8f9fc;
+            }
+
+                #subscriberModal .modal-body::-webkit-scrollbar-thumb:hover {
+                    background: linear-gradient(135deg, #4C51BF, #5A67D8);
+                }
+
+        /* Firefox */
+        #subscriberModal .modal-body {
+            scrollbar-width: thin;
+            scrollbar-color: #5A67D8 #f8f9fc;
+        }
+    </style>
+}
+
+<!-- ═══ HEADER ═══ -->
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <div>
+        <h4 class="fw-800 mb-1">
+            <i class="fas fa-users text-primary me-2"></i>
+            إدارة المشتركين
+        </h4>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0 small">
+                <li class="breadcrumb-item">
+                    <a href="@Url.Action("Index", "Dashboard")" class="text-decoration-none">
+                        <i class="fas fa-home"></i>
+                    </a>
+                </li>
+                <li class="breadcrumb-item active">المشتركين</li>
+            </ol>
+        </nav>
+    </div>
+    <button type="button" class="btn btn-primary btn-lg px-4" id="btnAddSubscriber">
+        <i class="fas fa-user-plus me-2"></i>
+        إضافة مشترك جديد
+    </button>
+</div>
+
+<!-- ═══ STATS CARDS ═══ -->
+<div class="row g-3 mb-4">
+    <div class="col-lg-3 col-md-6">
+        <div class="card stat-card shadow-sm h-100">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="stat-icon" style="background:#EBF4FF;color:#5A67D8">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div>
+                    <div class="text-muted small">إجمالي المشتركين</div>
+                    <h3 class="fw-900 mb-0">@stats?.Total</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="card stat-card shadow-sm h-100">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="stat-icon" style="background:#F0FFF4;color:#48BB78">
+                    <i class="fas fa-user-check"></i>
+                </div>
+                <div>
+                    <div class="text-muted small">مشتركين نشطين</div>
+                    <h3 class="fw-900 mb-0 text-success">@stats?.Active</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="card stat-card shadow-sm h-100">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="stat-icon" style="background:#FFFAF0;color:#D69E2E">
+                    <i class="fas fa-file-contract"></i>
+                </div>
+                <div>
+                    <div class="text-muted small">لديهم اشتراكات</div>
+                    <h3 class="fw-900 mb-0 text-warning">@stats?.WithSubscriptions</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="card stat-card shadow-sm h-100">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="stat-icon" style="background:#FFF5F5;color:#E53E3E">
+                    <i class="fas fa-user-slash"></i>
+                </div>
+                <div>
+                    <div class="text-muted small">بدون اشتراكات</div>
+                    <h3 class="fw-900 mb-0 text-danger">@stats?.WithoutSubscriptions</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ SUBSCRIBERS TABLE ═══ -->
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white py-3 border-bottom">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <h6 class="mb-0 fw-bold">
+                <i class="fas fa-list me-2 text-primary"></i>
+                قائمة المشتركين
+                <span class="badge bg-primary ms-2">@Model.Count</span>
+            </h6>
+        </div>
+    </div>
+    <div class="card-body p-3">
+        <table id="subscribersTable" class="table table-modern table-hover align-middle" style="width:100%">
+            <thead>
+                <tr>
+                    <th>الرقم</th>
+                    <th>المشترك</th>
+                    <th>الهاتف</th>
+                    <th>المنطقة</th>
+                    <th>الاشتراكات</th>
+                    <th>الرسوم الشهرية</th>
+                    <th>الحالة</th>
+                    <th>تاريخ التسجيل</th>
+                    <th class="text-center">الإجراءات</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var sub in Model)
+                {
+                    <tr>
+                        <td>
+                            <span class="badge bg-light text-primary fw-bold font-monospace">
+                                @sub.SubscriberNumber
+                            </span>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="subscriber-avatar">
+                                    @sub.FullName?.FirstOrDefault()
+                                </div>
+                                <div>
+                                    <strong class="d-block">@sub.FullName</strong>
+                                    @if (!string.IsNullOrEmpty(sub.Email))
+                                    {
+                                        <small class="text-muted">@sub.Email</small>
+                                    }
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            @if (!string.IsNullOrEmpty(sub.Phone))
+                            {
+                                <a href="tel:@sub.Phone" class="text-decoration-none" dir="ltr">
+                                    <i class="fas fa-phone-alt text-success me-1 small"></i>
+                                    @sub.Phone
+                                </a>
+                            }
+                            else
+                            {
+                                <span class="text-muted">—</span>
+                            }
+                        </td>
+                        <td>
+                            @if (!string.IsNullOrEmpty(sub.Area))
+                            {
+                                <i class="fas fa-map-marker-alt text-danger me-1 small"></i>
+                                <span>@sub.Area</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">—</span>
+                            }
+                        </td>
+                        <td>
+                            @if (sub.ActiveSubscriptionsCount > 0)
+                            {
+                                <span class="badge bg-success">
+                                    <i class="fas fa-check-circle me-1"></i>
+                                    @sub.ActiveSubscriptionsCount نشط
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">لا يوجد</span>
+                            }
+                        </td>
+                        <td>
+                            @if (sub.TotalMonthlyFees > 0)
+                            {
+                                <strong class="text-success">
+                                    @sub.TotalMonthlyFees.ToString("N0")
+                                    <small class="text-muted">د.ع</small>
+                                </strong>
+                            }
+                            else
+                            {
+                                <span class="text-muted">—</span>
+                            }
+                        </td>
+                        <td>
+                            @if (sub.IsActive)
+                            {
+                                <span class="badge bg-success">
+                                    <i class="fas fa-circle me-1" style="font-size:0.5rem"></i>
+                                    نشط
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">
+                                    <i class="fas fa-circle me-1" style="font-size:0.5rem"></i>
+                                    غير نشط
+                                </span>
+                            }
+                        </td>
+                        <td>
+                            <small class="text-muted">
+                                @sub.CreatedAt.ToString("yyyy/MM/dd")
+                            </small>
+                        </td>
+                        <td class="text-center">
+                            <div class="btn-group">
+                                <a href="@Url.Action("Details", new { id = sub.Id })"
+                                   class="btn btn-outline-primary btn-action"
+                                   title="عرض التفاصيل">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <button type="button"
+                                        class="btn btn-outline-success btn-action btn-edit"
+                                        data-id="@sub.Id"
+                                        title="تعديل">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button type="button"
+                                        class="btn @(sub.IsActive ? "btn-outline-warning" : "btn-outline-info") btn-action btn-toggle"
+                                        data-id="@sub.Id"
+                                        data-active="@sub.IsActive.ToString().ToLower()"
+                                        title="@(sub.IsActive ? "تعطيل" : "تفعيل")">
+                                    <i class="fas @(sub.IsActive ? "fa-ban" : "fa-check")"></i>
+                                </button>
+                                <button type="button"
+                                        class="btn btn-outline-danger btn-action btn-delete"
+                                        data-id="@sub.Id"
+                                        data-name="@sub.FullName"
+                                        title="حذف">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ═══ MODAL ═══ --> 
+<div class="modal fade" id="subscriberModal" tabindex="-1"
+     data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg" id="modalContent"></div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+
+            // ═══ DataTable ═══
+            var table = $('#subscribersTable').DataTable({
+                language: {
+                    url: "//cdn.datatables.net/plug-ins/1.13.7/i18n/ar.json"
+                },
+                order: [[7, 'desc']],
+                pageLength: 25,
+                responsive: true,
+                dom: '<"row mb-3"<"col-md-6"l><"col-md-6"f>>rt<"row mt-3"<"col-md-6"i><"col-md-6"p>>'
+            });
+
+            // ═══ فتح نافذة الإضافة ═══
+            $('#btnAddSubscriber').on('click', function () {
+                loadModal('@Url.Action("Create")');
+            });
+
+            // ═══ فتح نافذة التعديل ═══
+            $(document).on('click', '.btn-edit', function () {
+                var id = $(this).data('id');
+                loadModal('@Url.Action("Edit")/' + id);
+            });
+
+            // ═══ تحميل النافذة ═══
+            function loadModal(url) {
+                $('#modalContent').html(`
+                    <div class="modal-body text-center py-5">
+                        <div class="spinner-border text-primary" style="width:3rem;height:3rem"></div>
+                        <p class="mt-3 text-muted fw-bold">جارِ التحميل...</p>
+                    </div>
+                `);
+                $('#subscriberModal').modal('show');
+
+                $.get(url)
+                    .done(function (html) {
+                        $('#modalContent').html(html);
+                        initModalForm();
+                    })
+                    .fail(function () {
+                        $('#modalContent').html(`
+                            <div class="modal-body text-center py-5">
+                                <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3"></i>
+                                <p class="text-danger fw-bold">فشل تحميل النموذج</p>
+                                <button class="btn btn-outline-secondary" data-bs-dismiss="modal">إغلاق</button>
+                            </div>
+                        `);
+                    });
+            }
+
+            // ═══ تهيئة النموذج ═══
+            function initModalForm() {
+                var $form = $('#subscriberForm');
+                if (!$form.length) return;
+
+                // Validation فوري
+                $form.find('[name="FullName"]').on('blur', function () {
+                    if (!$(this).val().trim()) {
+                        $(this).addClass('is-invalid');
+                    } else {
+                        $(this).removeClass('is-invalid').addClass('is-valid');
+                    }
+                });
+
+                // Submit
+                $form.on('submit', function (e) {
+                    e.preventDefault();
+                    var $btn = $form.find('[type="submit"]');
+                    var originalText = $btn.html();
+
+                    var fullName = $form.find('[name="FullName"]').val();
+                    if (!fullName || !fullName.trim()) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'حقل مطلوب',
+                            text: 'يرجى إدخال اسم المشترك',
+                            confirmButtonColor: '#5A67D8',
+                            customClass: { popup: 'swal2-rtl' }
+                        });
+                        $form.find('[name="FullName"]').focus().addClass('is-invalid');
+                        return;
+                    }
+
+                    $btn.html('<span class="spinner-border spinner-border-sm me-2"></span>جارِ الحفظ...')
+                        .prop('disabled', true);
+
+                    $.ajax({
+                        url: $form.attr('action'),
+                        type: 'POST',
+                        data: $form.serialize(),
+                        success: function (res) {
+                            if (res.success) {
+                                $('#subscriberModal').modal('hide');
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'تم بنجاح',
+                                    text: res.message,
+                                    confirmButtonColor: '#48BB78',
+                                    customClass: { popup: 'swal2-rtl' },
+                                    timer: 2000,
+                                    timerProgressBar: true
+                                }).then(() => location.reload());
+                            } else {
+                                var errHtml = '';
+                                if (res.errors && res.errors.length) {
+                                    errHtml = '<ul class="text-start mb-0 mt-2">';
+                                    res.errors.forEach(e => errHtml += `<li>${e}</li>`);
+                                    errHtml += '</ul>';
+                                }
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'فشل الحفظ',
+                                    html: res.message + errHtml,
+                                    confirmButtonColor: '#dc3545',
+                                    customClass: { popup: 'swal2-rtl' }
+                                });
+                                $btn.html(originalText).prop('disabled', false);
+                            }
+                        },
+                        error: function () {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'خطأ',
+                                text: 'تعذر الاتصال بالخادم',
+                                customClass: { popup: 'swal2-rtl' }
+                            });
+                            $btn.html(originalText).prop('disabled', false);
+                        }
+                    });
+                });
+            }
+
+            // ═══ تفعيل/تعطيل ═══
+            $(document).on('click', '.btn-toggle', function () {
+                var id = $(this).data('id');
+                var isActive = $(this).data('active');
+                var action = isActive ? 'تعطيل' : 'تفعيل';
+
+                Swal.fire({
+                    icon: 'question',
+                    title: `تأكيد ${action}`,
+                    text: `هل تريد ${action} هذا المشترك؟`,
+                    showCancelButton: true,
+                    confirmButtonColor: '#5A67D8',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: `نعم، ${action}`,
+                    cancelButtonText: 'إلغاء',
+                    customClass: { popup: 'swal2-rtl' }
+                }).then(function (result) {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: '@Url.Action("ToggleActive")',
+                            type: 'POST',
+                            data: {
+                                id: id,
+                                __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                            },
+                            success: function (res) {
+                                if (res.success) {
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'تم',
+                                        text: res.message,
+                                        timer: 1500,
+                                        customClass: { popup: 'swal2-rtl' }
+                                    }).then(() => location.reload());
+                                } else {
+                                    Swal.fire({ icon: 'error', title: 'فشل', text: res.message });
+                                }
+                            }
+                        });
+                    }
+                });
+            });
+
+            // ═══ حذف ═══
+            $(document).on('click', '.btn-delete', function () {
+                var id = $(this).data('id');
+                var name = $(this).data('name');
+
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'تأكيد الحذف',
+                    html: `هل تريد حذف المشترك <strong>${name}</strong>؟<br/>
+                           <small class="text-danger">لا يمكن التراجع عن هذا الإجراء</small>`,
+                    showCancelButton: true,
+                    confirmButtonColor: '#dc3545',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: '<i class="fas fa-trash me-2"></i>نعم، احذف',
+                    cancelButtonText: 'إلغاء',
+                    customClass: { popup: 'swal2-rtl' }
+                }).then(function (result) {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: '@Url.Action("Delete")',
+                            type: 'POST',
+                            data: {
+                                id: id,
+                                __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                            },
+                            success: function (res) {
+                                if (res.success) {
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'تم الحذف',
+                                        text: res.message,
+                                        timer: 1500,
+                                        customClass: { popup: 'swal2-rtl' }
+                                    }).then(() => location.reload());
+                                } else {
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'فشل الحذف',
+                                        text: res.message,
+                                        customClass: { popup: 'swal2-rtl' }
+                                    });
+                                }
+                            }
+                        });
+                    }
+                });
+            });
+
+        });
+    </script>
+
+    <!-- Token للـ AJAX -->
+    <form id="antiForgeryForm">
+        @Html.AntiForgeryToken()
+    </form>
+}
