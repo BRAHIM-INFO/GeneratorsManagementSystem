@@ -188,5 +188,67 @@ namespace GeneratorsManagementSystem.Models.Fuel
                 return "—";
             }
         }
+
+        // ═══════════════════════════════════════════════════
+        //  🆕 حقول التجهيز التجاري
+        // ═══════════════════════════════════════════════════
+
+        [Display(Name = "طريقة الدفع")]
+        public FuelPaymentType PaymentType { get; set; } = FuelPaymentType.Cash;
+
+        [Display(Name = "الكمية المدخلة (لتر)")]
+        [Column(TypeName = "decimal(12,2)")]
+        public decimal? EnteredQuantity { get; set; }
+
+        [Display(Name = "الكمية الفعلية (لتر)")]
+        [Column(TypeName = "decimal(12,2)")]
+        public decimal? ActualQuantity { get; set; }
+
+        [Display(Name = "المتبقي من حصة الشهر (لتر)")]
+        [Column(TypeName = "decimal(12,2)")]
+        public decimal? MonthlyRemaining { get; set; }
+
+        [StringLength(50)]
+        [Display(Name = "رقم كتاب التجهيز")]
+        public string? AllocationBookNumber { get; set; }
+
+        [StringLength(100)]
+        [Display(Name = "الجهة الرسمية/الفرقة")]
+        public string? OfficialAuthority { get; set; }
+
+        [Display(Name = "تجاري")]
+        public bool IsCommercial { get; set; } = false;
+
+        [Display(Name = "معرف المصروف المُنشأ")]
+        public int? GeneratedExpenseId { get; set; }
+
+        [Display(Name = "المولد المرتبط")]
+        public int? GeneratorId { get; set; }
+        public Generator? Generator { get; set; }
+
+        // Computed Properties
+        [NotMapped]
+        public string PaymentTypeText => PaymentType switch
+        {
+            FuelPaymentType.Cash => "نقداً",
+            FuelPaymentType.Credit => "آجل",
+            FuelPaymentType.Free => "مجاناً (حصة)",
+            _ => "غير محدد"
+        };
+
+        [NotMapped]
+        public string PaymentTypeBadgeClass => PaymentType switch
+        {
+            FuelPaymentType.Cash => "bg-success",
+            FuelPaymentType.Credit => "bg-warning",
+            FuelPaymentType.Free => "bg-info",
+            _ => "bg-secondary"
+        };
+
+        [NotMapped]
+        public string AllocationTypeText => IsCommercial ? "تجهيز تجاري" : "حصة شهرية";
+
+        [NotMapped]
+        public string AllocationTypeBadgeClass => IsCommercial ? "bg-warning" : "bg-success";
     }
 }

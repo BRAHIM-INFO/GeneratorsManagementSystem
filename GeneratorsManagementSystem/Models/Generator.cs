@@ -1,4 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using GeneratorsManagementSystem.Models.Fuel;
+using GeneratorsManagementSystem.Models.IoT;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace GeneratorsManagementSystem.Models
@@ -226,7 +228,104 @@ namespace GeneratorsManagementSystem.Models
             Expenses?.Sum(e => e.Amount) ?? 0;
 
         [NotMapped]
-        public decimal NetProfit => TotalRevenue - TotalExpenses; 
+        public decimal NetProfit => TotalRevenue - TotalExpenses;
+
+        //-***********************************************
+
+        // ═══════════════════════════════════════════════════
+        //  🆕 نوع التشغيل وإعدادات الخزان
+        // ═══════════════════════════════════════════════════
+
+        [Display(Name = "نوع التشغيل")]
+        public GeneratorOperatingMode OperatingMode { get; set; } = GeneratorOperatingMode.Manual;
+
+        [Display(Name = "ارتفاع الخزان (سم)")]
+        [Column(TypeName = "decimal(10,2)")]
+        public decimal? TankHeightCM { get; set; }
+
+        [Display(Name = "كل سم = كم لتر")]
+        [Column(TypeName = "decimal(10,4)")]
+        public decimal? LitersPerCM { get; set; }
+
+        [Display(Name = "معدل الاستهلاك (لتر/ساعة)")]
+        [Column(TypeName = "decimal(10,2)")]
+        public decimal? FuelConsumptionRatePerHour { get; set; }
+
+        [Display(Name = "سعر اللتر الحالي")]
+        [Column(TypeName = "decimal(10,2)")]
+        public decimal? CurrentFuelPricePerLiter { get; set; }
+
+        [Display(Name = "مستوى الوقود الحالي (سم)")]
+        [Column(TypeName = "decimal(10,2)")]
+        public decimal? CurrentFuelLevelCM { get; set; }
+
+        [Display(Name = "الكمية الحالية (لتر)")]
+        [Column(TypeName = "decimal(10,2)")]
+        public decimal? CurrentFuelLiters { get; set; }
+
+        [Display(Name = "يعمل الآن")]
+        public bool IsRunning { get; set; } = false;
+
+        [Display(Name = "وقت آخر تشغيل")]
+        public DateTime? LastStartTime { get; set; }
+
+        [Display(Name = "وقت آخر إيقاف")]
+        public DateTime? LastStopTime { get; set; }
+
+       
+
+        // Computed Properties
+        [NotMapped]
+        public string OperatingModeText => OperatingMode switch
+        {
+            GeneratorOperatingMode.Automatic => "تلقائي (IoT)",
+            GeneratorOperatingMode.Manual => "يدوي",
+            _ => "غير محدد"
+        };
+
+        [NotMapped]
+        public string OperatingModeBadgeClass => OperatingMode switch
+        {
+            GeneratorOperatingMode.Automatic => "bg-primary",
+            GeneratorOperatingMode.Manual => "bg-secondary",
+            _ => "bg-light"
+        };
+
+        [NotMapped]
+        public string OperatingModeIcon => OperatingMode switch
+        {
+            GeneratorOperatingMode.Automatic => "fa-microchip",
+            GeneratorOperatingMode.Manual => "fa-user-cog",
+            _ => "fa-question"
+        };
+
+        [NotMapped]
+        public decimal? EstimatedRunningHoursRemaining
+        {
+            get
+            {
+                if (!CurrentFuelLiters.HasValue || !FuelConsumptionRatePerHour.HasValue || FuelConsumptionRatePerHour.Value == 0)
+                    return null;
+                return Math.Round(CurrentFuelLiters.Value / FuelConsumptionRatePerHour.Value, 2);
+            }
+        }
+
+        [NotMapped]
+        public decimal? HourlyOperatingCost
+        {
+            get
+            {
+                if (!FuelConsumptionRatePerHour.HasValue || !CurrentFuelPricePerLiter.HasValue)
+                    return null;
+                return Math.Round(FuelConsumptionRatePerHour.Value * CurrentFuelPricePerLiter.Value, 2);
+            }
+        }
+
+        // Navigation Properties
+        public ICollection<OperatingSession> OperatingSessions { get; set; } = new List<OperatingSession>();
+        public ICollection<FuelRefill> FuelRefills { get; set; } = new List<FuelRefill>();
+        public ICollection<IoTDevice> IoTDevices { get; set; } = new List<IoTDevice>();
+
     }
 
     // ─── Generator Log ───

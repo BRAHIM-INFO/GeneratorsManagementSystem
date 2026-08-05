@@ -1,11 +1,12 @@
 ﻿using GeneratorsManagementSystem.Models;
 using GeneratorsManagementSystem.Models.Accounting;
 using GeneratorsManagementSystem.Models.Fuel;
+using GeneratorsManagementSystem.Models.Geography;
 using GeneratorsManagementSystem.Models.Identity;
+using GeneratorsManagementSystem.Models.IoT;
 using GeneratorsManagementSystem.Models.Settings;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using GeneratorsManagementSystem.Models.Geography;
 
 namespace GeneratorsManagementSystem.Data
 {
@@ -55,6 +56,14 @@ namespace GeneratorsManagementSystem.Data
         // ═══ Fuel ═══
         public DbSet<FuelAllocation> FuelAllocations { get; set; }
         public DbSet<FuelConsumption> FuelConsumptions { get; set; }
+
+        // ═══ Fuel Management ═══
+        public DbSet<OperatingSession> OperatingSessions { get; set; }
+        public DbSet<FuelRefill> FuelRefills { get; set; }
+
+        // ═══ IoT ═══
+        public DbSet<IoTDevice> IoTDevices { get; set; }
+        public DbSet<SensorReading> SensorReadings { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder builder)
@@ -326,6 +335,73 @@ namespace GeneratorsManagementSystem.Data
                  .OnDelete(DeleteBehavior.SetNull)
                  .IsRequired(false);
             });
+
+
+            // ═══ OperatingSession ═══
+            builder.Entity<OperatingSession>(entity =>
+            {
+                entity.HasOne(x => x.Generator)
+                      .WithMany(g => g.OperatingSessions)
+                      .HasForeignKey(x => x.GeneratorId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasIndex(x => x.StartTime);
+                entity.HasIndex(x => x.GeneratorId);
+            });
+
+            // ═══ FuelRefill ═══
+            builder.Entity<FuelRefill>(entity =>
+            {
+                entity.HasOne(x => x.Generator)
+                      .WithMany(g => g.FuelRefills)
+                      .HasForeignKey(x => x.GeneratorId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(x => x.FuelAllocation)
+                      .WithMany()
+                      .HasForeignKey(x => x.FuelAllocationId)
+                      .OnDelete(DeleteBehavior.SetNull);
+
+                entity.HasIndex(x => x.RefillDate);
+                entity.HasIndex(x => x.RefillNumber).IsUnique();
+            });
+
+            // ═══ IoTDevice ═══
+            builder.Entity<IoTDevice>(entity =>
+            {
+                entity.HasOne(x => x.Generator)
+                      .WithMany(g => g.IoTDevices)
+                      .HasForeignKey(x => x.GeneratorId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasIndex(x => x.ApiKey).IsUnique();
+                entity.HasIndex(x => x.DeviceName).IsUnique();
+                entity.HasIndex(x => x.Status);
+            });
+
+            // ═══ SensorReading ═══
+            builder.Entity<SensorReading>(entity =>
+            {
+                entity.HasOne(x => x.IoTDevice)
+                      .WithMany(d => d.SensorReadings)
+                      .HasForeignKey(x => x.IoTDeviceId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(x => x.Generator)
+                      .WithMany()
+                      .HasForeignKey(x => x.GeneratorId)
+                      .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasIndex(x => x.ReadingTime);
+                entity.HasIndex(x => new { x.GeneratorId, x.ReadingType });
+            });
+
+            // ═══ FuelAllocation - إضافة العلاقة مع Generator ═══
+            builder.Entity<FuelAllocation>()
+                .HasOne(x => x.Generator)
+                .WithMany()
+                .HasForeignKey(x => x.GeneratorId)
+                .OnDelete(DeleteBehavior.SetNull);
         }
     }
 }
